@@ -49,13 +49,19 @@ rocprof-compute-viewer ../compute_viewer/big_results.json
 python source/hotspot_analyzer.py att_viewer/big/ui_output_agent_*/ --topk 15 --mode both
 ```
 
+If the ATT Viewer tabs are unfamiliar, read
+[`docs/att-viewer-guide.md`](docs/att-viewer-guide.md). It explains how to use
+`Compute Unit`, `Utilization`, dependency arrows, `s_waitcnt`, `hitcount`,
+`idle`, `VALU`, `LDS`, and VGPR/occupancy when ranking hotspots.
+
 ## Adding a new example
 
 **Read [`AGENTS.md`](AGENTS.md) first.** It codifies the entire workflow:
-environment setup, trace capture (small + big shapes), cleanup, analysis with
-`hotspot_analyzer.py`, report template, the per-example directory layout, and
-the five gotchas that cost us time to figure out (empty-shell folders,
-`dispatch_<N>` numbering, debug-info plumbing, etc.).
+environment setup, workload/grid sizing, trace capture (small + saturated
+steady-state shapes), cleanup, analysis with `hotspot_analyzer.py`, report
+template, the per-example directory layout, and the gotchas that cost us time to
+figure out (empty-shell folders, `dispatch_<N>` numbering, debug-info plumbing,
+etc.).
 
 Quick canonical layout:
 

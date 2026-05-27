@@ -51,7 +51,7 @@ examples/<kernel-name>/
 ├── REPORT.md          ← per-example analysis writeup (template below)
 ├── att_viewer/
 │   ├── small/ui_output_agent_<PID>_dispatch_<N>/   (1 chunk/CTA shape — prologue-bound)
-│   └── big/ui_output_agent_<PID>_dispatch_<N>/     (≥3 chunks/CTA — steady-state)
+│   └── big/ui_output_agent_<PID>_dispatch_<N>/     (saturated steady-state shape)
 ├── compute_viewer/
 │   ├── {small,big}_results.json
 │   ├── {small,big}_agent_info.csv
@@ -64,9 +64,11 @@ examples/<kernel-name>/
 ```
 
 **Why two shapes (`small` vs `big`)?** Different stalls dominate at different
-scales. A small workload (1 chunk/CTA) exposes the cold prologue / kernarg-load
-chain; a large workload (≥3 chunks/CTA) exposes the steady-state loop body.
-Both are valuable; capture both.
+scales. A small workload (often 1 chunk/CTA) exposes the cold prologue /
+kernarg-load chain; a saturated large workload exposes the steady-state loop
+body. "Big" must be sized by the kernel's tile/chunk schedule, not by chunk
+count alone: `total_ctas` should be close to the target parallelism and ATT
+Viewer should not show an obvious underfilled tail.
 
 ## Workflow
 
@@ -130,10 +132,47 @@ grep -v "at::native\|rocclr\|rocprim\|Cijk" prof/discover_kernel_stats.csv
 Record the exact kernel name (e.g. `pa_mqa_logits_fp4_kernel_0`); you'll
 need it as `kernel_include_regex` in the YAML.
 
-### Step 5 — Capture two ATT traces
+### Step 5 — Size the workload grid before capture
 
-Write `input_trace.yaml` (small shape) and `input_trace_big.yaml` (production
-shape). Template:
+Before capturing the "big" / steady-state trace, calculate whether the workload
+actually fills the target parallelism. Do not assume a larger `ctx` is enough.
+For persistent kernels like `pa_mqa_logits_fp4`, the host schedule is derived
+from tiles/chunks:
+
+```text
+chunks_per_batch = ceil(context_len / block_k)
+safe_chunks_per_cta = smallest s such that:
+    sum(ceil(chunks_per_batch / s)) * next_n <= parallel_unit_num
+total_ctas = sum(ceil(chunks_per_batch / safe_chunks_per_cta)) * next_n
+```
+
+The test harness prints:
+
+```text
+schedule: parallel_unit=<target> num_warps=<N> safe_chunks_per_cta=<S> total_ctas=<G>
+```
+
+Use this before trace capture:
+
+- For a prologue trace, a small underfilled grid is fine; it is intentionally
+  cold-start/prologue-biased.
+- For the primary steady-state trace, `total_ctas` should be close to the target
+  parallelism. With the default `parallel_unit_num=512`, prefer a shape that
+  lands near 512 CTAs, not 69 or 391.
+- If `total_ctas` is too low, increase `batch`, increase effective `ctx`, choose
+  a shape with more chunks/tiles, or adjust `parallel_unit_num`.
+- After capture, confirm in ATT Viewer that `Compute Unit` and `Utilization` do
+  not show an obvious underfilled tail where only a few waves remain.
+
+Record `block_k`, `safe_chunks_per_cta`, `total_ctas`, and
+`parallel_unit_num` in `REPORT.md`. If a trace is intentionally underfilled,
+label it as prologue/cold-start and do not use it as the main optimization
+ranking signal.
+
+### Step 6 — Capture two ATT traces
+
+Write `input_trace.yaml` (small/prologue shape) and `input_trace_big.yaml`
+(saturated steady-state shape). Template:
 
 ```yaml
 GlobalParameters:
@@ -175,10 +214,10 @@ FLYDSL_DEBUG_ENABLE_DEBUG_INFO=1 PYTHONPATH=build-fly/python_packages:. \
     rocprofv3 -i input_trace.yaml -- python tests/kernels/test_<kernel>.py <small-flags> ...
 
 FLYDSL_DEBUG_ENABLE_DEBUG_INFO=1 PYTHONPATH=build-fly/python_packages:. \
-    rocprofv3 -i input_trace_big.yaml -- python tests/kernels/test_<kernel>.py <big-flags> ...
+    rocprofv3 -i input_trace_big.yaml -- python tests/kernels/test_<kernel>.py <saturated-flags> ...
 ```
 
-### Step 6 — Cleanup
+### Step 7 — Cleanup
 
 Each capture produces `prof/att*/ui_output_agent_<PID>_dispatch_<N>/` folders.
 Some are empty shells; some are duplicates. Filter:
@@ -194,7 +233,7 @@ done
 
 (See Gotcha 3 for why empty shells exist.)
 
-### Step 7 — Analyze with `hotspot_analyzer.py` (DO NOT roll your own)
+### Step 8 — Analyze with `hotspot_analyzer.py` (DO NOT roll your own)
 
 Copy the analyzer from FlyDSL's `kernel-trace-analysis` skill:
 
@@ -218,7 +257,7 @@ If `source_loc` is `<unknown>` everywhere, see Gotcha 4 — debug info wasn't
 plumbed through. The report can still go ahead, but mark the PC→source
 mapping in §3 as manually derived from PC ranges.
 
-### Step 8 — Write REPORT.md (template)
+### Step 9 — Write REPORT.md (template)
 
 Required sections, in order:
 
@@ -230,7 +269,8 @@ Kernel: <JIT name> (<arch>)
 Workspace: <local probe path>
 
 ## Workload configurations measured
-[Table: shape | TFLOPS | duration | chunks_per_CTA]
+[Table: shape | TFLOPS | duration | block_k | safe_chunks_per_CTA |
+ total_CTAs | target_CTAs]
 
 ## 1. Headline wave-state breakdown
 [Table: EXEC/STALL/WAIT/SLEEP %]
@@ -268,7 +308,7 @@ Rank order in §4 should follow the §1a stall taxonomy: whichever bucket is
 biggest should get the top-priority recommendation. Don't just transcribe;
 **use the data to drive the priority**.
 
-### Step 9 — Bundle into repo
+### Step 10 — Bundle into repo
 
 ```bash
 EX=examples/<kernel-name>
@@ -287,14 +327,14 @@ cp hotspot_analyzer.py           $EX/source/
 # Then write README.md and REPORT.md into $EX/
 ```
 
-### Step 10 — Update top-level README
+### Step 11 — Update top-level README
 
 Add a row to the **Examples** table in the top-level `README.md` linking
 to your new example. Format: `| folder | kernel | source | one-liner |`.
 Lead the one-liner with the headline finding (e.g. "profoundly stall-bound:
 47 % VALU latency, 34 % `s_waitcnt`, only 0.3 % EXEC").
 
-### Step 11 — Commit
+### Step 12 — Commit
 
 One commit per example, with a message body that includes the headline
 finding so `git log` is useful:
@@ -369,6 +409,10 @@ example's README under "Source mapping note" and proceed.
 - **Don't capture only one workload shape.** Small and big expose different
   bottlenecks; one-shape analyses miss whichever stall the shape doesn't
   exercise.
+- **Don't call an underfilled grid "steady-state."** If `total_ctas` is far
+  below the target parallelism, the trace may be useful for prologue analysis,
+  but it should not drive the main optimization ranking. Resize the workload and
+  recapture.
 - **Don't paste full ATT trace into the report.** REPORT.md should be the
   *analysis*; raw trace lives under `att_viewer/`.
 - **Don't bury the headline.** The §1 wave-state breakdown should
@@ -389,6 +433,8 @@ The agent's job stops at producing the bundle; the user opens the viewers.
 ## See also
 
 - This repo's `README.md` — what the artifacts are and how to open them
+- This repo's `docs/att-viewer-guide.md` — how to read ATT Viewer /
+  rocprof-compute-viewer tabs, columns, and workload-sizing signals
 - FlyDSL `.claude/skills/capture-kernel-trace/SKILL.md` — verbatim capture recipe
 - FlyDSL `.claude/skills/kernel-trace-analysis/SKILL.md` — analysis patterns +
   MFMA latency table + register pressure formulas

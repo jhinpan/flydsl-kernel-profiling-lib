@@ -42,6 +42,12 @@ python3 -m http.server 8080
 Pick `big/` for steady-state analysis (production shape, 3 chunks per CTA);
 pick `small/` to see the cold-prologue tail.
 
+If the ATT Viewer columns/tabs are unfamiliar, read the repo-level
+[`docs/att-viewer-guide.md`](../../docs/att-viewer-guide.md). In particular:
+`Compute Unit` is the wave timeline, `Utilization` is the hardware-pipeline
+timeline, arrows are dependency/attribution links, and high-hitcount
+`s_waitcnt` hotspots are the first places to look for missed overlap.
+
 ### Naming convention: `ui_output_agent_<PID>_dispatch_<N>`
 
 `<N>` is rocprofv3's process-wide dispatch counter (covering torch utility
@@ -76,6 +82,16 @@ rocprof-compute-viewer bundle/compute_viewer/big_results.json
 The `discover_*.csv` files come from the `rocprofv3 --stats` discovery pass and
 include per-kernel call counts / durations across the whole test run, not just
 the one ATT-captured iteration.
+
+## Workload sizing note
+
+This example intentionally keeps both a small prologue-oriented trace and a
+larger steady-state trace. The current `big` shape reports
+`safe_chunks_per_cta=3` and `total_ctas=391`, which is useful but still below
+the default `parallel_unit_num=512` target. For a future saturated recapture,
+pick `batch`, effective `ctx`, or `parallel_unit_num` so `total_ctas` lands
+closer to the target and confirm in `Compute Unit` / `Utilization` that there is
+no obvious underfilled tail.
 
 ## Source mapping note (important)
 

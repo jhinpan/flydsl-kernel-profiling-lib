@@ -13,6 +13,14 @@ Workspace: `/sgl-workspace/jin/fp4_mqa_probe/`
 
 The "small" config exposes the **prologue / cold-start** overhead; the "big" config exposes the **loop-body** behaviour.
 
+Sizing caveat: the current `big` trace is useful, but it is not a fully
+saturated capture. With the default `parallel_unit_num=512`, `total_CTAs=391`
+is below the target. A follow-up recapture should size `batch`, effective `ctx`,
+or `parallel_unit_num` so `total_CTAs` lands closer to 512, then confirm in ATT
+Viewer that `Compute Unit` / `Utilization` do not show an obvious underfilled
+tail. See [`docs/att-viewer-guide.md`](../../docs/att-viewer-guide.md) for the
+grid-sizing rule and viewer-reading checklist.
+
 ---
 
 ## 1. Headline wave-state breakdown
