@@ -1,0 +1,138 @@
+[
+  {
+    "stem": "test_softmax",
+    "headline": "stall-bound (76% stalled, 46% VMEM-load), occ 5/SIMD; FlyDSL 271.8\u00b5s vs AIter triton 558\u00b5s (2.05x win) at 32768x8192 bf16 \u2014 but the fast vectorized path is dead-coded (False-gated), so it runs scalar 16-bit loads, leaving the HBM roofline on the table.",
+    "top_recommendation": "Delete the `False and` guard at softmax_kernel.py:104 to activate the pre-written BufferCopy128b fast path (8x bytes/instruction); directly attacks the 46% VMEM-load + 15% VMEM-store stall (technique-vectorized-loads). Effort: low.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_softmax/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_rmsnorm",
+    "headline": "bandwidth-bound (41% VMEM-wait), occ 4/SIMD @60 VGPR; FlyDSL 25.1\u00b5s vs AIter 22.4\u00b5s (0.89\u00d7, slower) \u2014 single vmcnt(0) load-drain before the block reduction is the ceiling.",
+    "top_recommendation": "Software-pipeline pass-1 loads with staged s_waitcnt vmcnt(N) per-tile gating instead of one vmcnt(0) full drain (ROCmKernelWiki technique-vectorized-loads + technique-lds-double-buffering) to attack the 41.1% VMEM-wait bucket.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_rmsnorm/REPORT.md",
+    "bound_type": "bandwidth-bound"
+  },
+  {
+    "stem": "test_layernorm",
+    "headline": "stall-bound (58% LDS/SMEM-wait), occ 3/SIMD (VGPR 72); FlyDSL 24.1\u00b5s \u2248 AIter 24.7\u00b5s (1.03\u00d7) \u2014 dependent ds_* cross-lane reduction tree (shuffle_xor) is the ceiling, not HBM (~1490 GB/s).",
+    "top_recommendation": "Replace the 6-step shuffle_xor wave-reduction (ds_bpermute/ds_swizzle + lgkmcnt(0)) with gfx950 v_permlane16_b32 + DPP pure-VALU tree to move the 58% LDS-wait off the LDS crossbar (ROCmKernelWiki technique-wave-reduce).",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_layernorm/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_topk_gating_softmax",
+    "headline": "stall-bound (43% LGKMCNT-wait + 50% \"other\"), occ 4/SIMD; FlyDSL 30.9\u00b5s vs AIter-HIP 6.7\u00b5s (0.22\u00d7) \u2014 K=6 serial shuffle_xor argmax butterflies (ds_swizzle/ds_bpermute on LGKMCNT) are the ceiling, not memory.",
+    "top_recommendation": "Replace shuffle_xor group reductions with DPP / v_permlane16 cross-lane ALU ops (ROCmKernelWiki technique-wave-reduce) to eliminate the per-step LGKMCNT drain \u2014 the 8-lane group fits entirely in a 16-lane DPP row.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_topk_gating_softmax/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_quant",
+    "headline": "bandwidth-bound (56.8% VMEM stalls, 77.5% total), occ 5/SIMD; FlyDSL 16.74\u00b5s vs aiter 16.05\u00b5s (0.96\u00d7) \u2014 near the HBM3E roofline, the recoverable budget is the ~23% barrier+LDS-wait from a two-barrier in-kernel block reduction.",
+    "top_recommendation": "Drop the two-barrier LDS block-max reduction (use BLOCK_THREADS=64 / RED_SLOTS==1, a barrier-free single-wave-per-row reduce) to recover the ~23% barrier+LDS-wait stall and close the 4% gap to aiter.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_quant/REPORT.md",
+    "bound_type": "bandwidth-bound"
+  },
+  {
+    "stem": "test_fused_rope_cache",
+    "headline": "stall-bound (80% lgkmcnt s_waitcnt), occ 8/SIMD but 1 wave/block; FlyDSL 219.6\u00b5s vs AIter 37.5\u00b5s (0.17x) \u2014 serialized buffer-descriptor + position + ds_bpermute fence chain in a single 64-lane wave is the ceiling, not bandwidth.",
+    "top_recommendation": "Pack multiple (head,token) pairs per workgroup so several wavefronts overlap each other's lgkmcnt/vmcnt fences (technique-occupancy-tuning) \u2014 the occupancy headroom exists, the single-wave-per-block kernel just never exposes it.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_fused_rope_cache/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_pa",
+    "headline": "stall-bound (65.7% stall, 36% LDS-wait + 36% VMEM), occ 1/SIMD (VGPR 176, needs \u2264128 for 2 waves); FlyDSL 169.5\u00b5s vs AIter Gluon 80.6\u00b5s (0.476\u00d7) \u2014 single resident wave can't hide its own K/V-load + softmax-LDS latency.",
+    "top_recommendation": "Cut VGPR live-range to \u2264128 (shrink the per-block loop-carried state, esp. the prefetched k_flat held in VGPRs) to reach occupancy 2/SIMD so a sibling wave hides the vmcnt/lgkmcnt waits.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_pa/REPORT.md",
+    "bound_type": "wait-bound"
+  },
+  {
+    "stem": "test_mla_decode",
+    "headline": "stall-bound (83% LDS/SMEM-wait, lgkmcnt(0)), occ 1/SIMD @ VGPR\u2248251; FlyDSL 12.40\u00b5s vs aiter-hk-CK 11.19\u00b5s (0.90\u00d7) \u2014 exposed LDS\u2192MFMA operand-feed latency on a single-wave decode is the ceiling.",
+    "top_recommendation": "Software-pipeline the LDS\u2192MFMA chain in _process_kv_tile (prefetch next K/V sub-block, partial lgkmcnt, overlap ds_read with MFMA issue) to attack the 83% LDS-wait \u2014 technique-mfma-pipelining + technique-lds-double-buffering.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_mla_decode/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_flash_attn_func",
+    "headline": "stall-bound (55% of cycles), occ 1/SIMD @243 VGPR; FlyDSL 9.9\u00b5s vs CK 9.1\u00b5s (0.92x, loses) and 0.72x at S=2048 \u2014 the scalar uncoalesced O-store epilogue (29% VMEM-store stalls, 80% of attributed cycles) is the ceiling.",
+    "top_recommendation": "Coalesce + widen the O writeback epilogue (lines 1132-1142): replace 16 scalar global_store_dwordx2/D-chunk with contiguous dwordx4 vectorized stores and a single trailing vmcnt(0).",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_flash_attn_func/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_hgemm_splitk",
+    "headline": "latency-bound (56% VMEM-wait, MFMA only 2%), occ 2/SIMD @ 117 VGPR; FlyDSL 7.0\u00b5s = 25 TFLOPS, 1.66x vs PyTorch 11.6\u00b5s \u2014 but only 84 workgroups on 256 CUs, so SPLIT_K=14 starves each block to ~2 K-iters and the 2-stage pipeline can't hide load latency.",
+    "top_recommendation": "Reduce SPLIT_K (sweep down from 14 to ~4-7) so each block runs enough K-loop iterations to overlap global loads with MFMA, directly attacking the 63% memory-latency stall.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_hgemm_splitk/REPORT.md",
+    "bound_type": "latency-bound"
+  },
+  {
+    "stem": "test_preshuffle_gemm",
+    "headline": "compute-bound re-test @4096\u00b3 fp8: FlyDSL 1347 TFLOPS (102\u00b5s) vs AIter-CK 1760 TFLOPS (78\u00b5s) \u2192 0.77\u00d7 \u2014 the M=16 sweep was launch-bound/noise; at saturation the gap is real. CK's bpreshuffle K-loop out-overlaps FlyDSL's.",
+    "top_recommendation": "Deepen the K-loop software-pipeline (more outstanding vmcnt prefetch) so HBM B-loads hide behind MFMA at large K \u2014 technique-mfma-pipelining; FlyDSL is at occ 3/SIMD, register-headroom permitting.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_preshuffle_gemm/REPORT.md",
+    "bound_type": "latency-bound"
+  },
+  {
+    "stem": "bench_preshuffle_gemm_v2",
+    "headline": "internal v2-vs-v1 @4096\u00d75120\u00d78192 bf16: v2 layout-API 767 TFLOPS (448\u00b5s) = 1.20\u00d7 over v1 manual (638 TFLOPS, 538\u00b5s) \u2014 the layout-API refactor is a real FlyDSL-internal win (no external baseline).",
+    "top_recommendation": "Ship the v2 layout-API path as default; it is 1.20\u00d7 over the manual v1 at compute-bound shape \u2014 then chase the external CK gap separately (see preshuffle_gemm).",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/bench_preshuffle_gemm_v2/REPORT.md",
+    "bound_type": "stall-bound"
+  },
+  {
+    "stem": "test_blockscale_preshuffle_gemm",
+    "headline": "compute-bound re-test @M=4096: FlyDSL 869 TFLOPS (156\u00b5s) vs AIter TUNED-CK 1322 TFLOPS (102\u00b5s) \u2192 0.66\u00d7 \u2014 gap WIDENS vs M=16 because CK loaded a per-shape tuned config and FlyDSL runs a fixed untuned schedule.",
+    "top_recommendation": "Add per-shape tile/split-K tuning (FlyDSL has no autotune table here); the 0.66\u00d7 is partly a tuning-parity gap, not a codegen gap \u2014 match CK's tuned tile + GlobalSplitU.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_blockscale_preshuffle_gemm/REPORT.md",
+    "bound_type": "latency-bound"
+  },
+  {
+    "stem": "test_moe_gemm",
+    "headline": "stall-bound (55% VMEM-wait, 70% VMEM total), occ 1/SIMD @155 VGPR; FlyDSL stage-1 70.8us = CK 71.1us (1.00x parity, 1.11x on full 2-stage) \u2014 load pipeline is unpipelined (vmcnt(1) stores) and matrix cores are starved.",
+    "top_recommendation": "Deepen the global->LDS software pipeline (more buffer_loads in flight, relax vmcnt(N) so the LDS store waits only on its own tile) to attack the 55% VMEM-wait bucket \u2014 grounded in technique-mfma-pipelining + technique-lds-double-buffering.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_moe_gemm/REPORT.md",
+    "bound_type": "latency-bound"
+  },
+  {
+    "stem": "test_moe_blockscale",
+    "headline": "bandwidth-bound (41% VMEM-wait + 36% VMEM-load = 78% of stalls), occ 2/SIMD @ ~203 VGPR; FlyDSL 53.8us vs CK 44.0us (0.818x, slower) \u2014 MFMA-scale starved on an under-prefetched FP8 operand/scale load chain.",
+    "top_recommendation": "Deepen the global->LDS software pipeline (prefetch A/W tiles 1-2 K-stages ahead, vmcnt-gated double/triple buffering) so the mfma_scale at lines 737/740 stops blocking on operand loads (ROCmKernelWiki technique-lds-double-buffering + technique-mfma-pipelining).",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_moe_blockscale/REPORT.md",
+    "bound_type": "bandwidth-bound"
+  },
+  {
+    "stem": "test_moe_reduce",
+    "headline": "bandwidth-bound (91% VMEM load+wait), occ 4/SIMD @ 56 VGPR; FlyDSL 382.7\u00b5s \u2248 torch.sum/aiter.moe_sum 382.6\u00b5s (1.00\u00d7) at the ~5.5 TB/s HBM ceiling \u2014 already optimal, no win available.",
+    "top_recommendation": "Add a non-temporal (streaming) hint to the once-read 128-bit loads (technique-vectorized-loads); width is already optimal so this is the only load-side knob, but expect <3% since HBM is saturated.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_moe_reduce/REPORT.md",
+    "bound_type": "bandwidth-bound"
+  },
+  {
+    "stem": "test_vec_add",
+    "headline": "bandwidth-bound (82% VMEM-wait), occ 8/SIMD (max), 9 VGPR; 6468 GB/s \u2248 81% of MI355X HBM3E ~8 TB/s \u2014 already-optimal 128-bit streaming triad, body has no headroom (no baseline recorded).",
+    "top_recommendation": "Convert to a persistent grid-stride kernel (technique-persistent-kernel) to absorb the 10000-block tail and amortize per-block V# descriptor setup; expect only a few % toward roofline since the op is fundamentally HBM-bound.",
+    "wrote_report": true,
+    "report_path": "/sgl-workspace/flydsl-prof/results/att/test_vec_add/REPORT.md",
+    "bound_type": "bandwidth-bound"
+  }
+]

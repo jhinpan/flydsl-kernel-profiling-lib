@@ -1,0 +1,66 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_layernorm/att/ui_output_agent_22257_dispatch_23
+
+  Kernel:        ui_output_agent_22257_dispatch_23
+  Instructions:  456
+  Total cycles:  76.2K
+  Total stalls:  46.0K  (60.3% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~69 (alloc 72)
+  accum_vgpr:     0 (not used)
+  limiting pool:  72 / 256
+  occupancy:      3 waves/SIMD
+  -> 4 waves requires max(arch,accum) <= 64
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 12,  buffer_store: 4
+    ds_read: 3,  ds_write: 2
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  LDS/SMEM-wait      26.8K  [█████████████████░░░░░░░░░░░░░]  58.2%
+  VMEM-wait          12.8K  [████████░░░░░░░░░░░░░░░░░░░░░░]  27.9%
+  other               4.0K  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   8.6%
+  VMEM-load            952  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.1%
+  barrier              824  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.8%
+  VMEM-store           644  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.4%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     22.8K   49.60%  [█████████████████████████████░]  97.5%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    2     21.4K   46.63%  [█████████████░░░░░░░░░░░░░░░░░]  44.1%  VMEM-wait     kspace/FlyDSL-lab/kernels/layernorm_kernel.py:50
+    3      1.1K    2.38%  [███████████░░░░░░░░░░░░░░░░░░░]  39.6%  VMEM-load     space/FlyDSL-lab/kernels/layernorm_kernel.py:151
+    4       644    1.40%  [████████████████░░░░░░░░░░░░░░]  54.2%  VMEM-store    space/FlyDSL-lab/kernels/layernorm_kernel.py:157
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     12.3K   26.81%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    2     10.5K   22.79%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    3      5.4K   11.81%  VMEM-wait     s_waitcnt vmcnt(4)                                DSL-lab/kernels/layernorm_kernel.py:50
+    4      2.8K    6.08%  VMEM-wait     s_waitcnt vmcnt(1)                                DSL-lab/kernels/layernorm_kernel.py:50
+    5      2.7K    5.82%  VMEM-wait     s_waitcnt vmcnt(3)                                DSL-lab/kernels/layernorm_kernel.py:50
+    6       724    1.57%  VMEM-wait     s_waitcnt vmcnt(0)                                DSL-lab/kernels/layernorm_kernel.py:50
+    7       724    1.57%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              DSL-lab/kernels/layernorm_kernel.py:50
+    8       668    1.45%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              DSL-lab/kernels/layernorm_kernel.py:50
+    9       608    1.32%  barrier       s_barrier                                         DSL-lab/kernels/layernorm_kernel.py:50
+   10       580    1.26%  VMEM-wait     s_waitcnt vmcnt(1)                                DSL-lab/kernels/layernorm_kernel.py:50
+   11       528    1.15%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              DSL-lab/kernels/layernorm_kernel.py:50
+   12       396    0.86%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              DSL-lab/kernels/layernorm_kernel.py:50
+   13       336    0.73%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              DSL-lab/kernels/layernorm_kernel.py:50
+   14       288    0.63%  other         v_mov_b32_e32 v1, v35                             DSL-lab/kernels/layernorm_kernel.py:50
+   15       256    0.56%  other         v_and_b32_e32 v33, 0xffff0000, v5                 DSL-lab/kernels/layernorm_kernel.py:50
+
+

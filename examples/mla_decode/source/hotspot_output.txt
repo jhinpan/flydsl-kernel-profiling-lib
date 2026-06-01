@@ -1,0 +1,54 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_mla_decode/att/ui_output_agent_41578_dispatch_58
+
+  Kernel:        ui_output_agent_41578_dispatch_58
+  Instructions:  4,948
+  Total cycles:  46.0K
+  Total stalls:  43.5K  (94.6% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~251 (alloc 256)
+  accum_vgpr:     0 (not used)
+  limiting pool:  256 / 256
+  occupancy:      1 waves/SIMD
+  -> 2 waves requires max(arch,accum) <= 128
+
+  Instruction mix:
+    MFMA: 688,  buffer_load: 130,  buffer_store: 64
+    ds_read: 759,  ds_write: 127
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  LDS/SMEM-wait      36.1K  [████████████████████████░░░░░░]  83.0%
+  VMEM-wait           5.9K  [████░░░░░░░░░░░░░░░░░░░░░░░░░░]  13.5%
+  other               1.0K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.4%
+  VMEM-load            496  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.1%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     36.1K   83.03%  [█████████████████████████████░]  99.6%  LDS/SMEM-wait  ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:396
+    2      6.9K   15.83%  [████████████████████████░░░░░░]  81.7%  VMEM-wait     ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:309
+    3       496    1.14%  [████████████░░░░░░░░░░░░░░░░░░]  42.0%  VMEM-load     ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:409
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     36.1K   83.03%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ls/mla_fwd_decode_m16x8_fp8_fp8.py:396
+    2      5.9K   13.46%  VMEM-wait     s_waitcnt vmcnt(0)                                ls/mla_fwd_decode_m16x8_fp8_fp8.py:309
+    3       708    1.63%  other         v_lshrrev_b32_e32 v2, 6, v0                       ls/mla_fwd_decode_m16x8_fp8_fp8.py:309
+    4       496    1.14%  VMEM-load     buffer_load_dwordx2 v[4:5], v1, s[4:7], 0 offen   ls/mla_fwd_decode_m16x8_fp8_fp8.py:409
+    5       188    0.43%  other         v_mov_b32_e32 v181, 0                             ls/mla_fwd_decode_m16x8_fp8_fp8.py:309
+    6       132    0.30%  other         v_readfirstlane_b32 s42, v2                       ls/mla_fwd_decode_m16x8_fp8_fp8.py:309
+
+

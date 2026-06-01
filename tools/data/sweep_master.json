@@ -1,0 +1,488 @@
+{
+  "provenance": {
+    "flydsl_version": "0.1.9.dev594",
+    "flydsl_commit": "18c5a7ed",
+    "flydsl_branch": "docs/update-compile-pipeline",
+    "gpu": "AMD Instinct MI350X (gfx950, CDNA4)",
+    "gpu_count": 8,
+    "rocm": "7.2.0",
+    "rocprofv3": "1.1.0",
+    "capture_date": "2026-06-01"
+  },
+  "kernels": [
+    {
+      "test": "test_flash_attn_func.py",
+      "kernels": [
+        "flash_attn_func_kernel"
+      ],
+      "op_category": "attention",
+      "flydsl_us": 11.0,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": 3.1,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 11.0
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 3.6,
+      "ck_baseline_candidate": "aiter.mha_fwd with softmax_scale=1/sqrt(head_dim), causal=True",
+      "aiter_comparable": "aiter.mha_fwd (CK backend) or aiter.fmha_v3_fwd (ASM backend, bf16 only)",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_mla_decode.py",
+      "kernels": [
+        "kn_mla_fwd_decode_m16x8_fp8_fp8"
+      ],
+      "op_category": "attention",
+      "flydsl_us": 12.23,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": 1.46,
+      "tbps": 0.02,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl_p50": 12.23
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 8.7,
+      "ck_baseline_candidate": "hipBLASLt-based paged attention if available; else DeepSeek-V3 reference attention",
+      "aiter_comparable": "aiter.hk_mla_decode_fwd + aiter.mla_decode_stage1_asm_fwd",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_pa.py",
+      "kernels": [
+        "pa_decode_ps_kernel",
+        "compile_pa_decode_sw",
+        "compile_pa_decode_sw_reduce"
+      ],
+      "op_category": "attention",
+      "flydsl_us": 169.5,
+      "baseline_us": 80.6,
+      "baseline_name": "AIter Gluon (pa_decode_gluon)",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {},
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 6.4,
+      "ck_baseline_candidate": "No CK baseline available; use AIter Gluon pa_decode_gluon as reference. For paged-attention performance comparison, AIter uses Triton Gluon compiled at runtime.",
+      "aiter_comparable": "torch.ops.aiter.pa_decode_gluon (Gluon reference paged-attention kernel; invoked via run_gluon_ps() at test_pa.py:802\u2013823)",
+      "status": "ok",
+      "note": "timing read from harness CSV (us_flydsl_ps vs us_gluon); shape b=3 c=1027 nq=8 nkv=1 d=128 fp8 per_token",
+      "speedup_vs_baseline": 0.476,
+      "verdict": "FlyDSL slower"
+    },
+    {
+      "test": "test_vec_add.py",
+      "kernels": [
+        "vecAddKernel"
+      ],
+      "op_category": "elementwise",
+      "flydsl_us": null,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": null,
+      "tbps": 6710.8,
+      "bandwidth_gbs": 6468.37,
+      "speedup_reported": null,
+      "us_detail": {},
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 3.0,
+      "ck_baseline_candidate": "Not applicable (vector add is elementwise; rocBLAS/CK target GEMM/reduction)",
+      "aiter_comparable": "torch.add (PyTorch baseline already in test)",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "bench_preshuffle_gemm_v2.py",
+      "kernels": [
+        "kernel_gemm"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": 447.9,
+      "baseline_us": 538.2,
+      "baseline_name": "FlyDSL v1 (manual, pre-layout-API)",
+      "tflops": 767.2,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "v2": 2.0,
+        "old": 2.0
+      },
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 3.8,
+      "ck_baseline_candidate": "rocBLAS or hipBLASLt fp16/bf16 128x5120x8192 tiled GEMM",
+      "aiter_comparable": "false",
+      "status": "ok",
+      "speedup_vs_baseline": 1.202,
+      "verdict": "FlyDSL faster"
+    },
+    {
+      "test": "test_blockscale_preshuffle_gemm.py",
+      "kernels": [
+        "bs_gemm_bf16_direct_t64x128x128",
+        "rocdl.mfma_scale_f32_16x16x128_f8f6f4"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": 155.7,
+      "baseline_us": 102.3,
+      "baseline_name": "AIter CK a8w8_blockscale_bpreshuffle (TUNED config)",
+      "tflops": 869.07,
+      "tbps": 1.389,
+      "bandwidth_gbs": null,
+      "speedup_reported": 0.83,
+      "us_detail": {},
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 6.1,
+      "ck_baseline_candidate": "CK gemm A8W8 blockscale_bpreshuffle (weight layout 16x16, scale_block 128x128)",
+      "aiter_comparable": "aiter.gemm_a8w8_blockscale_bpreshuffle",
+      "status": "ok",
+      "speedup_vs_baseline": 0.66,
+      "verdict": "FlyDSL slower"
+    },
+    {
+      "test": "test_fp8_gemm_rowscale.py",
+      "kernels": [
+        "kernel_gemm (fp8_gemm_4wave)",
+        "kernel_gemm (fp8_gemm_8wave)"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": null,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {},
+      "ok": false,
+      "correctness_seen": false,
+      "wall_s": 8.5,
+      "ck_baseline_candidate": "rocBLAS fp8_mm or CK scaled_gemm for FP8 with row-wise scales",
+      "aiter_comparable": "torch._scaled_mm (with --vs_torch flag)",
+      "status": "compile_fail",
+      "note": "flyc.compile(): missing _reusable_slot_spec on fast-dispatch path (fp8_gemm_4wave, M=4096 N=4096 K=4096 tile256). Real finding: this kernel path fails to compile in this build.",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_hgemm_splitk.py",
+      "kernels": [
+        "hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": 7.0,
+      "baseline_us": 11.6,
+      "baseline_name": "PyTorch",
+      "tflops": 25.09,
+      "tbps": 0.853,
+      "bandwidth_gbs": null,
+      "speedup_reported": 1.656,
+      "us_detail": {
+        "torch": 11.6,
+        "flydsl": 7.0
+      },
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 6.6,
+      "ck_baseline_candidate": "rocBLAS hemm or hgemm (MI350X tuned); CK GEMM bf16 for comparison",
+      "aiter_comparable": "torch.mm(a_bf16, b_bf16.T) via torch.cuda.Event timing",
+      "status": "ok",
+      "speedup_vs_baseline": 1.657,
+      "verdict": "FlyDSL faster"
+    },
+    {
+      "test": "test_moe_gemm.py",
+      "kernels": [
+        "moe_gemm1",
+        "moe_gemm2"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": 142.9,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": 93.01,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl_s1": 69.3,
+        "flydsl_s2": 73.6,
+        "flydsl_total": 142.9
+      },
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 8.1,
+      "ck_baseline_candidate": "ck_moe_stage1_fwd,ck_moe_stage2_fwd",
+      "aiter_comparable": "moe_gemm1,moe_gemm2",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_preshuffle_gemm.py",
+      "kernels": [
+        "preshuffle_gemm.kernel_gemm",
+        "preshuffle_gemm_v2.kernel_gemm"
+      ],
+      "op_category": "gemm",
+      "flydsl_us": 102.0,
+      "baseline_us": 78.1,
+      "baseline_name": "AIter CK a8w8 bpreshuffle (untuned default config)",
+      "tflops": 1347.41,
+      "tbps": 458.15,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 4.6
+      },
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 6.3,
+      "ck_baseline_candidate": "rocblas_gemm_ex or composable_kernels preshuffle fp8 variant",
+      "aiter_comparable": "aiter.gemm_a8w8_bpreshuffle",
+      "status": "ok",
+      "speedup_vs_baseline": 0.766,
+      "verdict": "FlyDSL slower"
+    },
+    {
+      "test": "test_moe_blockscale.py",
+      "kernels": [
+        "moe_blockscale_gemm1",
+        "moe_blockscale_gemm2"
+      ],
+      "op_category": "moe",
+      "flydsl_us": 53.8,
+      "baseline_us": 44.0,
+      "baseline_name": "CK",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl_total": 53.8,
+        "aiter": 52.8,
+        "ck_s1": 33.5,
+        "ck_s2": 10.5,
+        "flydsl_s1": 48.6,
+        "flydsl_s2": 5.2,
+        "ck_total": 44.0
+      },
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 5.8,
+      "ck_baseline_candidate": "ck_moe_stage1_fwd and ck_moe_stage2_fwd from aiter.ops.moe_op (blockscale)",
+      "aiter_comparable": "aiter.fmoe_fp8_blockscale_g1u1 (fused 1-stage)",
+      "status": "ok",
+      "speedup_vs_baseline": 0.818,
+      "verdict": "FlyDSL slower"
+    },
+    {
+      "test": "test_topk_gating_softmax.py",
+      "kernels": [
+        "topk_gating_softmax_kernel"
+      ],
+      "op_category": "moe",
+      "flydsl_us": 24.5,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 24.5
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 3.3,
+      "ck_baseline_candidate": "vLLM::topk_gating_softmax (reference: softmax + topk + renormalization)",
+      "aiter_comparable": "None",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_layernorm.py",
+      "kernels": [
+        "layernorm_kernel"
+      ],
+      "op_category": "norm",
+      "flydsl_us": 24.1,
+      "baseline_us": 24.7,
+      "baseline_name": "AIter",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": 1490.17,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 24.1,
+        "aiter": 24.7
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 5.0,
+      "ck_baseline_candidate": "CK LayerNorm (ck_launch_and_time baseline if available)",
+      "aiter_comparable": "aiter.ops.triton.norm.layer_norm",
+      "status": "ok",
+      "speedup_vs_baseline": 1.025,
+      "verdict": "comparable"
+    },
+    {
+      "test": "test_rmsnorm.py",
+      "kernels": [
+        "rmsnorm_kernel",
+        "rmsnorm_large_m_small_n_kernel"
+      ],
+      "op_category": "norm",
+      "flydsl_us": 25.1,
+      "baseline_us": 22.4,
+      "baseline_name": "AIter",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": 4729.73,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 25.1,
+        "aiter": 22.4
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 4.6,
+      "ck_baseline_candidate": "none (RMSNorm is a reduction/normalization op, not GEMM; rocBLAS does not provide RMSNorm)",
+      "aiter_comparable": "aiter.ops.triton.rmsnorm.rms_norm",
+      "status": "ok",
+      "speedup_vs_baseline": 0.892,
+      "verdict": "FlyDSL slower"
+    },
+    {
+      "test": "test_quant.py",
+      "kernels": [
+        "quant_kernel"
+      ],
+      "op_category": "quant",
+      "flydsl_us": null,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": 5910.18,
+      "speedup_reported": 0.95,
+      "us_detail": {},
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 5.2,
+      "ck_baseline_candidate": "none",
+      "aiter_comparable": "per_token_quant_hip",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_moe_reduce.py",
+      "kernels": [
+        "moe_reduction_kernel"
+      ],
+      "op_category": "reduction",
+      "flydsl_us": null,
+      "baseline_us": null,
+      "baseline_name": null,
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": 26.86,
+      "speedup_reported": null,
+      "us_detail": {},
+      "ok": true,
+      "correctness_seen": false,
+      "wall_s": 3.1,
+      "ck_baseline_candidate": "N/A (reduction, not GEMM; torch.sum is built-in baseline)",
+      "aiter_comparable": "torch.sum(dim=1) on [1,6,5120] f16 tensor",
+      "status": "ok",
+      "speedup_vs_baseline": null,
+      "verdict": null
+    },
+    {
+      "test": "test_softmax.py",
+      "kernels": [
+        "softmax_kernel"
+      ],
+      "op_category": "reduction",
+      "flydsl_us": 271.8,
+      "baseline_us": 558.0,
+      "baseline_name": "AIter",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": 5246.7,
+      "speedup_reported": null,
+      "us_detail": {
+        "flydsl": 271.8,
+        "aiter": 558.0
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 4.8,
+      "ck_baseline_candidate": "none (softmax is elementwise reduction; no direct CK/rocBLAS baseline. PyTorch softmax torch.nn.functional.softmax serves as reference.)",
+      "aiter_comparable": "aiter.ops.triton.softmax",
+      "status": "ok",
+      "speedup_vs_baseline": 2.053,
+      "verdict": "FlyDSL faster"
+    },
+    {
+      "test": "test_fused_rope_cache.py",
+      "kernels": [
+        "fused_qk_rope_reshape_and_cache"
+      ],
+      "op_category": "rope",
+      "flydsl_us": 219.6,
+      "baseline_us": 37.5,
+      "baseline_name": "AIter",
+      "tflops": null,
+      "tbps": null,
+      "bandwidth_gbs": null,
+      "speedup_reported": 0.17,
+      "us_detail": {
+        "flydsl": 219.6,
+        "aiter": 37.5
+      },
+      "ok": true,
+      "correctness_seen": true,
+      "wall_s": 6.3,
+      "ck_baseline_candidate": "false",
+      "aiter_comparable": "true",
+      "status": "ok",
+      "speedup_vs_baseline": 0.171,
+      "verdict": "FlyDSL slower"
+    }
+  ],
+  "deferred": [
+    {
+      "test": "test_allreduce.py",
+      "reason": "multi-GPU + torch.distributed; needs 2+ ranks",
+      "op_category": "comm"
+    },
+    {
+      "test": "test_flydsl_shmem.py",
+      "reason": "mori shmem, 2 PEs, no perf print",
+      "op_category": "comm"
+    }
+  ]
+}

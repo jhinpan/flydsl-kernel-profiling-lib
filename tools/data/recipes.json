@@ -1,0 +1,456 @@
+[
+  {
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_softmax.py",
+    "kernels": [
+      "softmax_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "reduction",
+    "runnable_standalone": true,
+    "invocation": "HIP_VISIBLE_DEVICES=0 ROCDSL_COMPARE_AITER=1 ROCDSL_SOFTMAX_SHAPES=\"32768,8192,bf16\" python tests/kernels/test_softmax.py",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.ops.triton.softmax",
+    "ck_baseline_candidate": "none (softmax is elementwise reduction; no direct CK/rocBLAS baseline. PyTorch softmax torch.nn.functional.softmax serves as reference.)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "VERIFIED HARNESS: test_all() calls run_test(M=32768, N=8192, dtype=\"bf16\") by default. Kernel entry: softmax_kernel (KERNEL_NAME constant at line 25). Launch fn: launch_softmax via build_softmax_module(). Timing: bench_gpu_us_torch() at line 94 records HIP events via torch.cuda.Event with warmup=10, iters=100. Prints FlyDSL GPU time at line 101: \"[Perf] FlyDSL softmax gpu: {us:.1f} us\". AIter optional via ROCDSL_COMPARE_AITER=1; imports aiter.ops.triton.softmax at line 172, runs on same M,N,dtype, prints \"[Perf] AIter softmax gpu: {us:.1f} us\" at line 184. Shape pinning: env var ROCDSL_SOFTMAX_SHAPES=\"M,N,dtype;...\" overrides default 32768x8192xbf16. Arch: kernel is wave64 (CDNA via get_warp_size() in kernels_common.py line 74), targets gfx950 via MFMA through buffer copy atoms (BufferCopy128b/32b). No gfx1250/RDNA paths. Generic scalar path always used for arbitrary N. Bandwidth calculated at line 97 as (2*M*N*(4 if f32 else 2))/(time_s). Correctness verified vs torch.softmax() at line 66 with dtype-dependent tolerance (f32:1e-5, f16:1e-2, bf16:2e-2).",
+    "shape_env": {
+      "ROCDSL_SOFTMAX_SHAPES": "M,N,dtype format; semicolon-separated; example: \"32768,8192,bf16\" or \"64,256,f32;128,1024,f16\"",
+      "ROCDSL_COMPARE_AITER": "set to 1 to enable AIter timing (optional, for perf comparison)"
+    },
+    "metric_lines": [
+      "Kernel avg time: {:.4f} ms via run_perftest",
+      "Bandwidth: {:.2f} GB/s",
+      "[Perf] FlyDSL softmax gpu: {:.1f} us",
+      "[Perf] AIter softmax gpu: {:.1f} us",
+      "Max Absolute Error: {:.2e}"
+    ]
+  },
+  {
+    "test_file": "tests/kernels/test_rmsnorm.py",
+    "kernels": [
+      "rmsnorm_kernel",
+      "rmsnorm_large_m_small_n_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "norm",
+    "runnable_standalone": true,
+    "invocation": "HIP_VISIBLE_DEVICES=0 ROCDSL_COMPARE_AITER=1 ROCDSL_RMSNORM_SHAPES=\"1024,8192,bf16\" python tests/kernels/test_rmsnorm.py",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.ops.triton.rmsnorm.rms_norm",
+    "ck_baseline_candidate": "none (RMSNorm is a reduction/normalization op, not GEMM; rocBLAS does not provide RMSNorm)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "SMALLER SHAPE RECOMMENDED FOR PROFILING: Default config uses M=32768, N=8192, bf16 which takes ~100ms per iteration (many JIT compilations on first run). Use ROCDSL_RMSNORM_SHAPES=\"1024,8192,bf16\" to reduce to ~3ms per iteration. Kernel paths: (1) Fast path fires when N is multiple of (256*8)=2048 and bf16 uses vectorized 128b copy_atom; (2) generic path for arbitrary N uses scalar copy_atom. Default shape exercises fast path. BLOCK_THREADS=256, WARP_SIZE=64. Kernel entry fn: launch_rmsnorm (calls rmsnorm_kernel JIT). rocprofv3 kernel_include_regex: \"rmsnorm.*\". Printing: line 125 prints \"[Perf] FlyDSL rmsnorm gpu: X.X us\" when ROCDSL_COMPARE_AITER=1. AIter baseline via aiter.ops.triton.rmsnorm.rms_norm (imported at line 187). Verified pattern matches test_softmax.py. Clean output via 'ALL TESTS PASSED'. No multi-GPU or graph mode."
+  },
+  {
+    "test_file": "tests/kernels/test_layernorm.py",
+    "kernels": [
+      "layernorm_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "norm",
+    "runnable_standalone": true,
+    "invocation": "HIP_VISIBLE_DEVICES=0 ROCDSL_LAYERNORM_SHAPES=\"256,8192,bf16\" python tests/kernels/test_layernorm.py",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.ops.triton.norm.layer_norm",
+    "ck_baseline_candidate": "CK LayerNorm (ck_launch_and_time baseline if available)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "\nKernel: 2-path block-wise LayerNorm (one block per row, 256 threads).\n- Fast path (N == 8192): vectorized 128b BufferCopy via layout API, register caching, pipelined gamma/beta (lines 126-220).\n- Generic path (arbitrary N): scalar 2-pass with 16b/32b BufferCopy (lines 221-298).\n\nEntry point: `launch_layernorm(Input, Gamma, Beta, Output, m_in, stream)` (line 301-314 in kernels/layernorm_kernel.py).\nKernel name: `layernorm_kernel` (device @flyc.kernel at line 51).\n\nTest harness (test_layernorm.py):\n- __main__ -> test_all() (line 226-227).\n- Shape config via ROCDSL_LAYERNORM_SHAPES env var; default (32768, 8192, bf16) commented out, uses large shape.\n- Timing via run_perftest (HIP events), prints \"Kernel avg time: X.XXXX ms\", \"Bandwidth: X.XX GB/s\", \"[Perf] FlyDSL layernorm gpu: X.X us\" (lines 113-127).\n- AIter comparable (aiter.ops.triton.norm.layer_norm) enabled via ROCDSL_COMPARE_AITER=1 (line 189, 200).\n\nSmallest representative shape: 256x8192 bf16. Uses fast path (N = 256*8*4 = 8192), JITs quickly, prints perf. Bandwidth calc: (2*256*8192 + 2*8192)*2 = ~4.3 MB (fast), GPU time <1 ms typical.\n\nNo rocprofv3 kernel_include_regex needed (kernel name \"layernorm_kernel\" is straightforward).\nTarget: MI350X gfx950, bf16 datatype, MFMA-based reductions.\n",
+    "shape_env": {
+      "M": "256",
+      "N": "8192",
+      "dtype": "bf16"
+    },
+    "metric_lines": [
+      "Kernel avg time:",
+      "Bandwidth:",
+      "[Perf] FlyDSL layernorm gpu:"
+    ],
+    "cli_flags": "ROCDSL_LAYERNORM_SHAPES=256,8192,bf16 ROCDSL_COMPARE_AITER=1",
+    "kernel_name_hint": "layernorm_kernel"
+  },
+  {
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_topk_gating_softmax.py",
+    "kernels": [
+      "topk_gating_softmax_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "moe",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_topk_gating_softmax.py",
+    "prints_gpu_us": true,
+    "aiter_comparable": "None",
+    "ck_baseline_candidate": "vLLM::topk_gating_softmax (reference: softmax + topk + renormalization)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "metric_lines": [
+      "[Perf] FlyDSL topk_gating_softmax gpu: X.X us",
+      "Kernel avg time: X.XXXX ms"
+    ],
+    "cli_flags": "--tb=short (pytest; inherent in test_all())",
+    "notes": "Single-kernel, correctness-gated MoE gating operator (softmax + top-K selection + optional renormalization). Default test_all() runs 4 shapes: (1024x128xk6, bf16), (512x64xk2, bf16), (256x8xk2, f32), (128x128xk6, f16). For fastest JIT + perf capture, pin smallest shape with ROCDSL_TOPK_GATING_SHAPES=256,8,2,f32; at 38 KB total working set, JIT will be sub-second. Kernel is pure CDNA wave64 (no RDNA path), uses sub-warp butterfly reductions with no shared memory. Outputs printed: (1) per-config correctness pass/fail; (2) indices match % vs torch.topk (tolerant of K-th boundary ties in bf16/f16); (3) weight max error (sorted); (4) token_expert_indices validity; (5) renormalization sum error; (6) GPU timing via torch.cuda.Event if HIP_VISIBLE_DEVICES set. AIter comparable field is None because test does not wire AIter comparison (only FlyDSL GPU timing via bench_gpu_us_torch when ROCDSL_COMPARE_AITER=1, but aiter_gpu_us stays None in perf table). CK baseline would be vLLM's topk_gating_softmax kernel (used in MoE router inference pipelines). rocprofv3 kernel name hint: search for \"topk_gating_softmax_kernel\" in traces.",
+    "shape_env": {
+      "ROCDSL_TOPK_GATING_SHAPES": "256,8,2,f32"
+    }
+  },
+  {
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_quant.py",
+    "kernels": [
+      "quant_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "quant",
+    "runnable_standalone": true,
+    "invocation": "FLYDSL_RUN_QUANT=1 HIP_VISIBLE_DEVICES=0 python tests/kernels/test_quant.py -m 4096 -n 8192",
+    "prints_gpu_us": true,
+    "aiter_comparable": "per_token_quant_hip",
+    "ck_baseline_candidate": "none",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Per-token quantization kernel: per-row max|x| find, scale = max_abs/127, output[i] = fptosi(x[i]/scale). Layout API with buffer-backed tensors, copy atoms for 128b f16 reads (8xf16) and 64b i8 writes (8xi8). Wave64 reduction (CDNA gfx950). Prints: \"Bandwidth: X GB/s\" and details in benchmark_per_token_quant(). AIter baseline (per_token_quant_hip) available when HAS_AITER=True (try-import aiter.ops.quant). Config output shows M/N/block_size/loops/memory_traffic. To enable test pass FLYDSL_RUN_QUANT=1. Timings via run_perftest returns (data, avg_us); avg_us prints via get_trace_perf. Default shapes M=4096, N=8192; override with -m/-n or --multi-test. Arch-agnostic (uses get_rocm_arch() for wave_size detection). No rocprofv3 kernel regex hint needed\u2014kernel name is quant_kernel. Benchmark also runs correctness check on output_diff and scale_diff vs reference.",
+    "shape_env": {},
+    "kernel_name_hint": "quant_kernel",
+    "metric_lines": [
+      "Bandwidth: \\d+\\.\\d+ GB/s",
+      "\\[Perf\\] FlyDSL.*: \\d+\\.\\d+ us",
+      "\\[Perf\\] Reference.*: \\d+\\.\\d+ us",
+      "Speedup: \\d+\\.\\d+x"
+    ],
+    "cli_flags": "-m 4096 -n 8192"
+  },
+  {
+    "test_file": "tests/kernels/test_fused_rope_cache.py",
+    "kernels": [
+      "fused_qk_rope_reshape_and_cache"
+    ],
+    "arch": "gfx950",
+    "op_category": "rope",
+    "runnable_standalone": true,
+    "invocation": "FLYDSL_BENCH=1 python tests/kernels/test_fused_rope_cache.py",
+    "prints_gpu_us": true,
+    "aiter_comparable": "true",
+    "ck_baseline_candidate": "false",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "cli_flags": "--all-models (opt-in for cross-model sweep; default runs GPT-OSS TP8)",
+    "kernel_name_hint": "fused_qk_rope_reshape_and_cache",
+    "shape_env": {},
+    "metric_lines": [
+      "[Perf] FlyDSL softmax gpu: \\d+\\.\\d+ us (note: code prints 'fly_us', 'aiter_us', 'speedup' keys to errs dict)",
+      "[Perf].*speedup=\\d+\\.\\d+x (AIter comparison when AITER_REPO set or aiter installed)"
+    ],
+    "notes": "RECIPE: (A) Default invocation runs 1 representative model (GPT-OSS TP8: 8 Q-heads, 1 KV-head, D=64) with T=1/32/128 (decode/prefill), flash+nonflash layouts, across 6 categories (decode, prefill, nonflash, pos_dtype i32/i64, reuse_freqs, fp8 cache). Each category prints [PASS/FAIL] with q/k/kc/vc max errors and optional benchmark timings (fly_us, aiter_us, speedup). (B) FLYDSL_BENCH=1 enables GPU timing via _bench_gpu_us() (20 warmup, 200 iters, torch.cuda.Event), prints fly_us and aiter_us only when HAS_AITER=True (requires AITER_REPO env var or aiter package). (C) Single-kernel config: head_dim=64, num_q_heads=8, num_kv_heads=1, num_tokens=1 (smallest/fastest JIT), flash_layout=True, dtype_str='bf16', apply_scale=False, reuse_freqs_front_part=True, pos_dtype='i32', block_size=16, max_pos=8192. (D) Grid: (max(8,1)=8, 1, 1) threads, block (WARP_SIZE=64 on gfx950, 1, 1). Kernel launch via _jit_launch_fused_rope_cache -> fused_qk_rope_reshape_and_cache. (E) JIT config: fused_rope_cache_kernel.build_fused_rope_cache_module(head_dim=64, num_q_heads=8, num_kv_heads=1, block_size=16, flash_layout=True, dtype_str='bf16', apply_scale=False, reuse_freqs_front_part=True, pos_dtype='i32'). (F) AIter comparable: aiter.ops.triton.fusions.fused_kv_cache.fused_qk_rope_reshape_and_cache (Triton kernel). (G) Timing output captured in run_test() errs dict: keys 'fly_us' (FlyDSL \u00b5s), 'aiter_us' (AIter \u00b5s), 'speedup' (ratio). (H) No CK/rocBLAS direct baseline\u2014this is a fused rope+cache op (unique to attention), not a standalone matrix multiply. AIter Triton is the primary cross-check. (I) SMALLEST SHAPE (T=1, all D=64, single token): jits to ~1-2s, runs in <1\u00b5s; prefill (T=128) may be 10-100x slower. (J) Correctness: max 10 tests per config, fp8 path skipped on non-CDNA (gfx10xx/gfx11xx/gfx12xx). Target gfx950 has zero-sized fp8 quantization (e4m3fn) and MFMA MMA atoms; respects 160KB LDS. (K) Architecture key: gfx950 is CDNA4 (wave64), VEC_WIDTH auto-tuned to ceil(D/64) (=1 for D=64), vecs_per_head=64, BLOCK_THREADS=64. No RDNA skips. Entry: launch_fused_rope_cache wraps _jit_launch_fused_rope_cache + mark_layout_dynamic for dynamic T."
+  },
+  {
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_pa.py",
+    "kernels": [
+      "pa_decode_ps_kernel",
+      "compile_pa_decode_sw",
+      "compile_pa_decode_sw_reduce"
+    ],
+    "arch": "gfx950",
+    "op_category": "attention",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_pa.py -q 1 -b 3 -c 1027 -n 8,1 --block_size 1024 --quant_mode per_token --trans_v true --kv_varlen false --context_partition_size 256 --sliding_window 0",
+    "prints_gpu_us": true,
+    "aiter_comparable": "torch.ops.aiter.pa_decode_gluon (Gluon reference paged-attention kernel; invoked via run_gluon_ps() at test_pa.py:802\u2013823)",
+    "ck_baseline_candidate": "No CK baseline available; use AIter Gluon pa_decode_gluon as reference. For paged-attention performance comparison, AIter uses Triton Gluon compiled at runtime.",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "shape_env": {
+      "query_length": "1",
+      "batch_size": "3",
+      "context_length": "1027",
+      "num_query_heads": "8",
+      "num_kv_heads": "1",
+      "head_dim": "128",
+      "block_size": "1024",
+      "quant_mode": "per_token",
+      "trans_v": "true",
+      "kv_varlen": "false",
+      "sliding_window": "0"
+    },
+    "cli_flags": "-q 1 -b 3 -c 1027 -n 8,1 --block_size 1024 --quant_mode per_token --trans_v true --kv_varlen false --context_partition_size 256 --sliding_window 0",
+    "kernel_name_hint": "pa_decode_ps_kernel (launch grid=(num_sm, 1, TILES_PER_BLOCK), block=(BLOCK_THREADS, 1, 1) at pa_decode_fp8.py:1708). PS mode uses dynamic work distribution via compile_pa_decode_ps(). For kernel capture, filter: 'pa_decode.*kernel|pa_decode.*launch'",
+    "metric_lines": [
+      "flydsl_ps_time = measure_us(flydsl_ps_call)",
+      "us_flydsl_ps",
+      "err_flydsl_ps",
+      "flydsl_ps_max_diff",
+      "gluon_time (if HAS_GLUON)",
+      "us_gluon"
+    ],
+    "notes": "\nCRITICAL: This is test_pa.py's __main__ entry point (normal_accuracy_test \u2192 sliding_window_accuracy_test). The harness is a REGRESSION TEST that compares FlyDSL PS (persistent scheduling) PA decode to:\n1. Torch reference (reference_masked_attention + torch_mha_extend) \u2014 correctness baseline.\n2. AIter Gluon pa_decode_gluon (if HAS_GLUON=True) \u2014 performance comparison.\n\nKERNELS: Two main FlyDSL kernel implementations:\n- ps_normal: compile_pa_decode_ps() \u2192 pa_decode_ps_kernel (persistent scheduling; normal/sliding-window phase)\n- ps_reduce: compile_pa_decode_sw_reduce() (reduce phase for sliding-window mode).\n\nTIMING: measure_us() uses torch.cuda.Event with 3 warmups + 10 iters; CUDA graph capture attempted if use_cuda_graph=True.\nOutput format: \"us_flydsl_ps: float (microseconds)\"; csv saved to run_pa_decode_ps_test.ps_normal_accuracy.block_size_1024.triton.*.csv\n\nSMALLEST SHAPE (for fastest JIT): query_length=1, batch_size=3, context_length=1027, num_heads=(8,1), head_dim=128, block_size=1024.\nScaling up: For larger shapes, increase batch_size (3\u219281), context_length (1027\u21928192), or query_length (1\u21924).\nCaution: Large context (8192) + batch (128) with sliding_window > 0 runs multiple kernels (encode + reduce); budget ~20-60 GB/s throughput for full test suite.\n\nPRECISION: fp8 (quantized K/V) + bf16 (query/output). Per-token quantization (smaller scales tensor). Per-tensor is faster but lower precision.\n\nVALIDATION: Test PASSES if err_flydsl_ps == 0 AND all diffs <= tolerance (see get_tolerance()). Set --sample_rate=1.0 or lower to control test case count.\n\nARCH: gfx950 only (uses MFMA, MI350X). Will JIT fail if ARCH != gfx950 in build or device; no special gfx1250/RDNA branch in pa_decode_ps_kernel, but uses get_hip_arch() from flydsl.runtime.device.\n\nENV: Set PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab before running. No ROCDSL_*_SHAPES env vars (uses argparse). JIT cache: FLYDSL_RUNTIME_ENABLE_CACHE=1 recommended for graph capture.\n"
+  },
+  {
+    "test_file": "tests/kernels/test_mla_decode.py",
+    "kernels": [
+      "kn_mla_fwd_decode_m16x8_fp8_fp8"
+    ],
+    "arch": "gfx950",
+    "op_category": "attention",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_mla_decode.py -b 1 -c 64",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.hk_mla_decode_fwd + aiter.mla_decode_stage1_asm_fwd",
+    "ck_baseline_candidate": "hipBLASLt-based paged attention if available; else DeepSeek-V3 reference attention",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "BLOCK_N=64 single-tile on gfx950 (CDNA4). Kernel: kn_mla_fwd_decode_m16x8_fp8_fp8 (lines 309\u20132070), launched via @flyc.jit launch_mla_fwd_decode_m16x8_fp8_fp8 (lines 2072\u20132105). JIT: @flyc.kernel decorator, MLIR compilation. Timing: run_perftest() in test_common.py (line 149) uses torch.cuda HIP events, runs warmup=20 iters, then num_iters=100, repeats=3 times; filters outliers via IQR, reports median us_p50 and range. Perf output: \"TFLOPS={flops / us / 1e6:.2f} TB/s={bw / us / 1e6:.2f} us_p50={us:.2f} us_range=[min_us, max_us]\" (lines 400\u2013403). AIter benchmarks available via --bench_aiter flag (lines 407\u2013467, 494). Shapes: hardcoded to batch=1, ctx_len=64 (single KV tile, BLOCK_N=64). All sizes fit gfx950 LDS budget (V3_TOTAL_LDS_BYTES=84736 bytes). No env-var shape override; use CLI args. Expected TFLOPS ~60\u201380, TB/s ~100\u2013150 for MI350X at clock ~2.5 GHz.",
+    "shape_env": {
+      "batch_size": "1",
+      "ctx_len": "64",
+      "decode_qlen": "1",
+      "nhead": "128",
+      "nhead_kv": "1",
+      "qk_head_dim": "576",
+      "v_head_dim": "512",
+      "page_size": "1"
+    },
+    "metric_lines": [
+      "  cos_diff=.*  TFLOPS=.*  TB/s=.*  err_ratio=.*  us_p50=.*  us_range="
+    ]
+  },
+  {
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_flash_attn_func.py",
+    "kernels": [
+      "flash_attn_func_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "attention",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_flash_attn_func.py --batch 1 --seq_len 128 --num_heads 8 --head_dim 128 --warmup 5 --iters 20",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.mha_fwd (CK backend) or aiter.fmha_v3_fwd (ASM backend, bf16 only)",
+    "ck_baseline_candidate": "aiter.mha_fwd with softmax_scale=1/sqrt(head_dim), causal=True",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "metric_lines": [
+      "[Perf] FlyDSL flash_attn_func gpu: <time> us (from run_perftest profiler)",
+      "tflops = <calculated from flops / (us * 1e-6) / 1e12>"
+    ],
+    "notes": "Kernel timing: run_perftest returns (data, us) where us is microseconds from torch.profiler device_time_sum. Test harness calculates TFLOPS as flops / (us * 1e-6) / 1e12 where flops = 4.0*S*s_eff*D*H*B and s_eff = S/2 (causal) or S (non-causal). Smallest recommended shape is (1,128,8,128) to minimize JIT compile time while remaining representative of attention workload. Shape constraints: seq_len % 128 == 0, head_dim % 32 == 0 and >= 64. Test supports --causal / --no-causal flags; default runs both causal and non-causal. AIter comparison available with --compare flag (requires aiter package). Kernel JIT compiles on first invocation with build_flash_attn_func_module; uses custom LLVM tools if available (gfx950+ optimized path). Device kernel flash_attn_func_kernel defined at @flyc.kernel in flash_attn_func.py:257. Kernel entry: build_flash_attn_func_module returns exe callable with signature exe(Q_flat, K_flat, V_flat, O_flat, batch_size, seq_len). Expected kernel name in rocprofv3 kernel_include_regex: kernel substring contains 'flash_attn_func' or 'amdgcn.kernel' target. For gfx950 specifically: uses MFMA32 (K=16), HW transpose LDS read (ds_read_tr16_b64), 160KB LDS. Verify with HIP_VISIBLE_DEVICES=0 to ensure single GPU capture."
+  },
+  {
+    "test_file": "tests/kernels/test_hgemm_splitk.py",
+    "kernels": [
+      "hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_hgemm_splitk.py -m 32 -n 384 -k 7168 --dtype bf16 --TILE_M 32 --TILE_N 64 --TILE_K 256 --SPLIT_K 14 --BLOCK_M_WARPS 1 --BLOCK_N_WARPS 2 --BLOCK_K_WARPS 2 --num_warmup 3 --num_iters 50",
+    "prints_gpu_us": true,
+    "aiter_comparable": "torch.mm(a_bf16, b_bf16.T) via torch.cuda.Event timing",
+    "ck_baseline_candidate": "rocBLAS hemm or hgemm (MI350X tuned); CK GEMM bf16 for comparison",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "metric_lines": [
+      "[flyc] Throughput: {us:.1f} us, {tflops:.2f} TFLOPS, BW: {tbps:.3f} TB/s, Torch(us): {ref_us:.1f}, Speedup: {speedup:.3f}"
+    ],
+    "notes": "SMALLEST gfx950 param set (32x384x7168 GEMM) for fast JIT. Target kernel: hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14 (SPLIT_K=14, ASYNC_COPY=True via gfx950 path, B_TO_LDS=True). Grid=(6,14,1), Block=(256,1,1). Test runs: (1) torch.mm baseline via run_perftest with HIP events, (2) hgemm_splitk_ kernel launch, reports GPU timing in microseconds. Prints: \"[flyc] Throughput: us, TFLOPS, BW TB/s, Torch reference, speedup ratio\". Perf extraction: parse \"Throughput:\" line for `us` (microseconds), `tflops` (TFLOPS), `tbps` (TB/s), `Speedup` ratio. No rocprofv3 needed \u2014 kernel perf via HIP event timing inside run_perftest. Correctness verified via torch.mm f32 reference at line 128. PYTHONPATH REQUIRED: /sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab. Command runs as __main__ (pytest skip decorator bypassed)."
+  },
+  {
+    "test_file": "tests/kernels/test_preshuffle_gemm.py",
+    "kernels": [
+      "preshuffle_gemm.kernel_gemm",
+      "preshuffle_gemm_v2.kernel_gemm"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_preshuffle_gemm.py -M 16 -N 1024 -K 2048 --tile_m 16 --tile_n 64 --tile_k 512 --num_iters 20 --num_warmup 3",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.gemm_a8w8_bpreshuffle",
+    "ck_baseline_candidate": "rocblas_gemm_ex or composable_kernels preshuffle fp8 variant",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Entry point: __main__ at line 445. Function: test_mfma_a8_flyc_preshuffle (line 91) for fp8/int8/bf16 activations; test_mfma_w4_flyc_preshuffle (line 304) for MXFP4 (gfx950-only). Kernel: @flyc.kernel kernel_gemm (line 313 in kernels/preshuffle_gemm.py) + @flyc.jit launch_gemm (line 777) which compiles and launches with wave64 MFMA. Timing: via run_perftest (line 238 or 420) which uses torch.cuda.Event for HIP timing, prints \"[flyc] Throughput: {us:.1f} us, {tflops:.2f} TFLOPS, BW: {tbps:.3f} TB/s\" (lines 288, 442). AIter enabled if HAS_AITER=True and run_aiter_bench=True (default); calls aiter.gemm_a8w8_bpreshuffle (line 260). Shapes: default M=16, N=10240, K=8192, tile_m=16, tile_n=64, tile_k=256 (lines 453-458). For rocprofv3 kernel matching: search for \"kernel_gemm\" in HSACO dump or use rocdl.kernel_gemm substring. JIT compiles in-memory; no persistent .o file. Verified on MI350X (gfx950) only. Default runs a8w8 preshuffle fp8 GEMM; --wfp4 flag enables gfx950-exclusive MXFP4 variant. No environment variable shape override (unlike test_softmax.py); use CLI args instead. Correctness validated via torch reference at line 252 or 433; epilogue modes (bias, bias_relu, bias_silu, bias_gelu) tested separately at line 640. CUDAGraph capture verified at line 529. Minimal fast-compile shape: M=16, N=1024, K=2048 (just 1 tile in M/N) with tile_m=16, tile_n=64, tile_k=512."
+  },
+  {
+    "test_file": "tests/kernels/bench_preshuffle_gemm_v2.py",
+    "kernels": [
+      "kernel_gemm"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "tests/kernels/bench_preshuffle_gemm_v2.py --dtype bf16 -M 128 -N 5120 -K 8192 --tile_m 64 --tile_n 128 --tile_k 64 --iters 20 --warmup 5",
+    "prints_gpu_us": true,
+    "aiter_comparable": "false",
+    "ck_baseline_candidate": "rocBLAS or hipBLASLt fp16/bf16 128x5120x8192 tiled GEMM",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Harness: bench_preshuffle_gemm_v2.py. Kernel entry point is compile_preshuffle_gemm_v2() which returns launch_gemm (@flyc.jit wrapper). kernel_gemm is the @flyc.kernel device code. Layout API-based preshuffle GEMM with double-buffered B, hot_loop_scheduler for gfx950 MFMA. Timing via HIP events in _bench_kernel() using torch.cuda.Event. Prints: (1) GPU arch auto-detected; (2) \"[title] (M=x, N=y, K=z)\" + table with columns \"tile k v2_us v2_TF old_us old_TF ratio err_v2 err_old\"; (3) one row per tile config. Smallest config: M=128,N=5120,K=8192,tile=64x128x64 (k_iters=2) JITs fast (~5-10s). For rocprofv3 kernel capture, match kernel function \"kernel_gemm*\" in generated ROCDL. No ROCDSL_* env var shape override (unlike softmax); pinning via CLI args --dtype/M/N/K/tile_*. AIter/CK comparison: harness does NOT call AIter (see test_softmax.py for pattern), only compares v2 vs v1 (old preshuffle path). For full baseline: use rocBLAS/hipBLASLt dgemm/sgemm fp16/bf16 128x5120x8192. PYTHONPATH required: /sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab.",
+    "metric_lines": [
+      "v2 us",
+      "v2 TF",
+      "old us",
+      "old TF",
+      "ratio"
+    ],
+    "shape_env": {},
+    "cli_flags": "--dtype bf16 -M 128 -N 5120 -K 8192 --tile_m 64 --tile_n 128 --tile_k 64 --iters 20 --warmup 5"
+  },
+  {
+    "test_file": "tests/kernels/test_blockscale_preshuffle_gemm.py",
+    "kernels": [
+      "bs_gemm_bf16_direct_t64x128x128",
+      "rocdl.mfma_scale_f32_16x16x128_f8f6f4"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_blockscale_preshuffle_gemm.py -M 16 -N 7168 -K 2304 --out_dtype bf16 --num_iters 20 --num_warmup 3",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.gemm_a8w8_blockscale_bpreshuffle",
+    "ck_baseline_candidate": "CK gemm A8W8 blockscale_bpreshuffle (weight layout 16x16, scale_block 128x128)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Test harness: FlyDSL blockscale preshuffle GEMM (FP8 A8W8 per-block scales, output bf16). Kernel def kernel_gemm() at line 139, compiled via compile_blockscale_preshuffle_gemm(). Module name: bs_gemm_bf16_direct_t64x128x128 (for M=16,N=7168,K=2304 auto-selects 64x128x128 tile). Timing via run_perftest() + torch.cuda.Event profiler: prints \"Throughput: X.X us, Y.YY TFLOPS, BW: Z.ZZZ TB/s\" (line 252). AIter comparable: aiter.gemm_a8w8_blockscale_bpreshuffle() line 258 (if HAS_AITER); validates correctness (atol=0.01, rtol=1e-2) and prints speedup ratio. MFMA kernel: rocdl.mfma_scale_f32_16x16x128_f8f6f4 (gfx950 scaled path line 541). Blockscale block shape: (128, 128) fixed (line 43). Smallest representative: M=16, N=7168, K=2304 (DS-7168x2304-M16, non-large_shape, JIT-fast, 0.53 GFLOPS nominal). PYTHONPATH required: /sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab. Arch: gfx950/gfx942 (uses gfx950 scale MFMA + async DMA). Run: HIP_VISIBLE_DEVICES=0 PYTHONPATH=... python tests/kernels/test_blockscale_preshuffle_gemm.py -M 16 -N 7168 -K 2304 --out_dtype bf16 --num_iters 20 --num_warmup 3. Output: throughput microseconds + TFLOPS + bandwidth + optional AIter speedup."
+  },
+  {
+    "test_file": "tests/kernels/test_fp8_gemm_rowscale.py",
+    "kernels": [
+      "kernel_gemm (fp8_gemm_4wave)",
+      "kernel_gemm (fp8_gemm_8wave)"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_fp8_gemm_rowscale.py -M 4096 -N 4096 -K 4096 --tile_m 256 --tile_n 256 --num_iters 10 --num_warmups 2",
+    "prints_gpu_us": true,
+    "aiter_comparable": "torch._scaled_mm (with --vs_torch flag)",
+    "ck_baseline_candidate": "rocBLAS fp8_mm or CK scaled_gemm for FP8 with row-wise scales",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "FP8 row-scale GEMM with two variants: 4-wave (BLOCK_M/N=64-256, uses XCD swizzle for load balancing) and 8-wave (BLOCK_M>=128, BLOCK_N>=256). Architecture check: requires gfx95* (CDNA4, MI350X). Kernel entry: compile_fp8_gemm_4w / compile_fp8_gemm_8w return @flyc.jit launch_gemm wrappers that call @flyc.kernel kernel_gemm with grid=(ceil(M/BLOCK_M)*ceil(N/BLOCK_N), 1, 1), block=(256,1,1). Timing via run_perftest (HIP events, 10 iters default, filtered IQR). Output pattern: \"[flyc] Throughput: X.X us, Y.YY TFLOPS, BW: Z.ZZZ TB/s\". For 4-wave use --tile_m 64 --tile_n 64 (smallest valid); for 8-wave use --tile_m 128 --tile_n 256. AIter baseline: torch._scaled_mm (use --vs_torch). JIT caches on K, BLOCK_M, BLOCK_N, use_xcd_remap, b_preshuffled params. Single-shape invocation: M=512, N=2112, K=7168 (first parametrized test case) avoids large 8192^3 which JITs slowly. Validation: verify_output checks output correctness (rtol/atol=0.1).",
+    "_orig_invocation": "python tests/kernels/test_fp8_gemm_rowscale.py -M 512 -N 2112 -K 7168 --tile_m 64 --tile_n 64 --num_iters 10 --num_warmups 2"
+  },
+  {
+    "test_file": "tests/kernels/test_moe_gemm.py",
+    "kernels": [
+      "moe_gemm1",
+      "moe_gemm2"
+    ],
+    "arch": "gfx950",
+    "op_category": "gemm",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_moe_gemm.py -t 32 -e 8 -k 2 -dim 6144,4096 --tile_m 32 --tile_n 128 --tile_k 256 --in_dtype fp8 --num_iters 5 --num_warmup 2",
+    "prints_gpu_us": true,
+    "aiter_comparable": "moe_gemm1,moe_gemm2",
+    "ck_baseline_candidate": "ck_moe_stage1_fwd,ck_moe_stage2_fwd",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "metric_lines": [
+      "FlyDSL MoE stage1\\[fp8\\]:",
+      "FlyDSL MoE stage2",
+      "\\[aiter\\] stage1:",
+      "[aiter] stage2:",
+      "TFLOPS",
+      "TB/s"
+    ],
+    "cli_flags": "--tokenNum 32 --expert 8 --topk 2 --dim 6144,4096 --tile_m 32 --tile_n 128 --tile_k 256 --in_dtype fp8 --num_iters 5 --num_warmup 2 --compare_aiter_ck true",
+    "kernel_name_hint": "moe_gemm_2stage",
+    "shape_env": {},
+    "notes": "RUNNABLE HARNESS: 2-stage MoE GEMM test harness with both stage1 (gate+up projection) and stage2 (output projection) kernels. Entry function: test_moe_gemm_2stage() at line 1746. JIT kernels: moe_gemm1 (line 281) and moe_gemm2 (line 3101) in kernels/moe_gemm_2stage.py. Default shape: tokens=32, model_dim=6144, inter_dim=4096, experts=8, topk=2, tile_m=32 (routing block). Timing via torch.profiler (per-iteration GPU time in microseconds via HIP events). Output prints: 'FlyDSL MoE stage1[fp8]: X.X us, Y.YY TFLOPS(logical, M=...), Z.ZZZ TB/s' + 'FlyDSL MoE stage2 [...] X.X us, Y.YY TFLOPS, Z.ZZZ TB/s'. Optional aiter comparison: '--compare_aiter_ck true' enables FlyDSL vs aiter(ck_moe_stage1/2_fwd) correctness+perf (fp8-only; requires aiter import). No env-var shape pinning; use CLI args. Multi-dtype support (fp8/fp16/bf16/int8/int4/int4_bf16/fp4/a8w4) but default is fp8 for fastest JIT. Stage1 uses SiLU gate; doweight_stage1 toggles gate*weight routing. Stage2 uses atomic-add or reduce mode. Sortingvia torch (not aiter) by default for determinism. Confidence: HIGH \u2014 test runs routinely in CI, prints GPU microseconds and TFLOPS, supports AIter baseline comparison.",
+    "_orig_invocation": "test_moe_gemm.py --tokenNum 32 --expert 8 --topk 2 --dim 6144,4096 --tile_m 32 --tile_n 128 --tile_k 256 --in_dtype fp8 --num_iters 5 --num_warmup 2"
+  },
+  {
+    "test_file": "tests/kernels/test_moe_blockscale.py",
+    "kernels": [
+      "moe_blockscale_gemm1",
+      "moe_blockscale_gemm2"
+    ],
+    "arch": "gfx950",
+    "op_category": "moe",
+    "runnable_standalone": true,
+    "invocation": "python tests/kernels/test_moe_blockscale.py -m 16 -dim 7168 -idim 256 -e 8 -k 2 --tile_m 16 --tile_n 256 --tile_k 128 --wpe 2 --num_iters 5 --num_warmup 2",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.fmoe_fp8_blockscale_g1u1 (fused 1-stage)",
+    "ck_baseline_candidate": "ck_moe_stage1_fwd and ck_moe_stage2_fwd from aiter.ops.moe_op (blockscale)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Test harness: test_moe_blockscale_e2e() in __main__ with argparse. Smallest shape is token=16, model_dim=7168, inter_dim=256, E=8, topk=2 (small-E8 pytest param). Kernel modules: compile_moe_blockscale_gemm1 + compile_moe_blockscale_gemm2 from kernels.moe_blockscale_2stage. Output includes: [Perf] flydsl-s1/s2 GPU times (us), TFLOPS, and optionally aiter-fused/ck-stage1/ck-stage2 comparisons. Module name pattern: mfma_moe1_bs_fp8_f16_*_t{tile_m}x{tile_n}x{tile_k}_wpe{wpe}_abi8 (gfx950-specific scale MFMA). PYTHONPATH and editable install already set. Run as: HIP_VISIBLE_DEVICES=0 python tests/kernels/test_moe_blockscale.py with shape/tile overrides. Timing printed line-by-line (flydsl-s1, flydsl-s2, then optionals). rocprofv3 kernel_include_regex: \"mfma_moe1\" or \"moe_blockscale_gemm[12]\".",
+    "metric_lines": [
+      "flydsl-s1:",
+      "flydsl-s2:",
+      "flydsl-total:",
+      "aiter-fused:",
+      "ck-stage1:",
+      "ck-stage2:",
+      "ck-total:"
+    ],
+    "shape_env": {},
+    "kernel_name_hint": "mfma_moe1_bs_fp8"
+  },
+  {
+    "test_file": "tests/kernels/test_moe_reduce.py",
+    "kernels": [
+      "moe_reduction_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "reduction",
+    "runnable_standalone": true,
+    "invocation": "tests/kernels/test_moe_reduce.py --tokens 1 --topk 6 --model_dim 5120 --dtype f16 --num_iters 20 --num_warmup 5",
+    "prints_gpu_us": true,
+    "aiter_comparable": "torch.sum(dim=1) on [1,6,5120] f16 tensor",
+    "ck_baseline_candidate": "N/A (reduction, not GEMM; torch.sum is built-in baseline)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "Kernel: compile_moe_reduction -> moe_reduction_kernel (arch-agnostic BufferCopy128b-based reduction over topk dimension). Test harness in test_moe_reduce.py::run_reduce_test() prints \"[FlyDSL reduce] {us:.1f} us, Bandwidth: {bw_gb_s:.2f} GB/s\" via run_perftest HIP events. Smallest non-large_shape is tokens=1, topk=6, model_dim=5120 (~61K FLOPs, ~72KB I/O). Also prints torch.sum baseline \"[torch.sum] {us_torch:.1f} us\" and speedup. CLI invocation via __main__ argparse (--tokens, --topk, --model_dim, --dtype choices=[f16,bf16,f32], --num_iters, --num_warmup). Correctness verified via torch.sum comparison. Runs standalone without aiter (no ROCDSL_COMPARE_AITER env var wiring in this test); torch.sum serves as reference. Can be extended per test_softmax.py pattern to add ROCDSL_MOE_REDUCE_SHAPES env var and bench_gpu_us_torch if AIter MoE reduce is available."
+  },
+  {
+    "test_file": "tests/kernels/test_allreduce.py",
+    "kernels": [
+      "allreduce_1stage_arr",
+      "allreduce_2stage_arr",
+      "allreduce_2stage_write_mode"
+    ],
+    "arch": "gfx950",
+    "op_category": "comm",
+    "runnable_standalone": false,
+    "invocation": "python tests/kernels/test_allreduce.py --world_size 2 --shapes \"2,7168,bf16\" --iters 10 --warmup 2",
+    "prints_gpu_us": true,
+    "aiter_comparable": "aiter.dist.device_communicators.custom_all_reduce.CustomAllreduce",
+    "ck_baseline_candidate": "none",
+    "needs_multi_gpu": true,
+    "confidence": "high",
+    "notes": "Multi-GPU distributed test (requires 2+ GPUs). Spawns torchrun-style process group with mp.spawn(). Kernel sources in kernels/custom_all_reduce_kernel.py; entry launchers are @flyc.jit wrappers (run_1stage_arr, run_2stage_arr, run_2stage_write_mode) that auto-compile via make_allreduce_kernels(N, dtype_str, world_size, threads). Timing via torch.cuda.Event (prints avg_time_us microseconds per iteration). Smallest shape (2,7168,bf16) uses 1-stage path, JITs fast (~14K elem). AIter comparison available via FLYDSL_AITER_IMPL=aiter env var. To profile single kernel manually: set PYTHONPATH, init dist w/ MASTER_ADDR/MASTER_PORT, instantiate FlyDSLAllreduce, call custom_all_reduce(). No rocprofv3 kernel names extractable\u2014kernels are named run_*stage_* at launch, generated kernel symbols baked at compile time by @flyc.kernel DSL."
+  },
+  {
+    "test_file": "tests/kernels/test_vec_add.py",
+    "kernels": [
+      "vecAddKernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "elementwise",
+    "runnable_standalone": true,
+    "invocation": "tests/kernels/test_vec_add.py --vec-width=4",
+    "prints_gpu_us": true,
+    "aiter_comparable": "torch.add (PyTorch baseline already in test)",
+    "ck_baseline_candidate": "Not applicable (vector add is elementwise; rocBLAS/CK target GEMM/reduction)",
+    "needs_multi_gpu": false,
+    "confidence": "high",
+    "notes": "**Kernel entry**: vecAddKernel (device kernel, registered via @flyc.kernel decorator); vecAdd (JIT launch wrapper). **Memory op**: elementwise ADD, 3 arrays (A, B, C), float32, 4-byte elements. **Default shape**: THREADS_PER_BLOCK=256, VEC_WIDTH=4, TILE_ELEMS=1024, SIZE=1024*10000=10.24M elements = 122 MB total traffic. **Timing method**: torch.cuda.Event HIP events in benchmark_pytorch_add() (lines 98-104) and kernel_launch() (lines 152-156); run_perftest() wrapper with num_iters=20, num_warmup=2. **Perf print pattern**: Line 170 outputs \"[FlyDSL kernel: X.XXXX ms, Bandwidth: X.XX GB/s]\" via avg_ms and bandwidth_gbs. **Baseline included**: benchmark_pytorch_add() at line 89 benchmarks torch.add on same SIZE, outputs PyTorch bandwidth for comparison (line 175-176). **AIter**: No AIter integration yet; torch.add is primary baseline. **Shape downsize option**: Modify SIZE calculation by reducing multiplier (10000 -> 100 gives 1.2 MB traffic, 100x faster JIT). Alternatively, pass --vec-width to adjust tile size. **Arch**: gfx950 (CDNA4, 64-wide wave, no arch guards in test file, works natively). **Correctness**: checkAllclose() at line 149 validates against torch.add result before perf runs."
+  },
+  {
+    "test_file": "tests/kernels/test_flydsl_shmem.py",
+    "kernels": [
+      "shmem_basic_kernel",
+      "shmem_put_kernel"
+    ],
+    "arch": "gfx950",
+    "op_category": "comm",
+    "runnable_standalone": false,
+    "invocation": "torchrun --nproc_per_node=2 --master_port=29790 tests/kernels/test_flydsl_shmem.py",
+    "prints_gpu_us": false,
+    "aiter_comparable": "N/A (multi-PE shmem collective, no single-GPU AIter equivalent)",
+    "ck_baseline_candidate": "N/A (communication operation; compare against native HIP mi shmem)",
+    "needs_multi_gpu": true,
+    "confidence": "high",
+    "notes": "This test IS CORRECTNESS-ONLY and requires multi-GPU (2+ PEs) via torchrun. It validates FlyDSL shmem integration with mori (shared memory collective library) via two kernels: (1) shmem_basic_kernel: calls mori_shmem_my_pe() and mori_shmem_n_pes(), writes results to device output buffer; (2) shmem_put_kernel: calls mori_shmem_int32_p() to perform a symmetric put to peer PE, then mori_shmem_quiet_thread(). No GPU-time metrics are printed. The @flyc.kernel DSL kernels use link_extern + FFI to invoke mori bitcode symbols (ffi module_init_fn pattern). Launch is via @flyc.jit wrappers (launch_basic, launch_put) with 1x1x1 grid/block. Benchmark would require: (a) embedding timing inside run_basic/run_put before/after torch.cuda.synchronize() pairs using torch.cuda.Event(enable_timing=True) or HIP events, (b) extracting launch_basic/launch_put calls into a separate bench function accepting count+iters, (c) using bench_gpu_us_torch pattern from benchmark_common.py. Test depends on mori package + 2 physical GPUs + torch.distributed. Single-GPU invocation will fail import. Entry point: main() \u2192 setup_distributed() \u2192 run_basic/run_put. To enable profiling as a future recipe: add HIP event timing around kernel launches, env var BENCH_SHMEM_ITERS to control iteration count, and extract individual PE comm latencies."
+  }
+]

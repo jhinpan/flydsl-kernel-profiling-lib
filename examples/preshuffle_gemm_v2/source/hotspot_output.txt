@@ -1,0 +1,76 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/bench_preshuffle_gemm_v2/att/ui_output_agent_63371_dispatch_15
+
+  Kernel:        ui_output_agent_63371_dispatch_15
+  Instructions:  428
+  Total cycles:  1.72M
+  Total stalls:  1.40M  (81.1% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~97 (alloc 104)
+  accum_vgpr:     0 (not used)
+  limiting pool:  104 / 256
+  occupancy:      2 waves/SIMD
+  -> 3 waves requires max(arch,accum) <= 85
+
+  Instruction mix:
+    MFMA: 64,  buffer_load: 24,  buffer_store: 32
+    ds_read: 32,  ds_write: 10
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  LDS/SMEM-wait     567.6K  [████████████░░░░░░░░░░░░░░░░░░]  40.6%
+  VMEM-wait         461.5K  [█████████░░░░░░░░░░░░░░░░░░░░░]  33.0%
+  barrier           211.5K  [████░░░░░░░░░░░░░░░░░░░░░░░░░░]  15.1%
+  MFMA/FMA           87.1K  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   6.2%
+  LDS                35.0K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.5%
+  VMEM-load          22.4K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.6%
+  other              12.2K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.9%
+  VMEM-store           220  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1    901.7K   64.52%  [██████████████████████████░░░░]  88.4%  LDS/SMEM-wait  ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:309
+    2    285.5K   20.43%  [███████████████████████████░░░]  93.2%  barrier       ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:100
+    3    131.4K    9.40%  [████████████████████░░░░░░░░░░]  68.4%  VMEM-wait     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:311
+    4     30.5K    2.18%  [██████████░░░░░░░░░░░░░░░░░░░░]  34.4%  LDS           ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:305
+    5     20.1K    1.44%  [█████████░░░░░░░░░░░░░░░░░░░░░]  33.0%  VMEM-load     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:302
+    6     11.1K    0.80%  [███████████░░░░░░░░░░░░░░░░░░░]  36.8%  VMEM-load     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:298
+    7      9.4K    0.67%  [████████████████████████████░░]  94.5%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    8      5.5K    0.40%  [███████████████████████████░░░]  90.0%  VMEM-wait     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:320
+    9      1.1K    0.08%  [████████████████░░░░░░░░░░░░░░]  54.4%  other         ld-fly/python_packages/flydsl/expr/derived.py:45
+   10       596    0.04%  [███████████████████░░░░░░░░░░░]  64.5%  VMEM-load     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:318
+   11       368    0.03%  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   7.5%  VMEM-store    ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:414
+   12       140    0.01%  [██████████░░░░░░░░░░░░░░░░░░░░]  36.5%  VMEM-load     ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:317
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1    188.6K   13.50%  VMEM-wait     s_waitcnt vmcnt(0) lgkmcnt(0)                     -lab/kernels/preshuffle_gemm_v2.py:309
+    2    109.9K    7.86%  barrier       s_barrier                                         -lab/kernels/preshuffle_gemm_v2.py:100
+    3    103.1K    7.38%  VMEM-wait     s_waitcnt vmcnt(0) lgkmcnt(0)                     -lab/kernels/preshuffle_gemm_v2.py:309
+    4     97.5K    6.98%  barrier       s_barrier                                         -lab/kernels/preshuffle_gemm_v2.py:100
+    5     57.7K    4.13%  VMEM-wait     s_waitcnt vmcnt(5)                                -lab/kernels/preshuffle_gemm_v2.py:311
+    6     41.2K    2.95%  VMEM-wait     s_waitcnt vmcnt(5)                                -lab/kernels/preshuffle_gemm_v2.py:311
+    7     40.4K    2.89%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:100
+    8     37.2K    2.66%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+    9     37.2K    2.66%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   10     37.0K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   11     36.9K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   12     36.8K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   13     36.8K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   14     36.8K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+   15     36.8K    2.64%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              -lab/kernels/preshuffle_gemm_v2.py:309
+
+

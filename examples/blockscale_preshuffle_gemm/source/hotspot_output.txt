@@ -1,0 +1,75 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_blockscale_preshuffle_gemm/att/ui_output_agent_14065_dispatch_120
+
+  Kernel:        ui_output_agent_14065_dispatch_120
+  Instructions:  390
+  Total cycles:  90.1K
+  Total stalls:  82.7K  (91.8% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx950 (CDNA4)
+  arch_vgpr:      ~73 (alloc 80)
+  accum_vgpr:     0 (not used)
+  total_vgpr:     80 / 512 (combined pool)
+  occupancy:      6 waves/SIMD
+  -> 7 waves requires total_vgpr <= 73
+
+  Instruction mix:
+    MFMA: 18,  buffer_load: 72,  buffer_store: 4
+    ds_read: 36,  ds_write: 9
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  VMEM-wait          63.4K  [██████████████████████░░░░░░░░]  76.6%
+  barrier             6.0K  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   7.3%
+  LDS/SMEM-wait       6.0K  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   7.2%
+  VMEM-load           4.7K  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.6%
+  other               2.4K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.9%
+  LDS                  192  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.2%
+  MFMA/FMA              84  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.1%
+  VMEM-store            28  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     44.2K   53.49%  [████████████████████████████░░]  93.4%  VMEM-wait     SL-lab/kernels/blockscale_preshuffle_gemm.py:138
+    2     30.4K   36.72%  [█████████████████████████████░]  97.7%  VMEM-wait     yDSL-lab/kernels/mfma_preshuffle_pipeline.py:585
+    3      2.9K    3.46%  [███████████████████████░░░░░░░]  78.5%  LDS/SMEM-wait  SL-lab/kernels/blockscale_preshuffle_gemm.py:541
+    4      2.6K    3.12%  [██████████████████████████░░░░]  87.5%  VMEM-load     SL-lab/kernels/blockscale_preshuffle_gemm.py:481
+    5      1.8K    2.20%  [████████████████████░░░░░░░░░░]  69.7%  VMEM-load     lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:83
+    6       272    0.33%  [█████████████████░░░░░░░░░░░░░]  57.1%  VMEM-load     SL-lab/kernels/blockscale_preshuffle_gemm.py:489
+    7       192    0.23%  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  22.9%  LDS           SL-lab/kernels/blockscale_preshuffle_gemm.py:288
+    8       176    0.21%  [████████████░░░░░░░░░░░░░░░░░░]  43.1%  other         lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:24
+    9       132    0.16%  [██████████████████████░░░░░░░░]  73.3%  other         SL-lab/kernels/blockscale_preshuffle_gemm.py:211
+   10        56    0.07%  [████████░░░░░░░░░░░░░░░░░░░░░░]  28.6%  other         SL-lab/kernels/blockscale_preshuffle_gemm.py:654
+   11         8    0.01%  [██████████░░░░░░░░░░░░░░░░░░░░]  33.3%  other         yDSL-lab/kernels/mfma_preshuffle_pipeline.py:530
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1      6.6K    8.03%  VMEM-wait     s_waitcnt vmcnt(0)                                nels/blockscale_preshuffle_gemm.py:138
+    2      5.1K    6.21%  VMEM-wait     s_waitcnt vmcnt(5)                                ernels/mfma_preshuffle_pipeline.py:585
+    3      4.2K    5.04%  VMEM-wait     s_waitcnt vmcnt(1)                                nels/blockscale_preshuffle_gemm.py:138
+    4      3.9K    4.77%  VMEM-wait     s_waitcnt vmcnt(7)                                ernels/mfma_preshuffle_pipeline.py:585
+    5      3.7K    4.51%  VMEM-wait     s_waitcnt vmcnt(2)                                nels/blockscale_preshuffle_gemm.py:138
+    6      3.6K    4.40%  VMEM-wait     s_waitcnt vmcnt(2)                                nels/blockscale_preshuffle_gemm.py:138
+    7      3.6K    4.40%  VMEM-wait     s_waitcnt vmcnt(2)                                nels/blockscale_preshuffle_gemm.py:138
+    8      3.5K    4.26%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              nels/blockscale_preshuffle_gemm.py:138
+    9      3.4K    4.10%  VMEM-wait     s_waitcnt vmcnt(7)                                ernels/mfma_preshuffle_pipeline.py:585
+   10      3.4K    4.09%  VMEM-wait     s_waitcnt vmcnt(7)                                ernels/mfma_preshuffle_pipeline.py:585
+   11      3.2K    3.92%  VMEM-wait     s_waitcnt vmcnt(7)                                ernels/mfma_preshuffle_pipeline.py:585
+   12      2.9K    3.54%  VMEM-wait     s_waitcnt vmcnt(7)                                ernels/mfma_preshuffle_pipeline.py:585
+   13      2.9K    3.45%  VMEM-wait     s_waitcnt vmcnt(0)                                ernels/mfma_preshuffle_pipeline.py:585
+   14      2.8K    3.42%  VMEM-wait     s_waitcnt vmcnt(2)                                nels/blockscale_preshuffle_gemm.py:138
+   15      2.8K    3.40%  VMEM-wait     s_waitcnt vmcnt(2)                                nels/blockscale_preshuffle_gemm.py:138
+
+

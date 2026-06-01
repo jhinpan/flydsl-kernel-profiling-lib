@@ -1,0 +1,179 @@
+[
+  {
+    "test": "test_preshuffle_gemm.py",
+    "success": true,
+    "baseline_impl": "AIter CK a8w8 bpreshuffle (untuned default config)",
+    "baseline_us": 78.1,
+    "flydsl_us": 102.0,
+    "shape": "M=4096 N=4096 K=4096 fp8(e4m3)->bf16, tile 128x128x128",
+    "source": "harness_flag",
+    "baseline_tflops": 1760.2,
+    "flydsl_tflops": 1347.41,
+    "baseline_gbs": 491.86,
+    "speedup_flydsl_vs_baseline": 0.766,
+    "cmd": "HIP_VISIBLE_DEVICES=0 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_preshuffle_gemm.py -M 16 -N 1024 -K 2048 --tile_m 16 --tile_n 64 --tile_k 512 --num_iters 50 --num_warmup 15   (run from /sgl-workspace/FlyDSL-lab; built-in AIter bench is ON by default \u2014 do NOT pass --no_aiter_bench)",
+    "extra_baselines": {
+      "aiter_gemm_a8w8_bpreshuffle_run1_iters20": 4.4,
+      "aiter_run2_iters50": 4.3,
+      "aiter_run3_iters50": 4.8,
+      "aiter_run4_iters50": 4.2
+    },
+    "notes": "COMPUTE-BOUND re-test (the M=16 sweep was launch-bound / within noise). At 4096^3 the gap is REAL: FlyDSL 1347 TFLOPS vs AIter CK 1760 TFLOPS (0.77x). AIter used its UNTUNED default config here (no tuned entry for 4096^3), so this is FlyDSL vs untuned CK. Headroom is in the K-loop load pipeline depth.",
+    "shape_class": "compute-bound"
+  },
+  {
+    "test": "test_blockscale_preshuffle_gemm.py",
+    "success": true,
+    "baseline_impl": "AIter CK a8w8_blockscale_bpreshuffle (TUNED config)",
+    "baseline_us": 102.3,
+    "baseline_tflops": 1321.97,
+    "baseline_gbs": null,
+    "flydsl_us": 155.7,
+    "flydsl_tflops": 869.07,
+    "speedup_flydsl_vs_baseline": 0.66,
+    "shape": "M=4096 N=7168 K=2304 fp8 a8w8 blockscale(128x128)->bf16",
+    "source": "harness_flag",
+    "cmd": "cd /sgl-workspace/FlyDSL-lab && HIP_VISIBLE_DEVICES=1 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_blockscale_preshuffle_gemm.py -M 16 -N 7168 -K 2304 --out_dtype bf16 --num_iters 50 --num_warmup 10",
+    "extra_baselines": {
+      "aiter_ck_bpreshuffle_run1_us": 9.7,
+      "aiter_ck_bpreshuffle_run2_us": 10.1
+    },
+    "notes": "COMPUTE-BOUND re-test. Gap WIDENS vs M=16 (0.88x->0.66x) because AIter loaded a TUNED blockscale config (dsv3/qwen tables) while FlyDSL runs an untuned fixed schedule. FlyDSL 869 TFLOPS vs tuned-CK 1322 TFLOPS. Needs split-K + per-shape tile tuning to close.",
+    "shape_class": "compute-bound"
+  },
+  {
+    "test": "test_moe_gemm.py",
+    "success": true,
+    "baseline_impl": "AIter CK MoE 2-stage (ck_moe_stage1_fwd + ck_moe_stage2_fwd), per_Token fp8, Silu",
+    "baseline_us": 123.4,
+    "baseline_tflops": 90.64,
+    "flydsl_us": 111.1,
+    "flydsl_tflops": 91.06,
+    "shape": "model_dim=6144, inter_dim=4096, experts=8, topk=2, tokens=32, in_dtype=fp8, tile_m=32/tile_n=128/tile_k=256; M_eff=64",
+    "source": "harness_flag",
+    "speedup_flydsl_vs_baseline": 1.11,
+    "cmd": "cd /sgl-workspace/FlyDSL-lab && HIP_VISIBLE_DEVICES=2 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_moe_gemm.py -t 32 -e 8 -k 2 -dim 6144,4096 --tile_m 32 --tile_n 128 --tile_k 256 --in_dtype fp8 --num_iters 20 --num_warmup 10 --compare_aiter_ck true",
+    "extra_baselines": {
+      "ck_stage1_us": 71.1,
+      "ck_stage2_atomic_us": 52.3,
+      "ck_stage2_reduce_us": 51.1,
+      "flydsl_stage1_us": 70.8,
+      "flydsl_stage2_atomic_us": 40.3,
+      "flydsl_stage2_reduce_us": 47.2
+    },
+    "notes": "Baseline obtained via the harness built-in --compare_aiter_ck flag (FASTEST path). The baseline is aiter's CK MoE 2-stage: harness imports `from aiter.ops.moe_op import ck_moe_stage1_fwd` (line ~817) and the analogous ck_moe_stage2_fwd, with QuantType.per_Token + ActivationType.Silu, run via the same run_perftest harness as FlyDSL so timing/warmup are identical. Same shape as the FlyDSL run, so it is a true apples-to-apples comparison; the harness also asserts FlyDSL-vs-aiter output correctness (rtol/atol=0.25) before printing, so numbers are validated.\n\nPer-stage results (20 iters / 10 warmup, GPU 2, MI350-class gfx950), stable across two runs:\n- Stage1: FlyDSL 70.8 us (91.06 TFLOPS) vs CK 71.1 us (90.64 TFLOPS) -> ~1.00x, parity.\n- Stage2 atomic (FlyDSL's faster/default mode): FlyDSL 40.3 us (79.96 TFLOPS) vs CK 52.3 us (61.55 TFLOPS) -> 1.30x faster.\n- Stage2 reduce: FlyDSL 47.2 us vs CK 51.1 us -> 1.08x.\n\nHeadline (stage1 + best stage2-atomic) used for the top-level numbers: FlyDSL 70.8+40.3=111.1 us vs CK 71.1+52.3=123.4 us => 1.11x faster overall. baseline_tflops/flydsl_tflops report the stage1 figures (representative; per-stage TFLOPS are in the FLOPS prints above).\n\nDISCREPANCY vs sweep_master.json: the sweep recorded flydsl_total=142.9 us (s1=69.3, s2=73.6) and 93.01 TFLOPS with baseline_us=null. The s1 number matches; the s2=73.6 in the sweep is much slower than the current stage2-atomic (40.3 us) \u2014 the sweep evidently timed a slower stage2 variant. Re-measuring here, FlyDSL stage2 is substantially faster, so FlyDSL genuinely wins (stage2 1.30x, total 1.11x) and is at parity on stage1. Verdict: FlyDSL wins overall vs the strongest comparable non-FlyDSL impl (AIter CK).\n\nNo standalone script was needed (harness flag sufficed). FlyDSL harness: /sgl-workspace/FlyDSL-lab/tests/kernels/test_moe_gemm.py."
+  },
+  {
+    "test": "test_flash_attn_func.py",
+    "success": true,
+    "baseline_impl": "aiter.mha_fwd (CK FMHA), softmax_scale=1/sqrt(128), causal=True",
+    "baseline_us": 9.1,
+    "baseline_tflops": 3.7,
+    "flydsl_us": 9.9,
+    "flydsl_tflops": 3.4,
+    "shape": "B=1 S=128 H=8 D=128 bf16 causal",
+    "source": "harness_flag",
+    "speedup_flydsl_vs_baseline": 0.919,
+    "extra_baselines": {
+      "ck_S128_us": 9.1,
+      "asm_fmha_v3_S128_us": 9.3,
+      "flydsl_S128_us": 9.9,
+      "ck_S2048_us": 49.7,
+      "asm_fmha_v3_S2048_us": 56.9,
+      "flydsl_S2048_us": 69.3
+    },
+    "cmd": "cd /sgl-workspace/FlyDSL-lab && HIP_VISIBLE_DEVICES=3 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_flash_attn_func.py --compare --batch 1 --seq_len 128 --num_heads 8 --head_dim 128 --dtype bf16 --causal --warmup 30 --iters 200   (swap --seq_len 2048 for steady-state)",
+    "notes": "Used the harness's BUILT-IN --compare flag (fastest path): runs FlyDSL vs CK (aiter.mha_fwd) vs ASM (aiter.fmha_v3_fwd) in one process on GPU 3, MI350X gfx950, ROCm 7.2. All three match PyTorch SDPA ref to MaxErr 3.91e-03 (bf16).\n\nMATCHING SHAPE B=1 S=128 H=8 D=128 (sweep_master records flydsl_us=11.0, tflops=3.1): FlyDSL is latency-bound at ~9.9-10.5us (bounces run-to-run), CK steady at 9.1us, ASM 9.3us. CK is the strongest comparable. FlyDSL does NOT win here: it sits at 86-92% of CK TFLOPS, i.e. CK is ~1.0-1.15x faster. At this tiny shape everyone clusters near the ~9us launch-overhead floor so the gap is small.\n\nSTEADY-STATE B=1 S=2048 H=8 D=128 (fairer compute compare): FlyDSL 69.3us/124 TFLOPS, CK 49.7us/173 TFLOPS, ASM 56.9us/151 TFLOPS. CK is 1.39x faster than FlyDSL (FlyDSL=71.7% of CK TFLOPS); ASM 1.22x faster. The gap WIDENS with sequence length, indicating FlyDSL FMHA is throughput-limited vs CK rather than merely overhead-limited.\n\nspeedup_flydsl_vs_baseline=0.919 reported at the matching S=128 shape (baseline_us 9.1 / flydsl_us 9.9). At S=2048 it is 49.7/69.3=0.717. In both regimes the external CK baseline beats FlyDSL, so FlyDSL does not truly win on this kernel on MI350X.\n\nArtifacts: /sgl-workspace/flydsl-prof/results/baselines/test_flash_attn_func/BASELINE_NOTES.md and fmha_perf_compare_MI350X_S2048.csv (CSV holds the last --compare run only). Harness: /sgl-workspace/FlyDSL-lab/tests/kernels/test_flash_attn_func.py (run_aiter_bench with backend ck/asm)."
+  },
+  {
+    "test": "test_mla_decode.py",
+    "success": true,
+    "baseline_impl": "aiter.hk_mla_decode_fwd (HipKittens CK MLA decode stage1)",
+    "baseline_us": 11.19,
+    "baseline_tflops": 1.59,
+    "baseline_gbs": null,
+    "flydsl_us": 12.4,
+    "flydsl_tflops": 1.44,
+    "speedup_flydsl_vs_baseline": 0.902,
+    "shape": "DeepSeek MLA decode b=1 ctx_len=64, nhead=128, qk=576 (kv_lora 512 + rope 64), v=512, page_size=1, fp8 Q + fp8 KV, out bf16, sm_scale=1/sqrt(576)",
+    "source": "harness_flag",
+    "extra_baselines": {
+      "aiter.mla_decode_stage1_asm_fwd (mla_a8w8_qh128_m32x4_n16x2 ASM)": 12.03
+    },
+    "cmd": "HIP_VISIBLE_DEVICES=4 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_mla_decode.py -b 1 -c 64 --bench_aiter   (cwd=/sgl-workspace/FlyDSL-lab)",
+    "notes": "Used the harness's built-in --bench_aiter flag, which benchmarks FlyDSL and TWO aiter MLA-decode impls in one run at the identical shape, so it is a true apples-to-apples comparison. All three time ONLY the decode stage1 kernel (mla_reduce_v1 is excluded from every timed region) and all pass the same correctness check (cos_diff=1.44e-04, err_ratio=0.18%). Single clean run on GPU 4 (MI350X, gfx950).\n\nMeasured this run (us_p50 / TFLOPS):\n- FlyDSL kn_mla_fwd_decode_m16x8_fp8_fp8: 12.40 us / 1.44  (range 12.39-12.41; sweep_master.json recorded 12.23 us / 1.46 -- consistent within noise)\n- aiter.hk_mla_decode_fwd (HipKittens CK): 11.19 us / 1.59  (range 11.15-11.57) <- STRONGEST baseline\n- aiter.mla_decode_stage1_asm_fwd (ASM kernel mla_a8w8_qh128_m32x4_n16x2_msk0_ps.co): 12.03 us / 1.48  (range 12.02-12.05)\n\nVerdict: at this tiny single-tile shape (b=1, ctx_len=64) FlyDSL is NOT winning. The best external baseline (aiter HipKittens CK) is 11.19 us vs FlyDSL 12.40 us => speedup_flydsl_vs_baseline = 11.19/12.40 = 0.90 (FlyDSL ~10% SLOWER). FlyDSL is roughly tied with the aiter ASM path (12.40 vs 12.03, ~3% slower). This is a latency-bound, memory-bound decode at very small ctx_len so all three are clustered near 11-12 us and far below peak (1.4-1.6 TFLOPS); differences are launch/scheduling-dominated, not compute. Note: hk_mla required a one-time 71s JIT build of module_hk_mla on first call (already cached after this run). speedup recomputed against the strongest baseline (hk) = 0.902; vs the asm baseline it would be 12.03/12.40 = 0.97."
+  },
+  {
+    "test": "test_quant.py",
+    "success": true,
+    "baseline_impl": "aiter per_token_quant_hip (aiter.ops.quant, fp16->int8 per-token quant)",
+    "baseline_us": 16.045,
+    "baseline_gbs": 6274.67,
+    "baseline_tflops": null,
+    "flydsl_us": 16.742,
+    "flydsl_tflops": null,
+    "shape": "M=4096, N=8192 (fp16 in -> int8 out, per-token scale); traffic=100,679,680 B/call",
+    "source": "harness_flag",
+    "speedup_flydsl_vs_baseline": 0.958,
+    "cmd": "HIP_VISIBLE_DEVICES=5 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab FLYDSL_RUN_QUANT=1 /opt/venv/bin/python tests/kernels/test_quant.py -m 4096 -n 8192   (run from /sgl-workspace/FlyDSL-lab)",
+    "extra_baselines": {},
+    "notes": "Built-in baseline path: test_quant.py has a native aiter comparison gated behind FLYDSL_RUN_QUANT=1 (it imports aiter.ops.quant.per_token_quant_hip and prints a FlyDSL-vs-Reference Performance Comparison block in one run). This is the fastest, exactly-matched path and was used. GPU 5 = AMD Instinct MI350X (gfx950).\n\nThis is a MEMORY-BOUND elementwise per-token quant (fp16->int8), so GB/s is the meaningful metric, not TFLOPS (baseline_tflops/flydsl_tflops left null intentionally). The harness computes both impls' bandwidth from the same fixed traffic model total_bytes = M*N*2 (fp16 read) + M*N*1 (int8 write) + M*4 (f32 scales) = 100,679,680 B, so us values are directly comparable. baseline_us was derived from the printed aiter GB/s and that exact total_bytes (16.045 us = 100679680 / (6274.67e9) * 1e6).\n\nTwo confirming runs on GPU 5, both stable:\n  run1: FlyDSL 16.742 us / 6013.49 GB/s, aiter 16.045 us / 6274.67 GB/s, harness Speedup 0.96x\n  run2: FlyDSL ~16.79 us / 5993.93 GB/s, aiter ~16.15 us / 6233.75 GB/s, harness Speedup 0.96x\n\nVERDICT: FlyDSL does NOT win here. aiter per_token_quant_hip is ~4% faster (speedup_flydsl_vs_baseline = baseline_us/flydsl_us = 0.96, i.e. FlyDSL is slower). Both kernels hit ~6.0-6.3 TB/s, which is near the MI350X HBM3e roofline, so both are bandwidth-saturated and the gap is small. This matches the prior sweep_master.json entry (test_quant.py: bandwidth_gbs=5910.18, speedup_reported=0.95). Correctness was equivalent: max output diff 1.0 (int8 rounding boundary, expected) and max scale diff ~3.7e-9 for aiter / 0 for FlyDSL.\n\nNo CK kernel exists for this op (ck_baseline_candidate='none' in sweep); aiter per_token_quant_hip IS the strongest comparable non-FlyDSL implementation. No standalone script needed; nothing saved under results/baselines/test_quant/."
+  },
+  {
+    "test": "test_moe_reduce.py",
+    "success": true,
+    "baseline_impl": "torch.sum(dim=1) (== aiter.moe_sum, which falls through to at::sum_out for topk=8)",
+    "baseline_us": 382.6,
+    "flydsl_us": 382.7,
+    "baseline_gbs": 5524.54,
+    "flydsl_tflops": null,
+    "baseline_tflops": null,
+    "speedup_flydsl_vs_baseline": 1,
+    "shape": "tokens=16384, topk=8, model_dim=7168, f16 (X[16384,8,7168] -> Y[16384,7168], reduce over topk)",
+    "source": "harness_flag",
+    "extra_baselines": {
+      "aiter.moe_sum_standalone_us": 412.7,
+      "torch.sum_standalone_us": 391.4,
+      "flydsl_us_run2": 385,
+      "torch.sum_us_run2": 386.1,
+      "flydsl_us_run3": 385.2,
+      "torch.sum_us_run3": 383.6
+    },
+    "cmd": "cd /sgl-workspace/FlyDSL-lab && HIP_VISIBLE_DEVICES=6 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python tests/kernels/test_moe_reduce.py --tokens 16384 --topk 8 --model_dim 7168 --dtype f16 --num_iters 50 --num_warmup 10",
+    "notes": "Kernel is bandwidth-bound, not GEMM (no TFLOPS). The FlyDSL harness (/sgl-workspace/FlyDSL-lab/tests/kernels/test_moe_reduce.py) has a BUILT-IN baseline: it times FlyDSL and torch.sum(dim=1) with the same run_perftest harness (warmup=10, iters=50) and prints a speedup line. Authoritative result (best of 3 runs, GPU 6 / MI350X): FlyDSL 382.7 us @ 5523.9 GB/s vs torch.sum 382.6 us @ 5524.5 GB/s => 1.00x. Three runs were tight: FlyDSL 382.7/385.0/385.2 us, torch.sum 382.6/386.1/383.6 us. Both saturate HBM at ~5.5 TB/s on MI350X, so neither can meaningfully win \u2014 this is the memory-bandwidth ceiling for a topk-8 reduction.\n\nSTRONGEST EXTERNAL COMPARABLE = aiter.moe_sum (module_moe_asm, the vLLM/AIter MoE reduce). KEY FINDING: aiter.moe_sum only ships specialized HIP kernels for topk in {2,4,5}; for ANY other topk (including the FlyDSL shape's topk=8) it falls through to `default: at::sum_out(output, input, 1)` in /sgl-workspace/aiter/csrc/kernels/topk_softmax_kernels.cu:817-855. So at topk=8 aiter.moe_sum IS torch.sum. I confirmed this: standalone /sgl-workspace/flydsl-prof/results/baselines/test_moe_reduce/bench_aiter_moe_sum.py shows aiter.moe_sum vs torch.sum max abs err = 0.0000 (bit-identical output). In that micro-bench loop aiter.moe_sum measured 412.7 us vs torch.sum 391.4 us \u2014 the ~20us gap is per-call Python/dispatch overhead, not a real kernel difference; the in-harness torch.sum (392 us standalone vs 383 us in run_perftest) confirms timing-harness variance. There is NO faster CK / hipBLASLt / rocBLAS / dedicated-ASM moe-reduce kernel for topk=8 in this AIter build; op_tests/ has no moe_reduce/moe_sum harness. Conclusion: FlyDSL matches the best available baseline (torch.sum == aiter.moe_sum) at the bandwidth ceiling; it does not beat it but is not beaten either (1.00x). aiter import requires PYTHONPATH build-fly/python_packages FIRST (else flydsl._mlir ModuleNotFoundError via aiter.ops.flydsl). Standalone script saved at /sgl-workspace/flydsl-prof/results/baselines/test_moe_reduce/bench_aiter_moe_sum.py"
+  },
+  {
+    "test": "test_topk_gating_softmax.py",
+    "success": true,
+    "baseline_impl": "AIter aiter.topk_softmax (HIP fused softmax+topk+renorm; exact same signature as FlyDSL: topk_weights, topk_ids, token_expert_indices, gating, renormalize)",
+    "baseline_us": 6.69,
+    "flydsl_us": 30.86,
+    "shape": "16384 tokens x 128 experts x topk6, bf16, renorm=True",
+    "source": "standalone_script",
+    "baseline_tflops": null,
+    "baseline_gbs": null,
+    "flydsl_tflops": null,
+    "speedup_flydsl_vs_baseline": 0.217,
+    "cmd": "HIP_VISIBLE_DEVICES=7 PYTHONPATH=/sgl-workspace/FlyDSL-lab/build-fly/python_packages:/sgl-workspace/FlyDSL-lab /opt/venv/bin/python /sgl-workspace/flydsl-prof/results/baselines/test_topk_gating_softmax/baseline.py",
+    "extra_baselines": {
+      "torch_softmax_topk_renorm": 56.63,
+      "aiter_topk_softmax_asm": 23.04,
+      "aiter_topk_softmax_hip": 6.69
+    },
+    "notes": "GPU 7 = MI350X / gfx950. FlyDSL harness (tests/kernels/test_topk_gating_softmax.py) has NO built-in aiter compare wired (ROCDSL_COMPARE_AITER only gates an extra FlyDSL self-timing; aiter_gpu_us is left None and the printed perf table has no aiter column). Its default sweep config is 1024x128xk6, NOT the requested 16384x128xk6; sweep_master.json logged flydsl_us=24.5 with baseline_us=null and aiter_comparable=\"None\". So I wrote a standalone matched-shape script.\n\nFound TWO direct AIter comparables, both run at the EXACT FlyDSL shape (16384x128xk6 bf16, renorm=True), measured with torch.cuda.Event (warmup=20, iters=100), two runs each:\n  - aiter.topk_softmax (HIP)     : 6.75 / 6.63 us  -> ~6.69 us  (STRONGEST, identical op signature to FlyDSL)\n  - aiter.topk_softmax_asm       : 22.43 / 23.65 us -> ~23 us   (auto-loaded the dedicated HSACO topksoftmax_12x128x6_bf16.co; (128,6) is in the gfx950 asm whitelist)\n  - torch softmax+topk+renorm    : 56.68 / 56.58 us -> ~56.6 us\n  - FlyDSL topk_gating_softmax   : 28.31 / 33.41 us -> ~30.9 us median (fluctuates 28-33us across runs)\n\nVerdict: FlyDSL LOSES badly to the apples-to-apples AIter HIP kernel (~4.6x slower; speedup 0.22x) and is also slightly slower than the AIter asm path (~0.75x). FlyDSL only beats the naive torch reference (~1.8x). This is a memory-bound MoE-gating op (16384x128 bf16 = 4MB read, ~0.6MB write); the aiter HIP kernel at 6.7us is near memory-bandwidth-bound, so the 24.5us figure in sweep_master.json (at the smaller 1024x128 default shape) overstates FlyDSL's standing. Conclusion: FlyDSL does NOT win here. Script saved at /sgl-workspace/flydsl-prof/results/baselines/test_topk_gating_softmax/baseline.py."
+  },
+  {
+    "test": "bench_preshuffle_gemm_v2.py",
+    "success": true,
+    "source": "harness_flag",
+    "baseline_impl": "FlyDSL v1 (manual, pre-layout-API)",
+    "baseline_us": 538.2,
+    "baseline_tflops": 638.4,
+    "flydsl_us": 447.9,
+    "flydsl_tflops": 767.2,
+    "speedup_flydsl_vs_baseline": 1.202,
+    "shape": "M=4096 N=5120 K=8192 bf16, tile 64x128x64",
+    "notes": "INTERNAL comparison (v2 layout-API vs v1 manual), not vs an external lib. At 4096x5120x8192 bf16 the v2 refactor is 1.20x faster (767 vs 638 TFLOPS) \u2014 a real FlyDSL-internal win.",
+    "shape_class": "compute-bound"
+  }
+]

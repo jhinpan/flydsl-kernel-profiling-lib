@@ -1,0 +1,73 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_softmax/att/ui_output_agent_47920_dispatch_13
+
+  Kernel:        ui_output_agent_47920_dispatch_13
+  Instructions:  731
+  Total cycles:  41.65M
+  Total stalls:  31.80M  (76.4% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~47 (alloc 48)
+  accum_vgpr:     0 (not used)
+  limiting pool:  48 / 256
+  occupancy:      5 waves/SIMD
+  -> 6 waves requires max(arch,accum) <= 42
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 32,  buffer_store: 32
+    ds_read: 4,  ds_write: 4
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  VMEM-load         14.60M  [█████████████░░░░░░░░░░░░░░░░░]  45.9%
+  VMEM-store         4.65M  [████░░░░░░░░░░░░░░░░░░░░░░░░░░]  14.6%
+  barrier            4.54M  [████░░░░░░░░░░░░░░░░░░░░░░░░░░]  14.3%
+  VMEM-wait          3.86M  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  12.1%
+  other              2.73M  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   8.6%
+  LDS/SMEM-wait      1.36M  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   4.3%
+  SMEM               29.0K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.1%
+  MFMA/FMA           23.0K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.1%
+  LDS                11.2K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1    14.75M   46.37%  [█████████████████████████████░]  97.7%  VMEM-load     rkspace/FlyDSL-lab/kernels/softmax_kernel.py:186
+    2    12.20M   38.36%  [█████████████████░░░░░░░░░░░░░]  57.9%  barrier       orkspace/FlyDSL-lab/kernels/softmax_kernel.py:41
+    3     4.67M   14.69%  [███████████████████████████░░░]  90.9%  VMEM-store    rkspace/FlyDSL-lab/kernels/softmax_kernel.py:194
+    4    151.6K    0.48%  [█████████████████████████░░░░░]  85.8%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    5     16.9K    0.05%  [████████░░░░░░░░░░░░░░░░░░░░░░]  29.0%  other         orkspace/FlyDSL-lab/kernels/softmax_kernel.py:96
+    6      8.5K    0.03%  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  12.7%  LDS           orkspace/FlyDSL-lab/kernels/softmax_kernel.py:99
+    7      4.6K    0.01%  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   8.6%  LDS           orkspace/FlyDSL-lab/kernels/softmax_kernel.py:84
+    8      1.5K    0.00%  [████░░░░░░░░░░░░░░░░░░░░░░░░░░]  14.4%  other         orkspace/FlyDSL-lab/kernels/softmax_kernel.py:90
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     8.47M   26.64%  VMEM-load     buffer_load_ushort v2, v1, s[12:15], 0 offen      yDSL-lab/kernels/softmax_kernel.py:186
+    2     2.85M    8.96%  barrier       s_barrier                                         lyDSL-lab/kernels/softmax_kernel.py:41
+    3     1.21M    3.79%  VMEM-load     buffer_load_ushort v9, v1, s[12:15], 0 offen of…  yDSL-lab/kernels/softmax_kernel.py:186
+    4     1.03M    3.24%  VMEM-wait     s_waitcnt vmcnt(10)                               lyDSL-lab/kernels/softmax_kernel.py:41
+    5    883.3K    2.78%  barrier       s_barrier                                         lyDSL-lab/kernels/softmax_kernel.py:41
+    6    871.5K    2.74%  VMEM-load     buffer_load_ushort v16, v4, s[12:15], 0 offen     yDSL-lab/kernels/softmax_kernel.py:186
+    7    803.3K    2.53%  VMEM-wait     s_waitcnt vmcnt(0)                                lyDSL-lab/kernels/softmax_kernel.py:41
+    8    755.7K    2.38%  barrier       s_barrier                                         lyDSL-lab/kernels/softmax_kernel.py:41
+    9    680.0K    2.14%  VMEM-load     buffer_load_ushort v40, v1, s[12:15], 0 offen     yDSL-lab/kernels/softmax_kernel.py:186
+   10    678.6K    2.13%  other         v_permlane32_swap_b32_e32 v3, v35                 lyDSL-lab/kernels/softmax_kernel.py:41
+   11    651.8K    2.05%  VMEM-load     buffer_load_ushort v30, v4, s[12:15], 0 offen     yDSL-lab/kernels/softmax_kernel.py:186
+   12    636.6K    2.00%  VMEM-load     buffer_load_ushort v1, v1, s[12:15], 0 offen      yDSL-lab/kernels/softmax_kernel.py:186
+   13    627.9K    1.97%  VMEM-load     buffer_load_ushort v45, v1, s[12:15], 0 offen     yDSL-lab/kernels/softmax_kernel.py:186
+   14    605.3K    1.90%  VMEM-wait     s_waitcnt vmcnt(2)                                lyDSL-lab/kernels/softmax_kernel.py:41
+   15    530.2K    1.67%  VMEM-load     buffer_load_ushort v38, v4, s[12:15], 0 offen o…  yDSL-lab/kernels/softmax_kernel.py:186
+
+

@@ -1,0 +1,68 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_moe_reduce/att/ui_output_agent_42768_dispatch_39
+
+  Kernel:        ui_output_agent_42768_dispatch_39
+  Instructions:  431
+  Total cycles:  59.01M
+  Total stalls:  45.69M  (77.4% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~53 (alloc 56)
+  accum_vgpr:     0 (not used)
+  limiting pool:  56 / 256
+  occupancy:      4 waves/SIMD
+  -> 5 waves requires max(arch,accum) <= 51
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 72,  buffer_store: 9
+    ds_read: 0,  ds_write: 0
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  VMEM-load         32.23M  [█████████████████████░░░░░░░░░]  70.5%
+  VMEM-wait          9.43M  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  20.6%
+  other              2.53M  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.5%
+  VMEM-store         1.05M  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.3%
+  LDS/SMEM-wait     433.6K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.9%
+  SMEM               21.9K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1    33.55M   73.42%  [█████████████████████████████░]  99.3%  VMEM-load     space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3177
+    2    10.79M   23.60%  [█████████████░░░░░░░░░░░░░░░░░]  45.8%  VMEM-wait     space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3101
+    3     1.05M    2.30%  [████████████████████████████░░]  94.5%  VMEM-store    space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3211
+    4    162.6K    0.36%  [███████████████░░░░░░░░░░░░░░░]  51.7%  LDS/SMEM-wait  ld-fly/python_packages/flydsl/expr/typing.py:896
+    5    139.5K    0.31%  [████████████████████████░░░░░░]  82.9%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    6      4.8K    0.01%  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   6.2%  SMEM          space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3243
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1    18.24M   39.92%  VMEM-load     buffer_load_dwordx4 v[0:3], v0, s[4:7], 0 offen   SL-lab/kernels/moe_gemm_2stage.py:3177
+    2     5.81M   12.71%  VMEM-load     buffer_load_dwordx4 v[4:7], v4, s[4:7], 0 offen   SL-lab/kernels/moe_gemm_2stage.py:3177
+    3     2.46M    5.38%  VMEM-load     buffer_load_dwordx4 v[8:11], v8, s[4:7], 0 offen  SL-lab/kernels/moe_gemm_2stage.py:3177
+    4     1.68M    3.69%  VMEM-wait     s_waitcnt vmcnt(5)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+    5     1.58M    3.45%  VMEM-load     buffer_load_dwordx4 v[12:15], v12, s[4:7], 0 of…  SL-lab/kernels/moe_gemm_2stage.py:3177
+    6     1.57M    3.43%  VMEM-wait     s_waitcnt vmcnt(4)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+    7     1.20M    2.62%  VMEM-load     buffer_load_dwordx4 v[16:19], v16, s[4:7], 0 of…  SL-lab/kernels/moe_gemm_2stage.py:3177
+    8     1.19M    2.61%  VMEM-wait     s_waitcnt vmcnt(6)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+    9     1.12M    2.46%  VMEM-wait     s_waitcnt vmcnt(2)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+   10     1.12M    2.45%  VMEM-wait     s_waitcnt vmcnt(3)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+   11     1.05M    2.30%  VMEM-store    buffer_store_dwordx4 v[0:3], v4, s[8:11], 0 off…  SL-lab/kernels/moe_gemm_2stage.py:3211
+   12    985.9K    2.16%  VMEM-load     buffer_load_dwordx4 v[28:31], v28, s[4:7], 0 of…  SL-lab/kernels/moe_gemm_2stage.py:3177
+   13    983.1K    2.15%  VMEM-load     buffer_load_dwordx4 v[24:27], v24, s[4:7], 0 of…  SL-lab/kernels/moe_gemm_2stage.py:3177
+   14    974.2K    2.13%  VMEM-load     buffer_load_dwordx4 v[20:23], v20, s[4:7], 0 of…  SL-lab/kernels/moe_gemm_2stage.py:3177
+   15    949.4K    2.08%  VMEM-wait     s_waitcnt vmcnt(7)                                SL-lab/kernels/moe_gemm_2stage.py:3101
+
+

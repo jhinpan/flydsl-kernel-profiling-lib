@@ -6,6 +6,19 @@ on any machine (no GPU required) load the kernel into the AMD **ATT Viewer**
 for instruction-level inspection or **rocprof-compute-viewer** for counter
 aggregates — without re-capturing the trace.
 
+> ### 🛰️ MI350X / gfx950 full sweep — 2026-06-01
+> Every major FlyDSL kernel profiled in one pass on **8× AMD Instinct MI350X**
+> (FlyDSL `0.1.9.dev594` @ `18c5a7ed`, ROCm 7.2.0, rocprofv3 1.1.0):
+> **17 kernels** with 95–100 % source-mapped ATT, **15 matched-shape baselines**
+> (AIter / CK / hipBLASLt).
+> → **[Interactive dashboard](https://jhinpan.github.io/flydsl-kernel-profiling/)**
+> · **[FINDINGS.md](FINDINGS.md)** (the bird's-eye read)
+>
+> Headline: FlyDSL **wins** Softmax 2.05×, HGEMM-SplitK 1.66×, MoE-GEMM 1.11×;
+> clear **headroom** on RoPE 0.17×, TopK-Gating 0.22×, Paged-Attn 0.48×. The
+> attention/GEMM losses are register-pressure-capped occupancy (1 wave/SIMD);
+> RoPE and TopK-Gating are structural (serialized cross-lane reductions).
+
 ## What the bundle gives you
 
 For one specific operator, every example contains all four of:
@@ -27,6 +40,29 @@ self-contained directory**.
 |---|---|---|---|
 | [`examples/pa_mqa_logits_fp4`](examples/pa_mqa_logits_fp4) | FP4 MQA Logits | [`ROCm/FlyDSL@9120078`](https://github.com/ROCm/FlyDSL/commit/9120078d35d7d232b3941ded5b76a1ca92329ef0) | 1189.9 TFLOPS at batch=32 ctx=128K with `total_CTAs=507/512`; stall-bound (35 % `vmcnt`, 22 % `lgkmcnt`, only 0.1 % EXEC); 5 waves/SIMD, 11 VGPRs from 6 waves/SIMD |
 | [`examples/flash_attn_func`](examples/flash_attn_func) | Flash Attention Func | `FlyDSL-lab@18c5a7e` | 371.7 TFLOPS at B=1 S=2048 H=32 D=128 with `total_CTAs=512/512`; cold-debug capture maps 2069/2070 ISA rows; ping-pong exists but consume points still stall (29 % `vmcnt`, 16 % `lgkmcnt`, 58.8 % stall ratio) |
+
+### MI350X / gfx950 sweep — 2026-06-01 (FlyDSL 0.1.9.dev594 @ 18c5a7ed)
+
+Ordered FlyDSL-wins → parity → headroom. Speedups are FlyDSL vs. the strongest matched-shape baseline. See **[FINDINGS.md](FINDINGS.md)** + the **[dashboard](https://jhinpan.github.io/flydsl-kernel-profiling/)**.
+
+| folder | kernel | source | headline |
+|---|---|---|---|
+| [`examples/softmax`](examples/softmax) | Softmax | `FlyDSL-lab@18c5a7e` | stall-bound (76% stalled, 46% VMEM-load), occ 5/SIMD; FlyDSL 271.8µs vs AIter triton 558µs (**2.05× win**) at 32768×8192 bf16 — but the fast vectorized path is dead-coded (`False`-gated), so it runs scalar 16-bit loads, leaving the HBM roofline on the table. |
+| [`examples/hgemm_splitk`](examples/hgemm_splitk) | HGEMM Split-K | `FlyDSL-lab@18c5a7e` | latency-bound (56% VMEM-wait, MFMA only 2%), occ 2/SIMD @117 VGPR; FlyDSL 7.0µs = 25 TFLOPS, **1.66× vs PyTorch** 11.6µs — only 84 workgroups on 256 CUs, so SPLIT_K=14 starves each block to ~2 K-iters. |
+| [`examples/moe_gemm`](examples/moe_gemm) | MoE GEMM (2-stage) | `FlyDSL-lab@18c5a7e` | stall-bound (55% VMEM-wait), occ 1/SIMD @155 VGPR; FlyDSL stage-1 70.8µs = CK 71.1µs (parity), **1.11× on full 2-stage** (stage-2 atomic 1.30×) — load pipeline unpipelined, matrix cores starved. |
+| [`examples/layernorm`](examples/layernorm) | LayerNorm | `FlyDSL-lab@18c5a7e` | stall-bound (58% LDS/SMEM-wait), occ 3/SIMD @72 VGPR; FlyDSL 24.1µs ≈ AIter 24.7µs (1.03×) — dependent `shuffle_xor` cross-lane reduction tree is the ceiling, not HBM. |
+| [`examples/moe_reduce`](examples/moe_reduce) | MoE Reduction | `FlyDSL-lab@18c5a7e` | bandwidth-bound (91% VMEM load+wait), occ 4/SIMD @56 VGPR; FlyDSL 382.7µs ≈ torch.sum / aiter.moe_sum 382.6µs (1.00×) at the ~5.5 TB/s HBM ceiling — already optimal. |
+| [`examples/quant`](examples/quant) | Per-Token Quant | `FlyDSL-lab@18c5a7e` | bandwidth-bound (77.5% total stall), occ 5/SIMD; FlyDSL 16.74µs vs AIter 16.05µs (0.96×) — near the HBM3E roofline; recoverable budget is ~23% barrier+LDS-wait from a two-barrier block reduction. |
+| [`examples/mla_decode`](examples/mla_decode) | MLA Decode (fp8) | `FlyDSL-lab@18c5a7e` | stall-bound (83% LDS/SMEM-wait), occ 1/SIMD @ VGPR≈251; FlyDSL 12.40µs vs aiter-HK-CK 11.19µs (0.90×) — exposed LDS→MFMA operand-feed latency on a single-wave decode. |
+| [`examples/rmsnorm`](examples/rmsnorm) | RMSNorm | `FlyDSL-lab@18c5a7e` | bandwidth-bound (41% VMEM-wait), occ 4/SIMD @60 VGPR; FlyDSL 25.1µs vs AIter 22.4µs (0.89×) — single `vmcnt(0)` load-drain before the block reduction is the ceiling. |
+| [`examples/blockscale_preshuffle_gemm`](examples/blockscale_preshuffle_gemm) | Block-Scale Preshuffle GEMM | `FlyDSL-lab@18c5a7e` | **compute-bound @M=4096**: FlyDSL 869 TFLOPS (156µs) vs AIter **tuned**-CK 1322 TFLOPS (102µs) → **0.66×** — gap widens vs M=16 (0.88×); partly a tuning-parity gap (CK loads per-shape tables, FlyDSL runs a fixed schedule). Needs split-K + tuned tiles. |
+| [`examples/preshuffle_gemm`](examples/preshuffle_gemm) | Preshuffle GEMM | `FlyDSL-lab@18c5a7e` | **compute-bound @4096³ fp8**: FlyDSL 1347 TFLOPS (102µs) vs AIter-CK (untuned) 1760 TFLOPS (78µs) → **0.77×** — at saturation the gap is real (M=16 was launch-bound/noise). ATT occ 3/SIMD: deepen the K-loop prefetch to overlap HBM loads with MFMA. |
+| [`examples/moe_blockscale`](examples/moe_blockscale) | MoE Block-Scale (2-stage) | `FlyDSL-lab@18c5a7e` | bandwidth-bound (78% of stalls VMEM), occ 2/SIMD @~203 VGPR; FlyDSL 53.8µs vs CK 44.0µs (0.82×) — MFMA-scale starved on an under-prefetched FP8 operand/scale chain. |
+| [`examples/pa`](examples/pa) | Paged-Attn Decode (PS) | `FlyDSL-lab@18c5a7e` | stall-bound (65.7%), occ 1/SIMD (VGPR 176, needs ≤128 for 2 waves); FlyDSL 169.5µs vs AIter Gluon 80.6µs (**0.48×**) — single resident wave can't hide its K/V-load + softmax-LDS latency. |
+| [`examples/topk_gating_softmax`](examples/topk_gating_softmax) | TopK Gating Softmax | `FlyDSL-lab@18c5a7e` | stall-bound (43% LGKMCNT-wait + 50% "other"), occ 4/SIMD; FlyDSL 30.9µs vs AIter-HIP 6.7µs (**0.22×**) — K=6 serial `shuffle_xor` argmax butterflies on LGKMCNT are the ceiling, not memory. |
+| [`examples/fused_rope_cache`](examples/fused_rope_cache) | Fused RoPE + KV-Cache | `FlyDSL-lab@18c5a7e` | stall-bound (80% `lgkmcnt`), occ 8/SIMD but 1 wave/block; FlyDSL 219.6µs vs AIter 37.5µs (**0.17×**) — serialized buffer-descriptor + position + `ds_bpermute` fence chain in a single 64-lane wave. |
+| [`examples/vec_add`](examples/vec_add) | Vector Add | `FlyDSL-lab@18c5a7e` | bandwidth-bound (82% VMEM-wait), occ 8/SIMD, 9 VGPR; 6468 GB/s ≈ 81% of HBM3E peak — already-optimal 128-bit streaming triad, no body headroom. |
+| [`examples/preshuffle_gemm_v2`](examples/preshuffle_gemm_v2) | Preshuffle GEMM v2 | `FlyDSL-lab@18c5a7e` | **internal v2-vs-v1 @4096×5120×8192 bf16**: v2 layout-API **767 TFLOPS = 1.20× over v1 manual** (638 TFLOPS) — the layout-API refactor is a real FlyDSL-internal win; the external CK gap is tracked under `preshuffle_gemm`. |
 
 ## How to use a captured trace
 

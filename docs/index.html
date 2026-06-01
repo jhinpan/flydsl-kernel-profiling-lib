@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlyDSL Kernel Atlas · MI350X / gfx950</title>
+<meta name="description" content="rocprofv3 ATT instruction-level profiling of every FlyDSL GPU kernel on AMD MI350X (gfx950), with AIter / CK / hipBLASLt baselines and stall-hotspot maps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b11; --bg2:#0c111a; --panel:#10151f; --panel2:#141b28;
+  --line:#1f2a3a; --line2:#2b394d;
+  --ink:#e8eef7; --ink2:#9fb0c6; --ink3:#64748b;
+  --fly:#33e0c8; --fly2:#27b8d6; --blue:#4a8dff; --violet:#9b8cff;
+  --good:#37e0a0; --warn:#ffc24b; --bad:#ff6275; --slate:#5b6b82;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 700px at 80% -10%,#0e1726 0%,var(--bg) 55%) fixed,var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--fly);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1280px;margin:0 auto;padding:0 22px}
+.mono{font-family:var(--mono)}
+.dim{color:var(--ink2)} .dim3{color:var(--ink3)}
+
+/* header */
+header{padding:42px 0 26px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+header:before{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(90deg,transparent 0 38px,rgba(51,224,200,.025) 38px 39px),
+  repeating-linear-gradient(0deg,transparent 0 38px,rgba(51,224,200,.025) 38px 39px);
+  mask:linear-gradient(180deg,#000,transparent);pointer-events:none}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--fly);font-weight:600}
+h1{font-size:clamp(30px,5vw,50px);line-height:1.04;margin:10px 0 6px;font-weight:800;letter-spacing:-.02em}
+h1 .grad{background:linear-gradient(100deg,var(--fly),var(--blue) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--ink2);max-width:760px;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line2);
+  padding:6px 11px;border-radius:999px;color:var(--ink2)}
+.chip b{color:var(--ink);font-weight:700}
+.chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--good)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:26px 0 8px}
+.kpi{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:var(--r);padding:16px 16px 14px}
+.kpi .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.01em}
+.kpi .l{font-size:12px;color:var(--ink2);margin-top:2px;letter-spacing:.02em}
+.kpi.good .n{color:var(--good)} .kpi.bad .n{color:var(--bad)} .kpi.fly .n{color:var(--fly)}
+
+section{padding:34px 0}
+.h2{display:flex;align-items:baseline;gap:12px;margin:0 0 6px}
+.h2 h2{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
+.h2 .tag{font-family:var(--mono);font-size:12px;color:var(--ink3)}
+.lead{color:var(--ink2);margin:0 0 20px;max-width:820px}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
+.pills{display:flex;flex-wrap:wrap;gap:7px}
+.pill{font-family:var(--mono);font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);
+  background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s;user-select:none}
+.pill:hover{border-color:var(--fly);color:var(--ink)}
+.pill.on{background:linear-gradient(180deg,rgba(51,224,200,.18),rgba(51,224,200,.06));border-color:var(--fly);color:#bff6ee}
+.spacer{flex:1}
+select,input[type=search]{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);
+  border:1px solid var(--line2);border-radius:9px;padding:8px 11px;outline:none}
+select:focus,input:focus{border-color:var(--fly)}
+
+/* speedup chart */
+.chart{background:var(--panel);border:1px solid var(--line2);border-radius:var(--r);padding:20px 22px}
+.bar-row{display:grid;grid-template-columns:190px 1fr 86px;align-items:center;gap:12px;padding:5px 0;cursor:pointer}
+.bar-row:hover .bk{color:var(--fly)}
+.bk{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk .cat{font-family:var(--mono);font-size:10px;color:var(--ink3);display:block}
+.track{position:relative;height:22px;background:var(--bg2);border-radius:6px;overflow:hidden}
+.track .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line2)}
+.fillbar{position:absolute;top:0;bottom:0;border-radius:6px;opacity:.92}
+.bv{font-family:var(--mono);font-size:13px;text-align:right;font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);
+  border-radius:var(--r);padding:0;overflow:hidden;cursor:pointer;transition:.16s;position:relative}
+.card:hover{transform:translateY(-3px);border-color:#37506e;box-shadow:0 14px 40px -18px rgba(0,0,0,.7)}
+.card .accent{height:3px;width:100%}
+.card .body{padding:15px 16px 16px}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card h3{font-size:16px;margin:0;font-weight:700;letter-spacing:-.01em}
+.card .catb{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-top:3px}
+.verdict{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.v-good{background:rgba(55,224,160,.14);color:var(--good)}
+.v-warn{background:rgba(255,194,75,.14);color:var(--warn)}
+.v-bad{background:rgba(255,98,117,.15);color:var(--bad)}
+.v-none{background:rgba(91,107,130,.16);color:var(--ink2)}
+.metrics{display:flex;gap:18px;margin:13px 0 11px}
+.metric .mv{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.01em}
+.metric .ml{font-size:11px;color:var(--ink3)}
+.metric .mv.fly{color:var(--fly)}
+.stallbar{height:7px;border-radius:4px;overflow:hidden;display:flex;background:var(--bg2);margin-top:4px}
+.stallbar span{height:100%}
+.cardfoot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-family:var(--mono);font-size:11.5px;color:var(--ink2)}
+.cardfoot .src{color:var(--ink3);max-width:165px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge-err{font-family:var(--mono);font-size:10px;color:var(--bad);border:1px solid rgba(255,98,117,.4);padding:2px 6px;border-radius:5px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(4,7,12,.66);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(640px,94vw);background:var(--bg2);border-left:1px solid var(--line2);
+  transform:translateX(100%);transition:.26s cubic-bezier(.4,0,.2,1);z-index:50;overflow-y:auto;box-shadow:-30px 0 80px -30px #000}
+.drawer.on{transform:none}
+.dhead{padding:22px 24px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(180deg,var(--bg2),rgba(12,17,26,.92));backdrop-filter:blur(6px);z-index:2}
+.dhead .x{position:absolute;top:18px;right:20px;font-size:22px;color:var(--ink2);cursor:pointer;line-height:1}
+.dhead .x:hover{color:var(--ink)}
+.dhead h2{margin:0 0 3px;font-size:24px;font-weight:800}
+.dhead .kn{font-family:var(--mono);font-size:12px;color:var(--fly)}
+.dbody{padding:20px 24px 60px}
+.dbody h4{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:24px 0 10px;font-weight:600}
+.dbody h4:first-child{margin-top:6px}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kv .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kv .cell .v{font-family:var(--mono);font-size:19px;font-weight:700}
+.kv .cell .k{font-size:11px;color:var(--ink3);margin-top:1px}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th{text-align:left;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding:6px 8px;border-bottom:1px solid var(--line2)}
+table.t td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td.mono{font-family:var(--mono)}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px}
+.minibar{height:18px;border-radius:4px;display:flex;overflow:hidden;background:var(--bg)}
+.minibar span{height:100%}
+.note{font-size:13px;color:var(--ink2);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--fly);border-radius:8px;padding:11px 13px;margin-top:8px}
+.dlinks{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.dlink{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;color:var(--ink)}
+.dlink:hover{border-color:var(--fly);text-decoration:none;color:var(--fly)}
+
+footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--ink3);font-size:13px}
+footer .mono{color:var(--ink2)}
+.hl{color:var(--fly)}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.bar-row{grid-template-columns:130px 1fr 64px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">rocprofv3 ATT · instruction-level atlas</div>
+    <h1>FlyDSL Kernel Atlas <span class="grad">· MI350X / gfx950</span></h1>
+    <p class="sub">Every major FlyDSL GPU kernel, captured with <b>rocprofv3 Advanced Thread Trace</b> on AMD Instinct
+      MI350X (CDNA4, gfx950) — timed, stall-mapped to the exact Python source line, and measured against
+      <b>AIter / CK / hipBLASLt</b> baselines. FlyDSL is the subject; baselines are the yardstick.</p>
+    <div class="chips" id="chips"></div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="h2"><h2>Speedup vs. baseline</h2><span class="tag" id="spd-tag"></span></div>
+    <p class="lead">Bars right of center: FlyDSL is faster than the strongest external baseline at the measured shape.
+      Bars left: optimization headroom. Kernels without a wired baseline are shown in the grid below.</p>
+    <div class="chart">
+      <div id="spdchart"></div>
+      <div class="legend">
+        <span><i style="background:var(--good)"></i>FlyDSL faster</span>
+        <span><i style="background:var(--warn)"></i>comparable (±5%)</span>
+        <span><i style="background:var(--bad)"></i>FlyDSL slower — headroom</span>
+        <span class="dim3">center = parity (1.00×)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:6px">
+  <div class="wrap">
+    <div class="h2"><h2>All kernels</h2><span class="tag" id="grid-tag"></span></div>
+    <div class="controls">
+      <div class="pills" id="catpills"></div>
+      <span class="spacer"></span>
+      <input type="search" id="search" placeholder="filter kernels…" autocomplete="off">
+      <select id="sort">
+        <option value="cat">sort: category</option>
+        <option value="spd">sort: speedup</option>
+        <option value="us">sort: FlyDSL µs</option>
+        <option value="occ">sort: occupancy</option>
+        <option value="stall">sort: stall %</option>
+      </select>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"><div id="drawer-content"></div></aside>
+
+<script src="data/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

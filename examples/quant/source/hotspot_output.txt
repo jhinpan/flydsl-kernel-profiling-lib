@@ -1,0 +1,77 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_quant/att/ui_output_agent_34678_dispatch_8
+
+  Kernel:        ui_output_agent_34678_dispatch_8
+  Instructions:  301
+  Total cycles:  2.62M
+  Total stalls:  2.03M  (77.5% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~44 (alloc 48)
+  accum_vgpr:     0 (not used)
+  limiting pool:  48 / 256
+  occupancy:      5 waves/SIMD
+  -> 6 waves requires max(arch,accum) <= 42
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 4,  buffer_store: 5
+    ds_read: 2,  ds_write: 2
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  VMEM-wait         730.0K  [██████████░░░░░░░░░░░░░░░░░░░░]  35.9%
+  VMEM-load         425.0K  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  20.9%
+  other             352.1K  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  17.3%
+  barrier           265.2K  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  13.1%
+  LDS/SMEM-wait     208.1K  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  10.2%
+  VMEM-store         41.3K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   2.0%
+  MFMA/FMA            8.5K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.4%
+  LDS                  644  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+  SMEM                  48  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     1.35M   66.50%  [█████████████████████░░░░░░░░░]  71.5%  VMEM-wait     kspace/FlyDSL-lab/tests/kernels/test_quant.py:99
+    2    482.7K   23.77%  [████████████████████████████░░]  95.9%  VMEM-load     space/FlyDSL-lab/tests/kernels/test_quant.py:178
+    3    130.5K    6.43%  [████████████████████████████░░]  96.7%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    4     36.4K    1.79%  [███████████████████████░░░░░░░]  79.2%  VMEM-store    space/FlyDSL-lab/tests/kernels/test_quant.py:242
+    5     12.6K    0.62%  [█████████████████████░░░░░░░░░]  70.6%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:128
+    6      4.9K    0.24%  [██████████████████████░░░░░░░░]  74.7%  VMEM-store    space/FlyDSL-lab/tests/kernels/test_quant.py:219
+    7      3.2K    0.16%  [███████████████████████████░░░]  92.6%  LDS/SMEM-wait  space/FlyDSL-lab/tests/kernels/test_quant.py:138
+    8      3.0K    0.15%  [██████████████████████░░░░░░░░]  73.8%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:133
+    9      2.6K    0.13%  [█████████████░░░░░░░░░░░░░░░░░]  45.9%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:202
+   10      2.1K    0.10%  [███████████████░░░░░░░░░░░░░░░]  50.1%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:212
+   11      1.5K    0.07%  [█████████░░░░░░░░░░░░░░░░░░░░░]  31.4%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:215
+   12       704    0.03%  [█████████████████████░░░░░░░░░]  72.7%  other         space/FlyDSL-lab/tests/kernels/test_quant.py:135
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1    368.5K   18.15%  VMEM-wait     s_waitcnt vmcnt(2)                                DSL-lab/tests/kernels/test_quant.py:99
+    2    269.5K   13.27%  VMEM-wait     s_waitcnt vmcnt(0)                                DSL-lab/tests/kernels/test_quant.py:99
+    3    267.5K   13.17%  VMEM-load     buffer_load_dwordx4 v[2:5], v1, s[4:7], s3 offen  SL-lab/tests/kernels/test_quant.py:178
+    4    142.4K    7.01%  barrier       s_barrier                                         DSL-lab/tests/kernels/test_quant.py:99
+    5    127.9K    6.30%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    6    122.8K    6.05%  barrier       s_barrier                                         DSL-lab/tests/kernels/test_quant.py:99
+    7     97.3K    4.79%  VMEM-load     buffer_load_dwordx4 v[6:9], v6, s[4:7], s3 offen  SL-lab/tests/kernels/test_quant.py:178
+    8     83.8K    4.13%  VMEM-wait     s_waitcnt vmcnt(1)                                DSL-lab/tests/kernels/test_quant.py:99
+    9     48.2K    2.37%  VMEM-load     buffer_load_dwordx4 v[40:43], v10, s[4:7], s3 o…  SL-lab/tests/kernels/test_quant.py:178
+   10     27.6K    1.36%  other         v_lshlrev_b32_e32 v1, 4, v0                       SL-lab/tests/kernels/test_quant.py:178
+   11     23.1K    1.14%  other         v_cvt_f32_f16_sdwa v27, v2 dst_sel:DWORD dst_un…  DSL-lab/tests/kernels/test_quant.py:99
+   12     18.4K    0.91%  VMEM-store    buffer_store_dwordx2 v[10:11], v34, s[0:3], s4 …  SL-lab/tests/kernels/test_quant.py:242
+   13     17.0K    0.84%  other         v_cvt_f32_f16_e32 v26, v2                         DSL-lab/tests/kernels/test_quant.py:99
+   14     16.2K    0.80%  other         v_lshlrev_b32_e32 v6, 4, v1                       SL-lab/tests/kernels/test_quant.py:178
+   15     14.3K    0.71%  VMEM-store    buffer_store_dwordx2 v[26:27], v37, s[0:3], s4 …  SL-lab/tests/kernels/test_quant.py:242
+
+

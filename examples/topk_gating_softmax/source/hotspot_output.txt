@@ -1,0 +1,66 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_topk_gating_softmax/att/ui_output_agent_23939_dispatch_37
+
+  Kernel:        ui_output_agent_23939_dispatch_37
+  Instructions:  1,162
+  Total cycles:  272.7K
+  Total stalls:  132.3K  (48.5% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~56 (alloc 56)
+  accum_vgpr:     0 (not used)
+  limiting pool:  56 / 256
+  occupancy:      4 waves/SIMD
+  -> 5 waves requires max(arch,accum) <= 51
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 2,  buffer_store: 18
+    ds_read: 0,  ds_write: 0
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  other              66.5K  [███████████████░░░░░░░░░░░░░░░]  50.3%
+  LDS/SMEM-wait      57.5K  [█████████████░░░░░░░░░░░░░░░░░]  43.4%
+  VMEM-wait           7.2K  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.4%
+  VMEM-store          1.0K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.8%
+  VMEM-load             72  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.1%
+  MFMA/FMA              32  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.0%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1    129.7K   98.03%  [██████████████░░░░░░░░░░░░░░░░]  48.8%  other         SL-lab/kernels/topk_gating_softmax_kernel.py:103
+    2      1.9K    1.46%  [███████████████████░░░░░░░░░░░]  65.4%  LDS/SMEM-wait  SL-lab/kernels/topk_gating_softmax_kernel.py:215
+    3       440    0.33%  [███████████████░░░░░░░░░░░░░░░]  52.4%  other         SL-lab/kernels/topk_gating_softmax_kernel.py:207
+    4       240    0.18%  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  10.3%  other         SL-lab/kernels/topk_gating_softmax_kernel.py:227
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     22.5K   17.01%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              nels/topk_gating_softmax_kernel.py:103
+    2      7.1K    5.35%  VMEM-wait     s_waitcnt vmcnt(1)                                nels/topk_gating_softmax_kernel.py:103
+    3      5.7K    4.28%  other         v_exp_f32_e32 v8, v8                              nels/topk_gating_softmax_kernel.py:103
+    4      1.7K    1.31%  other         v_exp_f32_e32 v8, v8                              nels/topk_gating_softmax_kernel.py:103
+    5      1.4K    1.07%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              nels/topk_gating_softmax_kernel.py:103
+    6      1.4K    1.06%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+    7      1.4K    1.05%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+    8      1.4K    1.03%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+    9      1.4K    1.03%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   10      1.3K    1.02%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   11      1.3K    1.02%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   12      1.3K    1.02%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   13      1.3K    1.02%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   14      1.3K    1.01%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+   15      1.3K    1.01%  LDS/SMEM-wait  s_waitcnt lgkmcnt(1)                              nels/topk_gating_softmax_kernel.py:103
+
+

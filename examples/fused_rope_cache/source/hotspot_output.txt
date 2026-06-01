@@ -1,0 +1,69 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_fused_rope_cache/att/ui_output_agent_4253_dispatch_8781
+
+  Kernel:        ui_output_agent_4253_dispatch_8781
+  Instructions:  207
+  Total cycles:  17.9K
+  Total stalls:  12.4K  (69.5% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~12 (alloc 16)
+  accum_vgpr:     0 (not used)
+  limiting pool:  16 / 256
+  occupancy:      8 waves/SIMD
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 7,  buffer_store: 6
+    ds_read: 0,  ds_write: 0
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  LDS/SMEM-wait       9.9K  [███████████████████████░░░░░░░]  79.7%
+  VMEM-wait           2.3K  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  18.6%
+  VMEM-load            128  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.0%
+  VMEM-store            64  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.5%
+  other                 16  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.1%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1      4.6K   36.93%  [████████████████████████████░░]  95.0%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    2      2.8K   22.20%  [█████████████████████████████░]  98.9%  LDS/SMEM-wait  lyDSL-lab/kernels/fused_rope_cache_kernel.py:182
+    3      2.5K   19.76%  [███████████░░░░░░░░░░░░░░░░░░░]  37.0%  VMEM-wait     lyDSL-lab/kernels/fused_rope_cache_kernel.py:105
+    4      2.3K   18.34%  [█████████████████████████████░]  97.9%  LDS/SMEM-wait  lyDSL-lab/kernels/fused_rope_cache_kernel.py:214
+    5       136    1.10%  [████████████████████░░░░░░░░░░]  66.7%  VMEM-wait     lyDSL-lab/kernels/fused_rope_cache_kernel.py:429
+    6        96    0.77%  [█████████░░░░░░░░░░░░░░░░░░░░░]  31.2%  VMEM-load     lyDSL-lab/kernels/fused_rope_cache_kernel.py:141
+    7        64    0.52%  [███████████████░░░░░░░░░░░░░░░]  50.0%  VMEM-store    lyDSL-lab/kernels/fused_rope_cache_kernel.py:148
+    8        32    0.26%  [████████░░░░░░░░░░░░░░░░░░░░░░]  27.6%  VMEM-load     lyDSL-lab/kernels/fused_rope_cache_kernel.py:187
+    9        16    0.13%  [███████████████░░░░░░░░░░░░░░░]  50.0%  LDS/SMEM-wait  lyDSL-lab/kernels/fused_rope_cache_kernel.py:405
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1      2.8K   22.20%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              kernels/fused_rope_cache_kernel.py:182
+    2      2.3K   18.92%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    3      2.3K   18.34%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              kernels/fused_rope_cache_kernel.py:214
+    4      2.0K   16.24%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    5       780    6.28%  VMEM-wait     s_waitcnt vmcnt(0)                                kernels/fused_rope_cache_kernel.py:105
+    6       508    4.09%  VMEM-wait     s_waitcnt vmcnt(1)                                kernels/fused_rope_cache_kernel.py:105
+    7       452    3.64%  VMEM-wait     s_waitcnt vmcnt(0)                                kernels/fused_rope_cache_kernel.py:105
+    8       368    2.96%  VMEM-wait     s_waitcnt vmcnt(1)                                kernels/fused_rope_cache_kernel.py:105
+    9       136    1.10%  VMEM-wait     s_waitcnt vmcnt(2)                                kernels/fused_rope_cache_kernel.py:429
+   10       132    1.06%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              kernels/fused_rope_cache_kernel.py:105
+   11       116    0.93%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              kernels/fused_rope_cache_kernel.py:105
+   12       112    0.90%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+   13       108    0.87%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+   14        32    0.26%  VMEM-load     buffer_load_dword v2, v1, s[4:7], 0 offen         kernels/fused_rope_cache_kernel.py:187
+   15        32    0.26%  VMEM-load     buffer_load_dword v4, v5, s[8:11], 0 offen        kernels/fused_rope_cache_kernel.py:141
+
+

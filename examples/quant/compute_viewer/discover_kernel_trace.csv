@@ -1,0 +1,50 @@
+"Kind","Agent_Id","Queue_Id","Stream_Id","Thread_Id","Dispatch_Id","Kernel_Id","Kernel_Name","Correlation_Id","Start_Timestamp","End_Timestamp","LDS_Block_Size","Scratch_Size","VGPR_Count","Accum_VGPR_Count","SGPR_Count","Workgroup_Size_X","Workgroup_Size_Y","Workgroup_Size_Z","Grid_Size_X","Grid_Size_Y","Grid_Size_Z"
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,1,11,"quant_kernel_0",1,2365470648094008,2365470648119168,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,2,11,"quant_kernel_0",2,2365470648631211,2365470648649052,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,3,11,"quant_kernel_0",3,2365470648700172,2365470648717452,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,4,11,"quant_kernel_0",4,2365470739193590,2365470739211270,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,5,11,"quant_kernel_0",5,2365470739319990,2365470739337150,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,6,11,"quant_kernel_0",6,2365470739387231,2365470739404591,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,7,11,"quant_kernel_0",7,2365470739454311,2365470739471511,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,8,11,"quant_kernel_0",8,2365470739520112,2365470739537392,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,9,11,"quant_kernel_0",9,2365470739586712,2365470739604112,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,10,11,"quant_kernel_0",10,2365470739651233,2365470739668433,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,11,11,"quant_kernel_0",11,2365470739716313,2365470739733634,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,12,11,"quant_kernel_0",12,2365470739782234,2365470739799554,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,13,11,"quant_kernel_0",13,2365470739847394,2365470739864515,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,14,11,"quant_kernel_0",14,2365470739910755,2365470739928155,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,15,11,"quant_kernel_0",15,2365470739975515,2365470739992676,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,16,11,"quant_kernel_0",16,2365470740046436,2365470740063716,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,17,11,"quant_kernel_0",17,2365470740110477,2365470740127877,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,18,11,"quant_kernel_0",18,2365470740173837,2365470740191077,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,19,11,"quant_kernel_0",19,2365470740237038,2365470740254358,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,20,11,"quant_kernel_0",20,2365470740301038,2365470740318358,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,21,11,"quant_kernel_0",21,2365470740364319,2365470740381719,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,22,11,"quant_kernel_0",22,2365470740427599,2365470740444919,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,23,11,"quant_kernel_0",23,2365470740490760,2365470740508160,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,24,7,"__amd_rocclr_copyBuffer",24,2365470767270257,2365470767274417,0,0,8,0,32,512,1,1,1024,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,25,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",25,2365470868211692,2365470868230372,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,26,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",26,2365470868548374,2365470868565534,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,27,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",27,2365470868610854,2365470868626894,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,28,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",28,2365470869304820,2365470869321260,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,29,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",29,2365470869378981,2365470869395221,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,30,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",30,2365470869441181,2365470869457101,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,31,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",31,2365470869501982,2365470869518142,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,32,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",32,2365470869564502,2365470869580902,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,33,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",33,2365470869625143,2365470869641503,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,34,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",34,2365470869685183,2365470869701343,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,35,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",35,2365470869744984,2365470869761064,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,36,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",36,2365470869809584,2365470869825744,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,37,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",37,2365470869871105,2365470869887425,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,38,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",38,2365470869931385,2365470869947785,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,39,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",39,2365470869993666,2365470870009786,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,40,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",40,2365470870056386,2365470870072466,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,41,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",41,2365470870117347,2365470870133827,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,42,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",42,2365470870180307,2365470870196267,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,43,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",43,2365470870240908,2365470870256988,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,44,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",44,2365470870301228,2365470870317388,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,45,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",45,2365470870363348,2365470870379629,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,46,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",46,2365470870422069,2365470870438229,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,47,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",47,2365470870482069,2365470870498110,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,48,94,"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",48,2365470884214420,2365470884231020,512,0,24,0,32,256,1,1,1048576,1,1
+"KERNEL_DISPATCH","Agent 6",1,0,1609273,49,7,"__amd_rocclr_copyBuffer",49,2365470899599824,2365470899604384,0,0,8,0,32,512,1,1,1024,1,1

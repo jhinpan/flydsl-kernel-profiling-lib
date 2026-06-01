@@ -1,0 +1,2486 @@
+{
+  "provenance": {
+    "flydsl_version": "0.1.9.dev594",
+    "flydsl_commit": "18c5a7ed",
+    "flydsl_branch": "docs/update-compile-pipeline",
+    "gpu": "AMD Instinct MI350X (gfx950, CDNA4)",
+    "gpu_count": 8,
+    "rocm": "7.2.0",
+    "rocprofv3": "1.1.0",
+    "capture_date": "2026-06-01"
+  },
+  "kernels": [
+    {
+      "test": "bench_preshuffle_gemm_v2.py",
+      "stem": "bench_preshuffle_gemm_v2",
+      "jit_kernel": "kernel_gemm_0",
+      "op_category": "gemm",
+      "capture": {
+        "kernel": "kernel_gemm_0",
+        "calls": 54,
+        "iter_range": "[6, [8-8]]",
+        "waves": 12,
+        "ins": 429,
+        "mapped": 428,
+        "mapped_pct": 99.8,
+        "arch": "gfx942",
+        "arch_vgpr": "97",
+        "accum_vgpr": "0",
+        "occupancy": "2",
+        "stall_pct_total": "81.1",
+        "top_stall_type": "LDS/SMEM-wait",
+        "capture_s": 8.1
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 447.9,
+        "baseline_us": 538.2,
+        "baseline_name": "FlyDSL v1 (manual, pre-layout-API)",
+        "speedup_vs_baseline": 1.202,
+        "verdict": "FlyDSL faster",
+        "tflops": 767.2,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "rocBLAS or hipBLASLt fp16/bf16 128x5120x8192 tiled GEMM",
+        "aiter_comparable": "false"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "567.6K",
+            "pct": 40.6
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "461.5K",
+            "pct": 33.0
+          },
+          {
+            "type": "barrier",
+            "stall": "211.5K",
+            "pct": 15.1
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "87.1K",
+            "pct": 6.2
+          },
+          {
+            "type": "LDS",
+            "stall": "35.0K",
+            "pct": 2.5
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "22.4K",
+            "pct": 1.6
+          },
+          {
+            "type": "other",
+            "stall": "12.2K",
+            "pct": 0.9
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "220",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "901.7K",
+            "pct_total": 64.52,
+            "domtype": "LDS/SMEM-wait",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:309"
+          },
+          {
+            "stall": "285.5K",
+            "pct_total": 20.43,
+            "domtype": "barrier",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:100"
+          },
+          {
+            "stall": "131.4K",
+            "pct_total": 9.4,
+            "domtype": "VMEM-wait",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:311"
+          },
+          {
+            "stall": "30.5K",
+            "pct_total": 2.18,
+            "domtype": "LDS",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:305"
+          },
+          {
+            "stall": "20.1K",
+            "pct_total": 1.44,
+            "domtype": "VMEM-load",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:302"
+          },
+          {
+            "stall": "11.1K",
+            "pct_total": 0.8,
+            "domtype": "VMEM-load",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:298"
+          },
+          {
+            "stall": "9.4K",
+            "pct_total": 0.67,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "5.5K",
+            "pct_total": 0.4,
+            "domtype": "VMEM-wait",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:320"
+          },
+          {
+            "stall": "1.1K",
+            "pct_total": 0.08,
+            "domtype": "other",
+            "source": "ld-fly/python_packages/flydsl/expr/derived.py:45"
+          },
+          {
+            "stall": "596",
+            "pct_total": 0.04,
+            "domtype": "VMEM-load",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:318"
+          },
+          {
+            "stall": "368",
+            "pct_total": 0.03,
+            "domtype": "VMEM-store",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:414"
+          },
+          {
+            "stall": "140",
+            "pct_total": 0.01,
+            "domtype": "VMEM-load",
+            "source": "ace/FlyDSL-lab/kernels/preshuffle_gemm_v2.py:317"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 64,
+          "buffer_load": 24,
+          "buffer_store": 32,
+          "ds_read": 32,
+          "ds_write": 10
+        },
+        "next_occ_step": {
+          "waves": 3,
+          "vgpr_budget": 85
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/bench_preshuffle_gemm_v2/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/bench_preshuffle_gemm_v2/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/bench_preshuffle_gemm_v2",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/bench_preshuffle_gemm_v2.py"
+      }
+    },
+    {
+      "test": "test_blockscale_preshuffle_gemm.py",
+      "stem": "test_blockscale_preshuffle_gemm",
+      "jit_kernel": "bs_gemm_bf16_direct_t16x64x256",
+      "op_category": "gemm",
+      "capture": {
+        "kernel": "bs_gemm_bf16_direct_t16x64x256",
+        "calls": 25,
+        "iter_range": "[6, [8-8]]",
+        "waves": 4,
+        "ins": 391,
+        "mapped": 390,
+        "mapped_pct": 99.7,
+        "arch": "gfx950",
+        "arch_vgpr": "73",
+        "accum_vgpr": "0",
+        "occupancy": "6",
+        "stall_pct_total": "91.8",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 14.1
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 155.7,
+        "baseline_us": 102.3,
+        "baseline_name": "AIter CK a8w8_blockscale_bpreshuffle (TUNED config)",
+        "speedup_vs_baseline": 0.66,
+        "verdict": "FlyDSL slower",
+        "tflops": 869.07,
+        "tbps": 1.389,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "CK gemm A8W8 blockscale_bpreshuffle (weight layout 16x16, scale_block 128x128)",
+        "aiter_comparable": "aiter.gemm_a8w8_blockscale_bpreshuffle"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "63.4K",
+            "pct": 76.6
+          },
+          {
+            "type": "barrier",
+            "stall": "6.0K",
+            "pct": 7.3
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "6.0K",
+            "pct": 7.2
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "4.7K",
+            "pct": 5.6
+          },
+          {
+            "type": "other",
+            "stall": "2.4K",
+            "pct": 2.9
+          },
+          {
+            "type": "LDS",
+            "stall": "192",
+            "pct": 0.2
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "84",
+            "pct": 0.1
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "28",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "44.2K",
+            "pct_total": 53.49,
+            "domtype": "VMEM-wait",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:138"
+          },
+          {
+            "stall": "30.4K",
+            "pct_total": 36.72,
+            "domtype": "VMEM-wait",
+            "source": "yDSL-lab/kernels/mfma_preshuffle_pipeline.py:585"
+          },
+          {
+            "stall": "2.9K",
+            "pct_total": 3.46,
+            "domtype": "LDS/SMEM-wait",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:541"
+          },
+          {
+            "stall": "2.6K",
+            "pct_total": 3.12,
+            "domtype": "VMEM-load",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:481"
+          },
+          {
+            "stall": "1.8K",
+            "pct_total": 2.2,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:83"
+          },
+          {
+            "stall": "272",
+            "pct_total": 0.33,
+            "domtype": "VMEM-load",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:489"
+          },
+          {
+            "stall": "192",
+            "pct_total": 0.23,
+            "domtype": "LDS",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:288"
+          },
+          {
+            "stall": "176",
+            "pct_total": 0.21,
+            "domtype": "other",
+            "source": "lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:24"
+          },
+          {
+            "stall": "132",
+            "pct_total": 0.16,
+            "domtype": "other",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:211"
+          },
+          {
+            "stall": "56",
+            "pct_total": 0.07,
+            "domtype": "other",
+            "source": "SL-lab/kernels/blockscale_preshuffle_gemm.py:654"
+          },
+          {
+            "stall": "8",
+            "pct_total": 0.01,
+            "domtype": "other",
+            "source": "yDSL-lab/kernels/mfma_preshuffle_pipeline.py:530"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 18,
+          "buffer_load": 72,
+          "buffer_store": 4,
+          "ds_read": 36,
+          "ds_write": 9
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_blockscale_preshuffle_gemm/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_blockscale_preshuffle_gemm/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_blockscale_preshuffle_gemm",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_blockscale_preshuffle_gemm.py"
+      }
+    },
+    {
+      "test": "test_flash_attn_func.py",
+      "stem": "test_flash_attn_func",
+      "jit_kernel": "flash_attn_func_kernel_0",
+      "op_category": "attention",
+      "capture": {
+        "kernel": "flash_attn_func_kernel_0",
+        "calls": 108,
+        "iter_range": "[6, [8-8]]",
+        "waves": 4,
+        "ins": 2023,
+        "mapped": 2022,
+        "mapped_pct": 100.0,
+        "arch": "gfx942",
+        "arch_vgpr": "243",
+        "accum_vgpr": "0",
+        "occupancy": "1",
+        "stall_pct_total": "54.9",
+        "top_stall_type": "VMEM-store",
+        "capture_s": 6.7
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 11.0,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": 3.1,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "aiter.mha_fwd with softmax_scale=1/sqrt(head_dim), causal=True",
+        "aiter_comparable": "aiter.mha_fwd (CK backend) or aiter.fmha_v3_fwd (ASM backend, bf16 only)"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-store",
+            "stall": "11.0K",
+            "pct": 29.0
+          },
+          {
+            "type": "other",
+            "stall": "8.2K",
+            "pct": 21.6
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "8.1K",
+            "pct": 21.4
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "5.9K",
+            "pct": 15.7
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "1.8K",
+            "pct": 4.8
+          },
+          {
+            "type": "barrier",
+            "stall": "1.8K",
+            "pct": 4.7
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "716",
+            "pct": 1.9
+          },
+          {
+            "type": "LDS",
+            "stall": "336",
+            "pct": 0.9
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "30.2K",
+            "pct_total": 79.92,
+            "domtype": "VMEM-store",
+            "source": "kspace/FlyDSL-lab/kernels/flash_attn_func.py:257"
+          },
+          {
+            "stall": "5.3K",
+            "pct_total": 13.95,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/flash_attn_func.py:283"
+          },
+          {
+            "stall": "2.3K",
+            "pct_total": 6.08,
+            "domtype": "LDS/SMEM-wait",
+            "source": "d-fly/python_packages/flydsl/expr/numeric.py:872"
+          },
+          {
+            "stall": "16",
+            "pct_total": 0.04,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/flash_attn_func.py:514"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 64,
+          "buffer_load": 20,
+          "buffer_store": 0,
+          "ds_read": 96,
+          "ds_write": 0
+        },
+        "next_occ_step": {
+          "waves": 2,
+          "vgpr_budget": 128
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_flash_attn_func/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_flash_attn_func/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_flash_attn_func",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_flash_attn_func.py"
+      }
+    },
+    {
+      "test": "test_fused_rope_cache.py",
+      "stem": "test_fused_rope_cache",
+      "jit_kernel": "fused_qk_rope_reshape_and_cache_0",
+      "op_category": "rope",
+      "capture": {
+        "kernel": "fused_qk_rope_reshape_and_cache_0",
+        "calls": 3761,
+        "iter_range": "[6, [8-8]]",
+        "waves": 4,
+        "ins": 208,
+        "mapped": 207,
+        "mapped_pct": 99.5,
+        "arch": "gfx942",
+        "arch_vgpr": "12",
+        "accum_vgpr": "0",
+        "occupancy": "8",
+        "stall_pct_total": "69.5",
+        "top_stall_type": "LDS/SMEM-wait",
+        "capture_s": 12.7
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 219.6,
+        "baseline_us": 37.5,
+        "baseline_name": "AIter",
+        "speedup_vs_baseline": 0.171,
+        "verdict": "FlyDSL slower",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "false",
+        "aiter_comparable": "true"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "9.9K",
+            "pct": 79.7
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "2.3K",
+            "pct": 18.6
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "128",
+            "pct": 1.0
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "64",
+            "pct": 0.5
+          },
+          {
+            "type": "other",
+            "stall": "16",
+            "pct": 0.1
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "4.6K",
+            "pct_total": 36.93,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "2.8K",
+            "pct_total": 22.2,
+            "domtype": "LDS/SMEM-wait",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:182"
+          },
+          {
+            "stall": "2.5K",
+            "pct_total": 19.76,
+            "domtype": "VMEM-wait",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:105"
+          },
+          {
+            "stall": "2.3K",
+            "pct_total": 18.34,
+            "domtype": "LDS/SMEM-wait",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:214"
+          },
+          {
+            "stall": "136",
+            "pct_total": 1.1,
+            "domtype": "VMEM-wait",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:429"
+          },
+          {
+            "stall": "96",
+            "pct_total": 0.77,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:141"
+          },
+          {
+            "stall": "64",
+            "pct_total": 0.52,
+            "domtype": "VMEM-store",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:148"
+          },
+          {
+            "stall": "32",
+            "pct_total": 0.26,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:187"
+          },
+          {
+            "stall": "16",
+            "pct_total": 0.13,
+            "domtype": "LDS/SMEM-wait",
+            "source": "lyDSL-lab/kernels/fused_rope_cache_kernel.py:405"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 7,
+          "buffer_store": 6,
+          "ds_read": 0,
+          "ds_write": 0
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_fused_rope_cache/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_fused_rope_cache/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_fused_rope_cache",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_fused_rope_cache.py"
+      }
+    },
+    {
+      "test": "test_hgemm_splitk.py",
+      "stem": "test_hgemm_splitk",
+      "jit_kernel": "hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14_0",
+      "op_category": "gemm",
+      "capture": {
+        "kernel": "hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14_0",
+        "calls": 55,
+        "iter_range": "[6, [8-8]]",
+        "waves": 8,
+        "ins": 522,
+        "mapped": 521,
+        "mapped_pct": 99.8,
+        "arch": "gfx942",
+        "arch_vgpr": "117",
+        "accum_vgpr": "0",
+        "occupancy": "2",
+        "stall_pct_total": "71.3",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 12.8
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 7.0,
+        "baseline_us": 11.6,
+        "baseline_name": "PyTorch",
+        "speedup_vs_baseline": 1.657,
+        "verdict": "FlyDSL faster",
+        "tflops": 25.09,
+        "tbps": 0.853,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "rocBLAS hemm or hgemm (MI350X tuned); CK GEMM bf16 for comparison",
+        "aiter_comparable": "torch.mm(a_bf16, b_bf16.T) via torch.cuda.Event timing"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "32.5K",
+            "pct": 55.8
+          },
+          {
+            "type": "barrier",
+            "stall": "8.3K",
+            "pct": 14.2
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "7.7K",
+            "pct": 13.3
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "4.3K",
+            "pct": 7.4
+          },
+          {
+            "type": "other",
+            "stall": "3.3K",
+            "pct": 5.7
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "1.2K",
+            "pct": 2.0
+          },
+          {
+            "type": "LDS",
+            "stall": "868",
+            "pct": 1.5
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "48.6K",
+            "pct_total": 83.46,
+            "domtype": "VMEM-wait",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:217"
+          },
+          {
+            "stall": "6.5K",
+            "pct_total": 11.2,
+            "domtype": "LDS/SMEM-wait",
+            "source": "d-fly/python_packages/flydsl/expr/numeric.py:872"
+          },
+          {
+            "stall": "1.4K",
+            "pct_total": 2.47,
+            "domtype": "MFMA/FMA",
+            "source": "-workspace/FlyDSL-lab/kernels/hgemm_splitk.py:80"
+          },
+          {
+            "stall": "1.3K",
+            "pct_total": 2.18,
+            "domtype": "LDS",
+            "source": "-workspace/FlyDSL-lab/kernels/tensor_shim.py:242"
+          },
+          {
+            "stall": "180",
+            "pct_total": 0.31,
+            "domtype": "other",
+            "source": "-workspace/FlyDSL-lab/kernels/tensor_shim.py:255"
+          },
+          {
+            "stall": "84",
+            "pct_total": 0.14,
+            "domtype": "other",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:487"
+          },
+          {
+            "stall": "48",
+            "pct_total": 0.08,
+            "domtype": "other",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:456"
+          },
+          {
+            "stall": "32",
+            "pct_total": 0.05,
+            "domtype": "LDS/SMEM-wait",
+            "source": "-workspace/FlyDSL-lab/kernels/tensor_shim.py:225"
+          },
+          {
+            "stall": "32",
+            "pct_total": 0.05,
+            "domtype": "LDS/SMEM-wait",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:449"
+          },
+          {
+            "stall": "20",
+            "pct_total": 0.03,
+            "domtype": "other",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:448"
+          },
+          {
+            "stall": "8",
+            "pct_total": 0.01,
+            "domtype": "other",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:738"
+          },
+          {
+            "stall": "4",
+            "pct_total": 0.01,
+            "domtype": "other",
+            "source": "workspace/FlyDSL-lab/kernels/hgemm_splitk.py:495"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 32,
+          "buffer_load": 24,
+          "buffer_store": 2,
+          "ds_read": 34,
+          "ds_write": 16
+        },
+        "next_occ_step": {
+          "waves": 3,
+          "vgpr_budget": 85
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_hgemm_splitk/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_hgemm_splitk/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_hgemm_splitk",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_hgemm_splitk.py"
+      }
+    },
+    {
+      "test": "test_layernorm.py",
+      "stem": "test_layernorm",
+      "jit_kernel": "layernorm_kernel_0",
+      "op_category": "norm",
+      "capture": {
+        "kernel": "layernorm_kernel_0",
+        "calls": 112,
+        "iter_range": "[6, [8-8]]",
+        "waves": 16,
+        "ins": 457,
+        "mapped": 456,
+        "mapped_pct": 99.8,
+        "arch": "gfx942",
+        "arch_vgpr": "69",
+        "accum_vgpr": "0",
+        "occupancy": "3",
+        "stall_pct_total": "60.3",
+        "top_stall_type": "LDS/SMEM-wait",
+        "capture_s": 6.3
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 24.1,
+        "baseline_us": 24.7,
+        "baseline_name": "AIter",
+        "speedup_vs_baseline": 1.025,
+        "verdict": "comparable",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": 1490.17,
+        "status": "ok",
+        "ck_baseline_candidate": "CK LayerNorm (ck_launch_and_time baseline if available)",
+        "aiter_comparable": "aiter.ops.triton.norm.layer_norm"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "26.8K",
+            "pct": 58.2
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "12.8K",
+            "pct": 27.9
+          },
+          {
+            "type": "other",
+            "stall": "4.0K",
+            "pct": 8.6
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "952",
+            "pct": 2.1
+          },
+          {
+            "type": "barrier",
+            "stall": "824",
+            "pct": 1.8
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "644",
+            "pct": 1.4
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "22.8K",
+            "pct_total": 49.6,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "21.4K",
+            "pct_total": 46.63,
+            "domtype": "VMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/layernorm_kernel.py:50"
+          },
+          {
+            "stall": "1.1K",
+            "pct_total": 2.38,
+            "domtype": "VMEM-load",
+            "source": "space/FlyDSL-lab/kernels/layernorm_kernel.py:151"
+          },
+          {
+            "stall": "644",
+            "pct_total": 1.4,
+            "domtype": "VMEM-store",
+            "source": "space/FlyDSL-lab/kernels/layernorm_kernel.py:157"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 12,
+          "buffer_store": 4,
+          "ds_read": 3,
+          "ds_write": 2
+        },
+        "next_occ_step": {
+          "waves": 4,
+          "vgpr_budget": 64
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_layernorm/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_layernorm/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_layernorm",
+        "kernel_sources": [
+          "/sgl-workspace/FlyDSL-lab/kernels/layernorm_kernel.py"
+        ],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_layernorm.py"
+      }
+    },
+    {
+      "test": "test_mla_decode.py",
+      "stem": "test_mla_decode",
+      "jit_kernel": "kn_mla_fwd_decode_m16x8_fp8_fp8_0",
+      "op_category": "attention",
+      "capture": {
+        "kernel": "kn_mla_fwd_decode_m16x8_fp8_fp8_0",
+        "calls": 363,
+        "iter_range": "[6, [8-8]]",
+        "waves": 32,
+        "ins": 4949,
+        "mapped": 4948,
+        "mapped_pct": 100.0,
+        "arch": "gfx942",
+        "arch_vgpr": "251",
+        "accum_vgpr": "0",
+        "occupancy": "1",
+        "stall_pct_total": "94.6",
+        "top_stall_type": "LDS/SMEM-wait",
+        "capture_s": 17.6
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 12.23,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": 1.46,
+        "tbps": 0.02,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "hipBLASLt-based paged attention if available; else DeepSeek-V3 reference attention",
+        "aiter_comparable": "aiter.hk_mla_decode_fwd + aiter.mla_decode_stage1_asm_fwd"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "36.1K",
+            "pct": 83.0
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "5.9K",
+            "pct": 13.5
+          },
+          {
+            "type": "other",
+            "stall": "1.0K",
+            "pct": 2.4
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "496",
+            "pct": 1.1
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "36.1K",
+            "pct_total": 83.03,
+            "domtype": "LDS/SMEM-wait",
+            "source": "ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:396"
+          },
+          {
+            "stall": "6.9K",
+            "pct_total": 15.83,
+            "domtype": "VMEM-wait",
+            "source": "ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:309"
+          },
+          {
+            "stall": "496",
+            "pct_total": 1.14,
+            "domtype": "VMEM-load",
+            "source": "ab/./kernels/mla_fwd_decode_m16x8_fp8_fp8.py:409"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 688,
+          "buffer_load": 130,
+          "buffer_store": 64,
+          "ds_read": 759,
+          "ds_write": 127
+        },
+        "next_occ_step": {
+          "waves": 2,
+          "vgpr_budget": 128
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_mla_decode/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_mla_decode/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_mla_decode",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_mla_decode.py"
+      }
+    },
+    {
+      "test": "test_moe_blockscale.py",
+      "stem": "test_moe_blockscale",
+      "jit_kernel": "mfma_moe1_bs_fp8_f16_cshuffle_t16x256x128_wpe2_abi8",
+      "op_category": "moe",
+      "capture": {
+        "kernel": "mfma_moe1_bs_fp8_f16_cshuffle_t16x256x128_wpe2_abi8",
+        "calls": 9,
+        "iter_range": "[3, [4-4]]",
+        "waves": 4,
+        "ins": 886,
+        "mapped": 885,
+        "mapped_pct": 99.9,
+        "arch": "gfx950",
+        "arch_vgpr": "203",
+        "accum_vgpr": "0",
+        "occupancy": "2",
+        "stall_pct_total": "82.8",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 12.4
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 53.8,
+        "baseline_us": 44.0,
+        "baseline_name": "CK",
+        "speedup_vs_baseline": 0.818,
+        "verdict": "FlyDSL slower",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "ck_moe_stage1_fwd and ck_moe_stage2_fwd from aiter.ops.moe_op (blockscale)",
+        "aiter_comparable": "aiter.fmoe_fp8_blockscale_g1u1 (fused 1-stage)"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "189.1K",
+            "pct": 41.3
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "166.0K",
+            "pct": 36.3
+          },
+          {
+            "type": "barrier",
+            "stall": "54.2K",
+            "pct": 11.9
+          },
+          {
+            "type": "other",
+            "stall": "21.2K",
+            "pct": 4.6
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "13.4K",
+            "pct": 2.9
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "13.3K",
+            "pct": 2.9
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "68",
+            "pct": 0.0
+          },
+          {
+            "type": "LDS",
+            "stall": "32",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "140.6K",
+            "pct_total": 30.74,
+            "domtype": "VMEM-wait",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:740"
+          },
+          {
+            "stall": "112.2K",
+            "pct_total": 24.52,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:83"
+          },
+          {
+            "stall": "91.1K",
+            "pct_total": 19.91,
+            "domtype": "barrier",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:196"
+          },
+          {
+            "stall": "44.4K",
+            "pct_total": 9.72,
+            "domtype": "VMEM-load",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:674"
+          },
+          {
+            "stall": "40.2K",
+            "pct_total": 8.79,
+            "domtype": "VMEM-wait",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:737"
+          },
+          {
+            "stall": "14.4K",
+            "pct_total": 3.16,
+            "domtype": "VMEM-load",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:688"
+          },
+          {
+            "stall": "3.8K",
+            "pct_total": 0.84,
+            "domtype": "LDS/SMEM-wait",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:306"
+          },
+          {
+            "stall": "2.4K",
+            "pct_total": 0.53,
+            "domtype": "LDS/SMEM-wait",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:341"
+          },
+          {
+            "stall": "1.6K",
+            "pct_total": 0.36,
+            "domtype": "VMEM-wait",
+            "source": "yDSL-lab/kernels/mfma_preshuffle_pipeline.py:612"
+          },
+          {
+            "stall": "1.6K",
+            "pct_total": 0.35,
+            "domtype": "other",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:450"
+          },
+          {
+            "stall": "1.5K",
+            "pct_total": 0.32,
+            "domtype": "VMEM-load",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:686"
+          },
+          {
+            "stall": "1.3K",
+            "pct_total": 0.28,
+            "domtype": "VMEM-wait",
+            "source": "/FlyDSL-lab/kernels/moe_blockscale_2stage.py:273"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 32,
+          "buffer_load": 104,
+          "buffer_store": 4,
+          "ds_read": 12,
+          "ds_write": 20
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_moe_blockscale/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_moe_blockscale/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_moe_blockscale",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_moe_blockscale.py"
+      }
+    },
+    {
+      "test": "test_moe_gemm.py",
+      "stem": "test_moe_gemm",
+      "jit_kernel": "moe_gemm1_0",
+      "op_category": "gemm",
+      "capture": {
+        "kernel": "moe_gemm1_0",
+        "calls": 18,
+        "iter_range": "[6, [8-8]]",
+        "waves": 24,
+        "ins": 997,
+        "mapped": 996,
+        "mapped_pct": 99.9,
+        "arch": "gfx942",
+        "arch_vgpr": "155",
+        "accum_vgpr": "0",
+        "occupancy": "1",
+        "stall_pct_total": "91.0",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 12.5
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 142.9,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": 93.01,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "ck_moe_stage1_fwd,ck_moe_stage2_fwd",
+        "aiter_comparable": "moe_gemm1,moe_gemm2"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "1.11M",
+            "pct": 55.0
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "304.7K",
+            "pct": 15.0
+          },
+          {
+            "type": "barrier",
+            "stall": "263.9K",
+            "pct": 13.0
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "227.5K",
+            "pct": 11.2
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "101.5K",
+            "pct": 5.0
+          },
+          {
+            "type": "other",
+            "stall": "11.1K",
+            "pct": 0.5
+          },
+          {
+            "type": "LDS",
+            "stall": "2.7K",
+            "pct": 0.1
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "132",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "639.6K",
+            "pct_total": 31.59,
+            "domtype": "VMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:880"
+          },
+          {
+            "stall": "570.7K",
+            "pct_total": 28.18,
+            "domtype": "VMEM-wait",
+            "source": "yDSL-lab/kernels/mfma_preshuffle_pipeline.py:585"
+          },
+          {
+            "stall": "306.9K",
+            "pct_total": 15.16,
+            "domtype": "barrier",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:280"
+          },
+          {
+            "stall": "306.4K",
+            "pct_total": 15.13,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:83"
+          },
+          {
+            "stall": "124.9K",
+            "pct_total": 6.17,
+            "domtype": "MFMA/FMA",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:881"
+          },
+          {
+            "stall": "34.1K",
+            "pct_total": 1.68,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:363"
+          },
+          {
+            "stall": "18.0K",
+            "pct_total": 0.89,
+            "domtype": "VMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:370"
+          },
+          {
+            "stall": "9.1K",
+            "pct_total": 0.45,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:442"
+          },
+          {
+            "stall": "8.3K",
+            "pct_total": 0.41,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:405"
+          },
+          {
+            "stall": "2.9K",
+            "pct_total": 0.15,
+            "domtype": "other",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:785"
+          },
+          {
+            "stall": "456",
+            "pct_total": 0.02,
+            "domtype": "other",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:616"
+          },
+          {
+            "stall": "400",
+            "pct_total": 0.02,
+            "domtype": "other",
+            "source": "kspace/FlyDSL-lab/kernels/moe_gemm_2stage.py:508"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 256,
+          "buffer_load": 96,
+          "buffer_store": 16,
+          "ds_read": 32,
+          "ds_write": 8
+        },
+        "next_occ_step": {
+          "waves": 2,
+          "vgpr_budget": 128
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_moe_gemm/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_moe_gemm/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_moe_gemm",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_moe_gemm.py"
+      }
+    },
+    {
+      "test": "test_moe_reduce.py",
+      "stem": "test_moe_reduce",
+      "jit_kernel": "moe_reduction_kernel_0",
+      "op_category": "reduction",
+      "capture": {
+        "kernel": "moe_reduction_kernel_0",
+        "calls": 26,
+        "iter_range": "[6, [8-8]]",
+        "waves": 4112,
+        "ins": 432,
+        "mapped": 431,
+        "mapped_pct": 99.8,
+        "arch": "gfx942",
+        "arch_vgpr": "53",
+        "accum_vgpr": "0",
+        "occupancy": "4",
+        "stall_pct_total": "77.4",
+        "top_stall_type": "VMEM-load",
+        "capture_s": 6.6
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": null,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": 26.86,
+        "status": "ok",
+        "ck_baseline_candidate": "N/A (reduction, not GEMM; torch.sum is built-in baseline)",
+        "aiter_comparable": "torch.sum(dim=1) on [1,6,5120] f16 tensor"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-load",
+            "stall": "32.23M",
+            "pct": 70.5
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "9.43M",
+            "pct": 20.6
+          },
+          {
+            "type": "other",
+            "stall": "2.53M",
+            "pct": 5.5
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "1.05M",
+            "pct": 2.3
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "433.6K",
+            "pct": 0.9
+          },
+          {
+            "type": "SMEM",
+            "stall": "21.9K",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "33.55M",
+            "pct_total": 73.42,
+            "domtype": "VMEM-load",
+            "source": "space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3177"
+          },
+          {
+            "stall": "10.79M",
+            "pct_total": 23.6,
+            "domtype": "VMEM-wait",
+            "source": "space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3101"
+          },
+          {
+            "stall": "1.05M",
+            "pct_total": 2.3,
+            "domtype": "VMEM-store",
+            "source": "space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3211"
+          },
+          {
+            "stall": "162.6K",
+            "pct_total": 0.36,
+            "domtype": "LDS/SMEM-wait",
+            "source": "ld-fly/python_packages/flydsl/expr/typing.py:896"
+          },
+          {
+            "stall": "139.5K",
+            "pct_total": 0.31,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "4.8K",
+            "pct_total": 0.01,
+            "domtype": "SMEM",
+            "source": "space/FlyDSL-lab/kernels/moe_gemm_2stage.py:3243"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 72,
+          "buffer_store": 9,
+          "ds_read": 0,
+          "ds_write": 0
+        },
+        "next_occ_step": {
+          "waves": 5,
+          "vgpr_budget": 51
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_moe_reduce/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_moe_reduce/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_moe_reduce",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_moe_reduce.py"
+      }
+    },
+    {
+      "test": "test_pa.py",
+      "stem": "test_pa",
+      "jit_kernel": "pa_decode_ps_kernel_0",
+      "op_category": "attention",
+      "capture": {
+        "kernel": "pa_decode_ps_kernel_0",
+        "calls": 13,
+        "iter_range": "[5, [6-6]]",
+        "waves": 56,
+        "ins": 937,
+        "mapped": 936,
+        "mapped_pct": 99.9,
+        "arch": "gfx942",
+        "arch_vgpr": "175",
+        "accum_vgpr": null,
+        "occupancy": "1",
+        "stall_pct_total": "65.7",
+        "top_stall_type": "LDS/SMEM-wait",
+        "capture_s": 14.3
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 169.5,
+        "baseline_us": 80.6,
+        "baseline_name": "AIter Gluon (pa_decode_gluon)",
+        "speedup_vs_baseline": 0.476,
+        "verdict": "FlyDSL slower",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "No CK baseline available; use AIter Gluon pa_decode_gluon as reference. For paged-attention performance comparison, AIter uses Triton Gluon compiled at runtime.",
+        "aiter_comparable": "torch.ops.aiter.pa_decode_gluon (Gluon reference paged-attention kernel; invoked via run_gluon_ps() at test_pa.py:802\u2013823)"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "25.3K",
+            "pct": 36.2
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "16.3K",
+            "pct": 23.3
+          },
+          {
+            "type": "other",
+            "stall": "15.8K",
+            "pct": 22.5
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "9.2K",
+            "pct": 13.1
+          },
+          {
+            "type": "barrier",
+            "stall": "2.5K",
+            "pct": 3.6
+          },
+          {
+            "type": "LDS",
+            "stall": "364",
+            "pct": 0.5
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "296",
+            "pct": 0.4
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "264",
+            "pct": 0.4
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "39.1K",
+            "pct_total": 55.83,
+            "domtype": "VMEM-wait",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1170"
+          },
+          {
+            "stall": "21.3K",
+            "pct_total": 30.48,
+            "domtype": "LDS/SMEM-wait",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1215"
+          },
+          {
+            "stall": "2.3K",
+            "pct_total": 3.23,
+            "domtype": "LDS/SMEM-wait",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1209"
+          },
+          {
+            "stall": "1.4K",
+            "pct_total": 1.99,
+            "domtype": "VMEM-load",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1577"
+          },
+          {
+            "stall": "1.3K",
+            "pct_total": 1.87,
+            "domtype": "other",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1220"
+          },
+          {
+            "stall": "1.0K",
+            "pct_total": 1.47,
+            "domtype": "VMEM-load",
+            "source": "orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:537"
+          },
+          {
+            "stall": "844",
+            "pct_total": 1.21,
+            "domtype": "VMEM-wait",
+            "source": "orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:895"
+          },
+          {
+            "stall": "544",
+            "pct_total": 0.78,
+            "domtype": "other",
+            "source": "orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:151"
+          },
+          {
+            "stall": "432",
+            "pct_total": 0.62,
+            "domtype": "VMEM-load",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1574"
+          },
+          {
+            "stall": "252",
+            "pct_total": 0.36,
+            "domtype": "VMEM-load",
+            "source": "orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:531"
+          },
+          {
+            "stall": "248",
+            "pct_total": 0.35,
+            "domtype": "VMEM-store",
+            "source": "rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1624"
+          },
+          {
+            "stall": "200",
+            "pct_total": 0.29,
+            "domtype": "other",
+            "source": "orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:808"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 32,
+          "buffer_load": 14,
+          "buffer_store": 3,
+          "ds_read": 18,
+          "ds_write": 8
+        },
+        "next_occ_step": {
+          "waves": 2,
+          "vgpr_budget": 128
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_pa/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_pa/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_pa",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_pa.py"
+      }
+    },
+    {
+      "test": "test_preshuffle_gemm.py",
+      "stem": "test_preshuffle_gemm",
+      "jit_kernel": "kernel_gemm_0",
+      "op_category": "gemm",
+      "capture": {
+        "kernel": "kernel_gemm_0",
+        "calls": 25,
+        "iter_range": "[6, [8-8]]",
+        "waves": 68,
+        "ins": 864,
+        "mapped": 863,
+        "mapped_pct": 99.9,
+        "arch": "gfx950",
+        "arch_vgpr": "161",
+        "accum_vgpr": "0",
+        "occupancy": "3",
+        "stall_pct_total": "82.7",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 11.7
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 102.0,
+        "baseline_us": 78.1,
+        "baseline_name": "AIter CK a8w8 bpreshuffle (untuned default config)",
+        "speedup_vs_baseline": 0.766,
+        "verdict": "FlyDSL slower",
+        "tflops": 1347.41,
+        "tbps": 458.15,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "rocblas_gemm_ex or composable_kernels preshuffle fp8 variant",
+        "aiter_comparable": "aiter.gemm_a8w8_bpreshuffle"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "1.79M",
+            "pct": 33.7
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "1.18M",
+            "pct": 22.3
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "698.1K",
+            "pct": 13.1
+          },
+          {
+            "type": "LDS",
+            "stall": "626.5K",
+            "pct": 11.8
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "439.2K",
+            "pct": 8.3
+          },
+          {
+            "type": "barrier",
+            "stall": "366.0K",
+            "pct": 6.9
+          },
+          {
+            "type": "other",
+            "stall": "109.3K",
+            "pct": 2.1
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "85.2K",
+            "pct": 1.6
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "2.76M",
+            "pct_total": 52.02,
+            "domtype": "VMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:313"
+          },
+          {
+            "stall": "1.89M",
+            "pct_total": 35.56,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:940"
+          },
+          {
+            "stall": "233.6K",
+            "pct_total": 4.4,
+            "domtype": "VMEM-load",
+            "source": "lyDSL-lab/kernels/mfma_preshuffle_pipeline.py:83"
+          },
+          {
+            "stall": "219.2K",
+            "pct_total": 4.13,
+            "domtype": "VMEM-load",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:517"
+          },
+          {
+            "stall": "87.2K",
+            "pct_total": 1.64,
+            "domtype": "VMEM-store",
+            "source": "space/FlyDSL-lab/kernels/preshuffle_gemm.py:1167"
+          },
+          {
+            "stall": "84.4K",
+            "pct_total": 1.59,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:396"
+          },
+          {
+            "stall": "15.0K",
+            "pct_total": 0.28,
+            "domtype": "VMEM-load",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:832"
+          },
+          {
+            "stall": "10.4K",
+            "pct_total": 0.2,
+            "domtype": "SMEM",
+            "source": "d-fly/python_packages/flydsl/expr/numeric.py:872"
+          },
+          {
+            "stall": "3.9K",
+            "pct_total": 0.07,
+            "domtype": "LDS/SMEM-wait",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:397"
+          },
+          {
+            "stall": "1.7K",
+            "pct_total": 0.03,
+            "domtype": "other",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:433"
+          },
+          {
+            "stall": "1.5K",
+            "pct_total": 0.03,
+            "domtype": "other",
+            "source": "yDSL-lab/kernels/mfma_preshuffle_pipeline.py:530"
+          },
+          {
+            "stall": "1.3K",
+            "pct_total": 0.03,
+            "domtype": "VMEM-load",
+            "source": "kspace/FlyDSL-lab/kernels/preshuffle_gemm.py:825"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 64,
+          "buffer_load": 42,
+          "buffer_store": 64,
+          "ds_read": 64,
+          "ds_write": 32
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_preshuffle_gemm/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_preshuffle_gemm/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_preshuffle_gemm",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_preshuffle_gemm.py"
+      }
+    },
+    {
+      "test": "test_quant.py",
+      "stem": "test_quant",
+      "jit_kernel": "quant_kernel_0",
+      "op_category": "quant",
+      "capture": {
+        "kernel": "quant_kernel_0",
+        "calls": 23,
+        "iter_range": "[6, [8-8]]",
+        "waves": 260,
+        "ins": 302,
+        "mapped": 301,
+        "mapped_pct": 99.7,
+        "arch": "gfx942",
+        "arch_vgpr": "44",
+        "accum_vgpr": "0",
+        "occupancy": "5",
+        "stall_pct_total": "77.5",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 10.7
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": null,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": 5910.18,
+        "status": "ok",
+        "ck_baseline_candidate": "none",
+        "aiter_comparable": "per_token_quant_hip"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "730.0K",
+            "pct": 35.9
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "425.0K",
+            "pct": 20.9
+          },
+          {
+            "type": "other",
+            "stall": "352.1K",
+            "pct": 17.3
+          },
+          {
+            "type": "barrier",
+            "stall": "265.2K",
+            "pct": 13.1
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "208.1K",
+            "pct": 10.2
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "41.3K",
+            "pct": 2.0
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "8.5K",
+            "pct": 0.4
+          },
+          {
+            "type": "LDS",
+            "stall": "644",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "1.35M",
+            "pct_total": 66.5,
+            "domtype": "VMEM-wait",
+            "source": "kspace/FlyDSL-lab/tests/kernels/test_quant.py:99"
+          },
+          {
+            "stall": "482.7K",
+            "pct_total": 23.77,
+            "domtype": "VMEM-load",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:178"
+          },
+          {
+            "stall": "130.5K",
+            "pct_total": 6.43,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "36.4K",
+            "pct_total": 1.79,
+            "domtype": "VMEM-store",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:242"
+          },
+          {
+            "stall": "12.6K",
+            "pct_total": 0.62,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:128"
+          },
+          {
+            "stall": "4.9K",
+            "pct_total": 0.24,
+            "domtype": "VMEM-store",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:219"
+          },
+          {
+            "stall": "3.2K",
+            "pct_total": 0.16,
+            "domtype": "LDS/SMEM-wait",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:138"
+          },
+          {
+            "stall": "3.0K",
+            "pct_total": 0.15,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:133"
+          },
+          {
+            "stall": "2.6K",
+            "pct_total": 0.13,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:202"
+          },
+          {
+            "stall": "2.1K",
+            "pct_total": 0.1,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:212"
+          },
+          {
+            "stall": "1.5K",
+            "pct_total": 0.07,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:215"
+          },
+          {
+            "stall": "704",
+            "pct_total": 0.03,
+            "domtype": "other",
+            "source": "space/FlyDSL-lab/tests/kernels/test_quant.py:135"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 4,
+          "buffer_store": 5,
+          "ds_read": 2,
+          "ds_write": 2
+        },
+        "next_occ_step": {
+          "waves": 6,
+          "vgpr_budget": 42
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_quant/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_quant/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_quant",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_quant.py"
+      }
+    },
+    {
+      "test": "test_rmsnorm.py",
+      "stem": "test_rmsnorm",
+      "jit_kernel": "rmsnorm_kernel_0",
+      "op_category": "norm",
+      "capture": {
+        "kernel": "rmsnorm_kernel_0",
+        "calls": 111,
+        "iter_range": "[6, [8-8]]",
+        "waves": 64,
+        "ins": 338,
+        "mapped": 337,
+        "mapped_pct": 99.7,
+        "arch": "gfx942",
+        "arch_vgpr": "60",
+        "accum_vgpr": "0",
+        "occupancy": "4",
+        "stall_pct_total": "72.1",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 6.1
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 25.1,
+        "baseline_us": 22.4,
+        "baseline_name": "AIter",
+        "speedup_vs_baseline": 0.892,
+        "verdict": "FlyDSL slower",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": 4729.73,
+        "status": "ok",
+        "ck_baseline_candidate": "none (RMSNorm is a reduction/normalization op, not GEMM; rocBLAS does not provide RMSNorm)",
+        "aiter_comparable": "aiter.ops.triton.rmsnorm.rms_norm"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "98.4K",
+            "pct": 41.1
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "48.1K",
+            "pct": 20.1
+          },
+          {
+            "type": "other",
+            "stall": "37.2K",
+            "pct": 15.6
+          },
+          {
+            "type": "barrier",
+            "stall": "32.5K",
+            "pct": 13.6
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "22.2K",
+            "pct": 9.3
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "796",
+            "pct": 0.3
+          },
+          {
+            "type": "LDS",
+            "stall": "68",
+            "pct": 0.0
+          },
+          {
+            "type": "SMEM",
+            "stall": "20",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "179.6K",
+            "pct_total": 75.02,
+            "domtype": "VMEM-wait",
+            "source": "rkspace/FlyDSL-lab/kernels/rmsnorm_kernel.py:115"
+          },
+          {
+            "stall": "32.8K",
+            "pct_total": 13.7,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "26.1K",
+            "pct_total": 10.89,
+            "domtype": "VMEM-load",
+            "source": "orkspace/FlyDSL-lab/kernels/rmsnorm_kernel.py:59"
+          },
+          {
+            "stall": "892",
+            "pct_total": 0.37,
+            "domtype": "VMEM-store",
+            "source": "orkspace/FlyDSL-lab/kernels/rmsnorm_kernel.py:66"
+          },
+          {
+            "stall": "24",
+            "pct_total": 0.01,
+            "domtype": "LDS",
+            "source": "rkspace/FlyDSL-lab/kernels/rmsnorm_kernel.py:177"
+          },
+          {
+            "stall": "8",
+            "pct_total": 0.0,
+            "domtype": "LDS",
+            "source": "rkspace/FlyDSL-lab/kernels/rmsnorm_kernel.py:165"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 8,
+          "buffer_store": 4,
+          "ds_read": 2,
+          "ds_write": 2
+        },
+        "next_occ_step": {
+          "waves": 5,
+          "vgpr_budget": 51
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_rmsnorm/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_rmsnorm/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_rmsnorm",
+        "kernel_sources": [
+          "/sgl-workspace/FlyDSL-lab/kernels/rmsnorm_kernel.py"
+        ],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_rmsnorm.py"
+      }
+    },
+    {
+      "test": "test_softmax.py",
+      "stem": "test_softmax",
+      "jit_kernel": "softmax_kernel_0",
+      "op_category": "reduction",
+      "capture": {
+        "kernel": "softmax_kernel_0",
+        "calls": 112,
+        "iter_range": "[6, [8-8]]",
+        "waves": 2056,
+        "ins": 732,
+        "mapped": 731,
+        "mapped_pct": 99.9,
+        "arch": "gfx942",
+        "arch_vgpr": "47",
+        "accum_vgpr": "0",
+        "occupancy": "5",
+        "stall_pct_total": "76.4",
+        "top_stall_type": "VMEM-load",
+        "capture_s": 8.5
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 271.8,
+        "baseline_us": 558.0,
+        "baseline_name": "AIter",
+        "speedup_vs_baseline": 2.053,
+        "verdict": "FlyDSL faster",
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": 5246.7,
+        "status": "ok",
+        "ck_baseline_candidate": "none (softmax is elementwise reduction; no direct CK/rocBLAS baseline. PyTorch softmax torch.nn.functional.softmax serves as reference.)",
+        "aiter_comparable": "aiter.ops.triton.softmax"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-load",
+            "stall": "14.60M",
+            "pct": 45.9
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "4.65M",
+            "pct": 14.6
+          },
+          {
+            "type": "barrier",
+            "stall": "4.54M",
+            "pct": 14.3
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "3.86M",
+            "pct": 12.1
+          },
+          {
+            "type": "other",
+            "stall": "2.73M",
+            "pct": 8.6
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "1.36M",
+            "pct": 4.3
+          },
+          {
+            "type": "SMEM",
+            "stall": "29.0K",
+            "pct": 0.1
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "23.0K",
+            "pct": 0.1
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "14.75M",
+            "pct_total": 46.37,
+            "domtype": "VMEM-load",
+            "source": "rkspace/FlyDSL-lab/kernels/softmax_kernel.py:186"
+          },
+          {
+            "stall": "12.20M",
+            "pct_total": 38.36,
+            "domtype": "barrier",
+            "source": "orkspace/FlyDSL-lab/kernels/softmax_kernel.py:41"
+          },
+          {
+            "stall": "4.67M",
+            "pct_total": 14.69,
+            "domtype": "VMEM-store",
+            "source": "rkspace/FlyDSL-lab/kernels/softmax_kernel.py:194"
+          },
+          {
+            "stall": "151.6K",
+            "pct_total": 0.48,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "16.9K",
+            "pct_total": 0.05,
+            "domtype": "other",
+            "source": "orkspace/FlyDSL-lab/kernels/softmax_kernel.py:96"
+          },
+          {
+            "stall": "8.5K",
+            "pct_total": 0.03,
+            "domtype": "LDS",
+            "source": "orkspace/FlyDSL-lab/kernels/softmax_kernel.py:99"
+          },
+          {
+            "stall": "4.6K",
+            "pct_total": 0.01,
+            "domtype": "LDS",
+            "source": "orkspace/FlyDSL-lab/kernels/softmax_kernel.py:84"
+          },
+          {
+            "stall": "1.5K",
+            "pct_total": 0.0,
+            "domtype": "other",
+            "source": "orkspace/FlyDSL-lab/kernels/softmax_kernel.py:90"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 32,
+          "buffer_store": 32,
+          "ds_read": 4,
+          "ds_write": 4
+        },
+        "next_occ_step": {
+          "waves": 6,
+          "vgpr_budget": 42
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_softmax/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_softmax/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_softmax",
+        "kernel_sources": [
+          "/sgl-workspace/FlyDSL-lab/kernels/softmax_kernel.py"
+        ],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_softmax.py"
+      }
+    },
+    {
+      "test": "test_topk_gating_softmax.py",
+      "stem": "test_topk_gating_softmax",
+      "jit_kernel": "topk_gating_softmax_kernel_0",
+      "op_category": "moe",
+      "capture": {
+        "kernel": "topk_gating_softmax_kernel_0",
+        "calls": 112,
+        "iter_range": "[6, [8-8]]",
+        "waves": 32,
+        "ins": 1163,
+        "mapped": 1162,
+        "mapped_pct": 99.9,
+        "arch": "gfx942",
+        "arch_vgpr": "56",
+        "accum_vgpr": "0",
+        "occupancy": "4",
+        "stall_pct_total": "48.5",
+        "top_stall_type": "other",
+        "capture_s": 6.1
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": 24.5,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": null,
+        "tbps": null,
+        "bandwidth_gbs": null,
+        "status": "ok",
+        "ck_baseline_candidate": "vLLM::topk_gating_softmax (reference: softmax + topk + renormalization)",
+        "aiter_comparable": "None"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "other",
+            "stall": "66.5K",
+            "pct": 50.3
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "57.5K",
+            "pct": 43.4
+          },
+          {
+            "type": "VMEM-wait",
+            "stall": "7.2K",
+            "pct": 5.4
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "1.0K",
+            "pct": 0.8
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "72",
+            "pct": 0.1
+          },
+          {
+            "type": "MFMA/FMA",
+            "stall": "32",
+            "pct": 0.0
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "129.7K",
+            "pct_total": 98.03,
+            "domtype": "other",
+            "source": "SL-lab/kernels/topk_gating_softmax_kernel.py:103"
+          },
+          {
+            "stall": "1.9K",
+            "pct_total": 1.46,
+            "domtype": "LDS/SMEM-wait",
+            "source": "SL-lab/kernels/topk_gating_softmax_kernel.py:215"
+          },
+          {
+            "stall": "440",
+            "pct_total": 0.33,
+            "domtype": "other",
+            "source": "SL-lab/kernels/topk_gating_softmax_kernel.py:207"
+          },
+          {
+            "stall": "240",
+            "pct_total": 0.18,
+            "domtype": "other",
+            "source": "SL-lab/kernels/topk_gating_softmax_kernel.py:227"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 2,
+          "buffer_store": 18,
+          "ds_read": 0,
+          "ds_write": 0
+        },
+        "next_occ_step": {
+          "waves": 5,
+          "vgpr_budget": 51
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_topk_gating_softmax/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_topk_gating_softmax/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_topk_gating_softmax",
+        "kernel_sources": [
+          "/sgl-workspace/FlyDSL-lab/kernels/topk_gating_softmax_kernel.py"
+        ],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_topk_gating_softmax.py"
+      }
+    },
+    {
+      "test": "test_vec_add.py",
+      "stem": "test_vec_add",
+      "jit_kernel": "vecAddKernel_0",
+      "op_category": "elementwise",
+      "capture": {
+        "kernel": "vecAddKernel_0",
+        "calls": 24,
+        "iter_range": "[6, [8-8]]",
+        "waves": 632,
+        "ins": 23,
+        "mapped": 22,
+        "mapped_pct": 95.7,
+        "arch": "gfx942",
+        "arch_vgpr": "9",
+        "accum_vgpr": "0",
+        "occupancy": "8",
+        "stall_pct_total": "56.3",
+        "top_stall_type": "VMEM-wait",
+        "capture_s": 5.9
+      },
+      "capture_error": null,
+      "sweep": {
+        "flydsl_us": null,
+        "baseline_us": null,
+        "baseline_name": null,
+        "speedup_vs_baseline": null,
+        "verdict": null,
+        "tflops": null,
+        "tbps": 6710.8,
+        "bandwidth_gbs": 6468.37,
+        "status": "ok",
+        "ck_baseline_candidate": "Not applicable (vector add is elementwise; rocBLAS/CK target GEMM/reduction)",
+        "aiter_comparable": "torch.add (PyTorch baseline already in test)"
+      },
+      "hotspot": {
+        "stall_breakdown": [
+          {
+            "type": "VMEM-wait",
+            "stall": "1.73M",
+            "pct": 82.3
+          },
+          {
+            "type": "VMEM-load",
+            "stall": "178.1K",
+            "pct": 8.5
+          },
+          {
+            "type": "VMEM-store",
+            "stall": "87.1K",
+            "pct": 4.1
+          },
+          {
+            "type": "LDS/SMEM-wait",
+            "stall": "69.7K",
+            "pct": 3.3
+          },
+          {
+            "type": "SMEM",
+            "stall": "29.5K",
+            "pct": 1.4
+          },
+          {
+            "type": "other",
+            "stall": "8.5K",
+            "pct": 0.4
+          }
+        ],
+        "top_source_lines": [
+          {
+            "stall": "1.76M",
+            "pct_total": 83.67,
+            "domtype": "VMEM-wait",
+            "source": "pace/FlyDSL-lab/tests/kernels/test_vec_add.py:28"
+          },
+          {
+            "stall": "155.6K",
+            "pct_total": 7.41,
+            "domtype": "VMEM-load",
+            "source": "pace/FlyDSL-lab/tests/kernels/test_vec_add.py:64"
+          },
+          {
+            "stall": "87.1K",
+            "pct_total": 4.14,
+            "domtype": "VMEM-store",
+            "source": "pace/FlyDSL-lab/tests/kernels/test_vec_add.py:70"
+          },
+          {
+            "stall": "75.4K",
+            "pct_total": 3.59,
+            "domtype": "LDS/SMEM-wait",
+            "source": "thon_packages/flydsl/expr/rocdl/universal.py:144"
+          },
+          {
+            "stall": "25.1K",
+            "pct_total": 1.19,
+            "domtype": "VMEM-load",
+            "source": "pace/FlyDSL-lab/tests/kernels/test_vec_add.py:65"
+          }
+        ],
+        "inst_mix": {
+          "mfma": 0,
+          "buffer_load": 2,
+          "buffer_store": 1,
+          "ds_read": 0,
+          "ds_write": 0
+        }
+      },
+      "paths": {
+        "capture_json": "/sgl-workspace/flydsl-prof/results/att/test_vec_add/capture.json",
+        "hotspot_txt": "/sgl-workspace/flydsl-prof/results/att/test_vec_add/hotspot_big.txt",
+        "bundle_dir": "/sgl-workspace/flydsl-prof/results/att/test_vec_add",
+        "kernel_sources": [],
+        "test_harness": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_vec_add.py"
+      }
+    }
+  ]
+}

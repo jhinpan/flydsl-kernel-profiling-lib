@@ -1,0 +1,79 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_pa/att/ui_output_agent_10886_dispatch_209
+
+  Kernel:        ui_output_agent_10886_dispatch_209
+  Instructions:  936
+  Total cycles:  106.6K
+  Total stalls:  70.0K  (65.7% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~175 (alloc 176)
+  accum_vgpr:     ~9 (alloc 16)
+  limiting pool:  176 / 256
+  occupancy:      1 waves/SIMD
+  -> 2 waves requires max(arch,accum) <= 128
+
+  Instruction mix:
+    MFMA: 32,  buffer_load: 14,  buffer_store: 3
+    ds_read: 18,  ds_write: 8
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  LDS/SMEM-wait      25.3K  [██████████░░░░░░░░░░░░░░░░░░░░]  36.2%
+  VMEM-wait          16.3K  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  23.3%
+  other              15.8K  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  22.5%
+  VMEM-load           9.2K  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  13.1%
+  barrier             2.5K  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   3.6%
+  LDS                  364  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.5%
+  MFMA/FMA             296  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.4%
+  VMEM-store           264  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.4%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     39.1K   55.83%  [██████████████████░░░░░░░░░░░░]  61.7%  VMEM-wait     rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1170
+    2     21.3K   30.48%  [█████████████████████████████░]  97.6%  LDS/SMEM-wait  rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1215
+    3      2.3K    3.23%  [█████████████████████████████░]  97.3%  LDS/SMEM-wait  rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1209
+    4      1.4K    1.99%  [███████████████████████████░░░]  92.6%  VMEM-load     rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1577
+    5      1.3K    1.87%  [█████████████████░░░░░░░░░░░░░]  57.7%  other         rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1220
+    6      1.0K    1.47%  [██████████████████████████░░░░]  88.3%  VMEM-load     orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:537
+    7       844    1.21%  [██████████████████░░░░░░░░░░░░]  62.2%  VMEM-wait     orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:895
+    8       544    0.78%  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   9.9%  other         orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:151
+    9       432    0.62%  [███████████████████████████░░░]  93.1%  VMEM-load     rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1574
+   10       252    0.36%  [███████████████░░░░░░░░░░░░░░░]  52.9%  VMEM-load     orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:531
+   11       248    0.35%  [███████████████████░░░░░░░░░░░]  66.0%  VMEM-store    rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1624
+   12       200    0.29%  [████████████████████░░░░░░░░░░]  67.6%  other         orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:808
+   13       156    0.22%  [███████░░░░░░░░░░░░░░░░░░░░░░░]  23.4%  other         orkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:664
+   14        96    0.14%  [██████████████░░░░░░░░░░░░░░░░]  47.1%  VMEM-load     rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1305
+   15        96    0.14%  [██████████████████████░░░░░░░░]  75.0%  other         rkspace/FlyDSL-lab/kernels/pa_decode_fp8.py:1299
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     20.9K   29.81%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              yDSL-lab/kernels/pa_decode_fp8.py:1215
+    2     10.9K   15.62%  VMEM-wait     s_waitcnt vmcnt(0)                                yDSL-lab/kernels/pa_decode_fp8.py:1170
+    3      2.1K    3.00%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              yDSL-lab/kernels/pa_decode_fp8.py:1209
+    4      1.4K    1.97%  VMEM-load     buffer_load_dword v55, v1, s[44:47], 0 offen      yDSL-lab/kernels/pa_decode_fp8.py:1577
+    5      1.2K    1.71%  VMEM-wait     s_waitcnt vmcnt(3)                                yDSL-lab/kernels/pa_decode_fp8.py:1170
+    6      1.1K    1.58%  VMEM-load     global_load_dwordx4 v[72:75], v[2:3], off         yDSL-lab/kernels/pa_decode_fp8.py:1170
+    7      1.0K    1.47%  VMEM-load     buffer_load_dword v6, v0, s[84:87], 0 offen       lyDSL-lab/kernels/pa_decode_fp8.py:537
+    8       992    1.42%  VMEM-wait     s_waitcnt vmcnt(2)                                yDSL-lab/kernels/pa_decode_fp8.py:1170
+    9       956    1.37%  other         v_min_u32_e32 v86, 7, v5                          yDSL-lab/kernels/pa_decode_fp8.py:1220
+   10       944    1.35%  other         v_pk_mul_f32 v[16:17], v[16:17], s[94:95] op_se…  yDSL-lab/kernels/pa_decode_fp8.py:1170
+   11       912    1.30%  barrier       s_barrier                                         yDSL-lab/kernels/pa_decode_fp8.py:1170
+   12       832    1.19%  VMEM-load     global_load_dwordx4 v[82:85], v[2:3], off         yDSL-lab/kernels/pa_decode_fp8.py:1170
+   13       732    1.05%  VMEM-wait     s_waitcnt vmcnt(0)                                yDSL-lab/kernels/pa_decode_fp8.py:1170
+   14       708    1.01%  barrier       s_barrier                                         yDSL-lab/kernels/pa_decode_fp8.py:1170
+   15       692    0.99%  VMEM-wait     s_waitcnt vmcnt(1)                                yDSL-lab/kernels/pa_decode_fp8.py:1170
+
+

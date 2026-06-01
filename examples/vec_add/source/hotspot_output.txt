@@ -1,0 +1,66 @@
+
+Loading: /sgl-workspace/flydsl-prof/results/att/test_vec_add/att/ui_output_agent_14705_dispatch_25
+
+  Kernel:        ui_output_agent_14705_dispatch_25
+  Instructions:  22
+  Total cycles:  3.73M
+  Total stalls:  2.10M  (56.3% of total cycles)
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Register Pressure & Occupancy
+══════════════════════════════════════════════════════════════════════════════════════════
+  Architecture:   gfx942 (CDNA3)
+  arch_vgpr:      ~9 (alloc 16)
+  accum_vgpr:     0 (not used)
+  limiting pool:  16 / 256
+  occupancy:      8 waves/SIMD
+
+  Instruction mix:
+    MFMA: 0,  buffer_load: 2,  buffer_store: 1
+    ds_read: 0,  ds_write: 0
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Stall Breakdown by Type
+══════════════════════════════════════════════════════════════════════════════════════════
+  Type               Stall  Bar
+  --------------  --------  --------------------------------------
+  VMEM-wait          1.73M  [████████████████████████░░░░░░]  82.3%
+  VMEM-load         178.1K  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   8.5%
+  VMEM-store         87.1K  [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   4.1%
+  LDS/SMEM-wait      69.7K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   3.3%
+  SMEM               29.5K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   1.4%
+  other               8.5K  [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0.4%
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Source Lines  (stall cycles aggregated)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  StallBar                                DomType       Source
+  ---  --------  -------  --------------------------------------  ------------  ----------------------------------------
+    1     1.76M   83.67%  [███████████████░░░░░░░░░░░░░░░]  52.5%  VMEM-wait     pace/FlyDSL-lab/tests/kernels/test_vec_add.py:28
+    2    155.6K    7.41%  [████████████████████████████░░]  93.6%  VMEM-load     pace/FlyDSL-lab/tests/kernels/test_vec_add.py:64
+    3     87.1K    4.14%  [████████████████████████████░░]  96.5%  VMEM-store    pace/FlyDSL-lab/tests/kernels/test_vec_add.py:70
+    4     75.4K    3.59%  [███████████████████████░░░░░░░]  78.5%  LDS/SMEM-wait  thon_packages/flydsl/expr/rocdl/universal.py:144
+    5     25.1K    1.19%  [███████████████████████████░░░]  90.8%  VMEM-load     pace/FlyDSL-lab/tests/kernels/test_vec_add.py:65
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top-15 Hotspot Instructions  (by stall cycles)
+══════════════════════════════════════════════════════════════════════════════════════════
+    #     Stall   %Total  Type          ASM                                               Source
+  ---  --------  -------  ------------  ------------------------------------------------  ------------------------------
+    1     1.73M   82.25%  VMEM-wait     s_waitcnt vmcnt(0)                                L-lab/tests/kernels/test_vec_add.py:28
+    2    153.0K    7.28%  VMEM-load     buffer_load_dwordx4 v[0:3], v8, s[4:7], 0 offen   L-lab/tests/kernels/test_vec_add.py:64
+    3     87.1K    4.14%  VMEM-store    buffer_store_dwordx4 v[0:3], v8, s[12:15], 0 of…  L-lab/tests/kernels/test_vec_add.py:70
+    4     69.7K    3.32%  LDS/SMEM-wait  s_waitcnt lgkmcnt(0)                              ges/flydsl/expr/rocdl/universal.py:144
+    5     29.2K    1.39%  SMEM          s_load_dwordx2 s[4:5], s[0:1], 0x0                L-lab/tests/kernels/test_vec_add.py:28
+    6     25.1K    1.19%  VMEM-load     buffer_load_dwordx4 v[4:7], v8, s[8:11], 0 offen  L-lab/tests/kernels/test_vec_add.py:65
+    7      3.8K    0.18%  other         s_and_b32 s5, s5, 0xffff                          ges/flydsl/expr/rocdl/universal.py:144
+    8      2.5K    0.12%  other         s_mov_b32 s7, 0x27000                             L-lab/tests/kernels/test_vec_add.py:64
+    9       816    0.04%  other         s_mov_b32 s6, -1                                  ges/flydsl/expr/rocdl/universal.py:144
+   10       520    0.02%  other         s_and_b32 s9, s9, 0xffff                          ges/flydsl/expr/rocdl/universal.py:144
+   11       380    0.02%  SMEM          s_load_dwordx2 s[8:9], s[0:1], 0x10               L-lab/tests/kernels/test_vec_add.py:28
+   12       216    0.01%  other         s_mov_b32 s11, s7                                 ges/flydsl/expr/rocdl/universal.py:144
+   13       188    0.01%  other         s_mov_b32 s10, s6                                 ges/flydsl/expr/rocdl/universal.py:144
+   14       168    0.01%  other         s_endpgm                                          L-lab/tests/kernels/test_vec_add.py:28
+   15       120    0.01%  other         s_mov_b32 s14, s6                                 ges/flydsl/expr/rocdl/universal.py:144
+
+

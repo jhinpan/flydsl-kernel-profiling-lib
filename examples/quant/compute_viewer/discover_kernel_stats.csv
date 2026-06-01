@@ -1,0 +1,4 @@
+"Name","Calls","TotalDurationNs","AverageNs","Percentage","MinNs","MaxNs","StdDev"
+"quant_kernel_0",23,406564,17676.695652,50.33,17121,25160,1639.073919
+"void aiter::dynamic_per_token_scaled_quant_kernel<half, signed char, 32>(signed char*, float*, half*, float const*, int, int const*, int)",24,392482,16353.416667,48.59,15920,18680,558.560332
+"__amd_rocclr_copyBuffer",2,8720,4360.000000,1.08,4160,4560,282.842712
