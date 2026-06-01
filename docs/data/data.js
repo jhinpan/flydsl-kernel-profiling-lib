@@ -50,8 +50,8 @@ window.KERNEL_DATA = {
       "test": "test_flash_attn_func.py",
       "stem": "test_flash_attn_func",
       "example": "flash_attn_func",
-      "report_url": "../examples/flash_attn_func/REPORT.md",
-      "bundle_url": "../examples/flash_attn_func/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/flash_attn_func/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/flash_attn_func",
       "op_category": "attention",
       "kernels": [
         "flash_attn_func_kernel"
@@ -177,8 +177,8 @@ window.KERNEL_DATA = {
       "test": "test_mla_decode.py",
       "stem": "test_mla_decode",
       "example": "mla_decode",
-      "report_url": "../examples/mla_decode/REPORT.md",
-      "bundle_url": "../examples/mla_decode/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/mla_decode/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/mla_decode",
       "op_category": "attention",
       "kernels": [
         "kn_mla_fwd_decode_m16x8_fp8_fp8"
@@ -273,8 +273,8 @@ window.KERNEL_DATA = {
       "test": "test_pa.py",
       "stem": "test_pa",
       "example": "pa",
-      "report_url": "../examples/pa/REPORT.md",
-      "bundle_url": "../examples/pa/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/pa/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/pa",
       "op_category": "attention",
       "kernels": [
         "pa_decode_ps_kernel",
@@ -443,8 +443,8 @@ window.KERNEL_DATA = {
       "test": "test_vec_add.py",
       "stem": "test_vec_add",
       "example": "vec_add",
-      "report_url": "../examples/vec_add/REPORT.md",
-      "bundle_url": "../examples/vec_add/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/vec_add/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/vec_add",
       "op_category": "elementwise",
       "kernels": [
         "vecAddKernel"
@@ -556,8 +556,8 @@ window.KERNEL_DATA = {
       "test": "bench_preshuffle_gemm_v2.py",
       "stem": "bench_preshuffle_gemm_v2",
       "example": "preshuffle_gemm_v2",
-      "report_url": "../examples/preshuffle_gemm_v2/REPORT.md",
-      "bundle_url": "../examples/preshuffle_gemm_v2/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/preshuffle_gemm_v2/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/preshuffle_gemm_v2",
       "op_category": "gemm",
       "kernels": [
         "kernel_gemm"
@@ -724,8 +724,8 @@ window.KERNEL_DATA = {
       "test": "test_blockscale_preshuffle_gemm.py",
       "stem": "test_blockscale_preshuffle_gemm",
       "example": "blockscale_preshuffle_gemm",
-      "report_url": "../examples/blockscale_preshuffle_gemm/REPORT.md",
-      "bundle_url": "../examples/blockscale_preshuffle_gemm/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/blockscale_preshuffle_gemm/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/blockscale_preshuffle_gemm",
       "op_category": "gemm",
       "kernels": [
         "bs_gemm_bf16_direct_t64x128x128",
@@ -887,8 +887,8 @@ window.KERNEL_DATA = {
       "test": "test_fp8_gemm_rowscale.py",
       "stem": "test_fp8_gemm_rowscale",
       "example": "fp8_gemm_rowscale",
-      "report_url": "../examples/fp8_gemm_rowscale/REPORT.md",
-      "bundle_url": "../examples/fp8_gemm_rowscale/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/fp8_gemm_rowscale/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/fp8_gemm_rowscale",
       "op_category": "gemm",
       "kernels": [
         "kernel_gemm (fp8_gemm_4wave)",
@@ -933,8 +933,8 @@ window.KERNEL_DATA = {
       "test": "test_hgemm_splitk.py",
       "stem": "test_hgemm_splitk",
       "example": "hgemm_splitk",
-      "report_url": "../examples/hgemm_splitk/REPORT.md",
-      "bundle_url": "../examples/hgemm_splitk/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/hgemm_splitk/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/hgemm_splitk",
       "op_category": "gemm",
       "kernels": [
         "hgemm_bf16_32x64x256_W1x2x2_S2_BT_BLDS1_AS1_SPK14"
@@ -1096,8 +1096,8 @@ window.KERNEL_DATA = {
       "test": "test_moe_gemm.py",
       "stem": "test_moe_gemm",
       "example": "moe_gemm",
-      "report_url": "../examples/moe_gemm/REPORT.md",
-      "bundle_url": "../examples/moe_gemm/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/moe_gemm/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/moe_gemm",
       "op_category": "gemm",
       "kernels": [
         "moe_gemm1",
@@ -1272,8 +1272,8 @@ window.KERNEL_DATA = {
       "test": "test_preshuffle_gemm.py",
       "stem": "test_preshuffle_gemm",
       "example": "preshuffle_gemm",
-      "report_url": "../examples/preshuffle_gemm/REPORT.md",
-      "bundle_url": "../examples/preshuffle_gemm/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/preshuffle_gemm/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/preshuffle_gemm",
       "op_category": "gemm",
       "kernels": [
         "preshuffle_gemm.kernel_gemm",
@@ -1443,8 +1443,8 @@ window.KERNEL_DATA = {
       "test": "test_moe_blockscale.py",
       "stem": "test_moe_blockscale",
       "example": "moe_blockscale",
-      "report_url": "../examples/moe_blockscale/REPORT.md",
-      "bundle_url": "../examples/moe_blockscale/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/moe_blockscale/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/moe_blockscale",
       "op_category": "moe",
       "kernels": [
         "moe_blockscale_gemm1",
@@ -1609,8 +1609,8 @@ window.KERNEL_DATA = {
       "test": "test_topk_gating_softmax.py",
       "stem": "test_topk_gating_softmax",
       "example": "topk_gating_softmax",
-      "report_url": "../examples/topk_gating_softmax/REPORT.md",
-      "bundle_url": "../examples/topk_gating_softmax/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/topk_gating_softmax/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/topk_gating_softmax",
       "op_category": "moe",
       "kernels": [
         "topk_gating_softmax_kernel"
@@ -1723,8 +1723,8 @@ window.KERNEL_DATA = {
       "test": "test_layernorm.py",
       "stem": "test_layernorm",
       "example": "layernorm",
-      "report_url": "../examples/layernorm/REPORT.md",
-      "bundle_url": "../examples/layernorm/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/layernorm/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/layernorm",
       "op_category": "norm",
       "kernels": [
         "layernorm_kernel"
@@ -1833,8 +1833,8 @@ window.KERNEL_DATA = {
       "test": "test_rmsnorm.py",
       "stem": "test_rmsnorm",
       "example": "rmsnorm",
-      "report_url": "../examples/rmsnorm/REPORT.md",
-      "bundle_url": "../examples/rmsnorm/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/rmsnorm/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/rmsnorm",
       "op_category": "norm",
       "kernels": [
         "rmsnorm_kernel",
@@ -1966,8 +1966,8 @@ window.KERNEL_DATA = {
       "test": "test_quant.py",
       "stem": "test_quant",
       "example": "quant",
-      "report_url": "../examples/quant/REPORT.md",
-      "bundle_url": "../examples/quant/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/quant/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/quant",
       "op_category": "quant",
       "kernels": [
         "quant_kernel"
@@ -2134,8 +2134,8 @@ window.KERNEL_DATA = {
       "test": "test_moe_reduce.py",
       "stem": "test_moe_reduce",
       "example": "moe_reduce",
-      "report_url": "../examples/moe_reduce/REPORT.md",
-      "bundle_url": "../examples/moe_reduce/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/moe_reduce/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/moe_reduce",
       "op_category": "reduction",
       "kernels": [
         "moe_reduction_kernel"
@@ -2263,8 +2263,8 @@ window.KERNEL_DATA = {
       "test": "test_softmax.py",
       "stem": "test_softmax",
       "example": "softmax",
-      "report_url": "../examples/softmax/REPORT.md",
-      "bundle_url": "../examples/softmax/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/softmax/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/softmax",
       "op_category": "reduction",
       "kernels": [
         "softmax_kernel"
@@ -2407,8 +2407,8 @@ window.KERNEL_DATA = {
       "test": "test_fused_rope_cache.py",
       "stem": "test_fused_rope_cache",
       "example": "fused_rope_cache",
-      "report_url": "../examples/fused_rope_cache/REPORT.md",
-      "bundle_url": "../examples/fused_rope_cache/",
+      "report_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/examples/fused_rope_cache/REPORT.md",
+      "bundle_url": "https://github.com/jhinpan/flydsl-kernel-profiling/tree/main/examples/fused_rope_cache",
       "op_category": "rope",
       "kernels": [
         "fused_qk_rope_reshape_and_cache"
