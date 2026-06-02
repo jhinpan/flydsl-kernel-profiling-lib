@@ -1,0 +1,81 @@
+kernel: moe_gemm
+op_type: moe_gemm
+dtype: fp8
+layout_contract:
+  x: "row-major (tokens, model_dim=Dim1), fp32-built then cast; per-token fp8 quant inside fp8 providers"
+  w1: "(E, 2*inter_dim, model_dim) gate+up; FlyDSL CK-preshuffles (16,16) -> [E*2*inter_dim, model_dim]"
+  w2: "(E, model_dim, inter_dim) down; FlyDSL CK-preshuffles -> [E*model_dim, inter_dim]"
+  topk_ids: "(tokens, TopK) int32 routing; topk_weights (tokens, TopK) fp32 softmax over topk scores"
+  args: "ledger args M=tokens, E=experts, Dim1=model_dim, Dim2=2*inter_dim (inter_dim=Dim2//2), TopK"
+  note: >
+    Full 2-stage MoE: FlyDSL composes compile_moe_gemm1 (silu(x@W1g^T)*(x@W1u^T)) ->
+    requantize intermediate -> compile_moe_gemm2 (down + topk reduce, routed weight in
+    stage2). aiter.fused_moe is end-to-end (routing+sorting also timed); pytorch torch_moe
+    is the eager fp32 golden. FlyDSL routing(torch-sort)+preshuffle are built ONCE per shape
+    (untimed); the inter-stage fp8 requant is INHERENT to the un-fused path and is timed.
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_gemm:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >
+      candidate; compile_moe_gemm1 + compile_moe_gemm2 (kernels/moe_gemm_2stage.py).
+      In-scope dtypes fp8/bf16/fp16 only. Tiles tile_m=32, stage1=(n128,k256),
+      stage2=(n256,k64); supports() re-checks divisibility per shape. fp8 double-quant ->
+      wide tol. Existing ledger rows are block-scale/int8/fp4/a8w4 (a DIFFERENT builder) ->
+      seed plain-fp8 rows for this adapter (see notes below / shape_ledger).
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_gemm:PyTorch
+    provider: pytorch
+    notes: aiter.fused_moe.torch_moe (eager fp32 expert loop); also the fp32 reference
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_gemm:Aiter
+    provider: aiter
+    notes: >
+      aiter.fused_moe.fused_moe END-TO-END (routing+moe_sorting+both GEMMs+reduce in the
+      timed region) -> includes_layout_conversion=True; NOT a per-kernel match for FlyDSL's
+      two grouped GEMMs. fp8 uses QuantType.per_Token, bf16/fp16 QuantType.No.
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:AiterTriton
+    provider: aiter_triton
+    skip_reason: >
+      aiter.ops.triton.moe.moe_op_e2e.e2e_moe imports but needs hand-wired pre-sorted
+      buffers (moe_align_block_size) + preallocated Intermediate/C + a config dict (long
+      untested signature); not wired for the full-op model. Honest stub.
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:AiterCK
+    provider: aiter_ck
+    skip_reason: >
+      ck_moe_stage1_fwd/stage2_fwd are PER-STAGE (the REPORT.md head-to-head); this adapter
+      models the full 2-stage op, and CK JIT .so load is best-effort. Stub here.
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton MoE kernel on this node
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM MoE-GEMM path exercised here
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:CK
+    provider: ck
+    skip_reason: no standalone CK MoE adapter (CK MoE is reached via aiter, see aiter_ck)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:Gluon
+    provider: gluon
+    skip_reason: no Gluon MoE kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_gemm:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is dense-GEMM only (no expert-grouped MoE op)

@@ -1,0 +1,62 @@
+kernel: layernorm
+op_type: layernorm
+dtype: bf16
+layout_contract:
+  x: "row-major (M, N), contiguous"
+  gamma: "(N,), same dtype as x"
+  beta: "(N,), same dtype as x"
+  eps: "1e-5 (FlyDSL kernel constant)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.layernorm:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; build_layernorm_module, preallocated out (fast path only at N=8192 16-bit)
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.layernorm:PyTorch
+    provider: pytorch
+    notes: torch.nn.functional.layer_norm; also the fp32 (biased-variance) reference
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.layernorm:Aiter
+    provider: aiter
+    backend_visibility_required: true
+    notes: compiled module_norm (CK/HIP); inner backend opaque
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.layernorm:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.triton.norm.layer_norm (Triton)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:Triton
+    provider: triton
+    skip_reason: no standalone sglang triton layernorm on this node
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:AiterCK
+    provider: aiter_ck
+    skip_reason: CK norm backend not separately selectable from Python; use 'aiter'
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM layernorm path
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:CK
+    provider: ck
+    skip_reason: no standalone CK layernorm adapter
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:Gluon
+    provider: gluon
+    skip_reason: no Gluon layernorm kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.layernorm:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only

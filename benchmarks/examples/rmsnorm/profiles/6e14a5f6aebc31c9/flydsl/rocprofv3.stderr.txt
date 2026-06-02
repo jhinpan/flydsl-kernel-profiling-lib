@@ -1,0 +1,8 @@
+W20260602 10:30:56.313932 139053582401024 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000331 sec
+W20260602 10:30:56.314037 139053582401024 simple_timer.cpp:55] [rocprofv3] 'python benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/flydsl/repro.py' ::     0.000000 sec
+W20260602 10:30:57.165570 139053582401024 tool.cpp:2422] HSA version 8.20.0 initialized (instance=0)
+W20260602 10:30:58.450749 139053582401024 simple_timer.cpp:55] [rocprofv3] 'python benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/flydsl/repro.py' ::     2.136713 sec
+E20260602 10:30:58.454084 139053582401024 output_stream.cpp:111] Opened result file: benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/flydsl/nimrodmi350/1858814_kernel_trace.csv
+E20260602 10:30:58.457249 139053582401024 output_stream.cpp:111] Opened result file: benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/flydsl/nimrodmi350/1858814_agent_info.csv
+W20260602 10:30:58.457368 139053582401024 simple_timer.cpp:55] [rocprofv3] output generation ::     0.005383 sec
+W20260602 10:30:58.457656 139053582401024 simple_timer.cpp:55] [rocprofv3] tool finalization ::     0.005721 sec

@@ -1,0 +1,58 @@
+kernel: softmax
+op_type: softmax
+dtype: bf16
+layout_contract:
+  x: "row-major (M, N), contiguous; softmax over last dim N"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.softmax:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; build_softmax_module. NOTE vectorized path dead-coded off -> always generic-scalar
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.softmax:PyTorch
+    provider: pytorch
+    notes: torch.softmax(dim=-1); also the fp32 reference
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.softmax:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.triton.softmax (online 2-pass Triton)
+  triton:
+    enabled: true
+    entrypoint: benchmarks.providers.softmax:Triton
+    provider: triton
+    notes: self-contained inline tutorial Triton softmax (no sglang standalone exists)
+  aiter:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:Aiter
+    provider: aiter
+    skip_reason: no standalone compiled aiter softmax op; only aiter.ops.triton.softmax
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK softmax from Python
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM softmax path
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:CK
+    provider: ck
+    skip_reason: no standalone CK softmax adapter
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:Gluon
+    provider: gluon
+    skip_reason: no Gluon softmax kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.softmax:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only

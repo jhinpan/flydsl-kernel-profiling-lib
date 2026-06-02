@@ -1,0 +1,83 @@
+kernel: fused_rope_cache
+op_type: fused_rope_cache
+dtype: bf16
+layout_contract:
+  Q: "(T, QH, D), contiguous, bf16/f16"
+  K: "(T, KH, D), contiguous, bf16/f16"
+  V: "(T, KH, D), contiguous, bf16/f16"
+  Positions: "(T,) int32 (FlyDSL/reference form; aiter_triton converts to int64)"
+  SlotMapping: "(T,) int32 = arange(T) (aiter_triton converts to int64)"
+  CosCache: "(max_pos, D//2) bf16/f16 when reuse_freqs_front_part (aiter_triton reshapes to (max_pos,1,1,D//2))"
+  SinCache: "(max_pos, D//2) bf16/f16, same as CosCache"
+  KeyCache: "flash: (num_blocks, block_size, KH, D) bf16/f16, zeroed; written in-place"
+  ValueCache: "flash: (num_blocks, block_size, KH, D) bf16/f16, zeroed; written in-place"
+  KScale: "(1,) fp32 ones (always passed; apply_scale=False)"
+  VScale: "(1,) fp32 ones (always passed; apply_scale=False)"
+  output: "concat([Q_out, K_out] flattened to (T,-1)) upcast to fp32 (single comparable tensor)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.fused_rope_cache:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >-
+      candidate; build_fused_rope_cache_module (NeoX, flash, apply_scale=False),
+      cached launcher + preallocated Q_out/K_out/KV-cache. Single 64-lane wave
+      per (head,token); latency/stall-bound -> expect ~0.17x vs aiter_triton
+      (verified gfx950 rocprofv3 2026-06-01). Kernel-only CUDA-graph median is
+      the fair metric.
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.fused_rope_cache:AiterTriton
+    provider: aiter_triton
+    notes: >-
+      PRIMARY baseline; aiter.ops.triton.fusions.fused_kv_cache.fused_qk_rope_reshape_and_cache,
+      the exact fused op the FlyDSL test cross-checks. Layout differs (i64
+      pos/slots, 4-D cos/sin), caches written in-place -> includes_layout_conversion=True,
+      private zeroed cache copies.
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.fused_rope_cache:PyTorch
+    provider: pytorch
+    notes: >-
+      eager NeoX RoPE (cat/mul) reproducing the fp32 reference math; also the
+      reference_provider. No fused torch op exists -> correctness anchor, not a
+      perf target. (Op.reference is the golden; this returns concat([q_out,k_out]).)
+  aiter:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:Aiter
+    provider: aiter
+    skip_reason: >-
+      no separately-reachable compiled (C++/CK/ASM) fused rope+reshape-and-cache op;
+      only the Triton one (use aiter_triton)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK fused rope+cache from Python
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:AiterASM
+    provider: aiter_asm
+    skip_reason: no ASM fused rope+cache path in AITER
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton fused rope+reshape-and-cache kernel on this node
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:CK
+    provider: ck
+    skip_reason: no standalone Composable Kernel fused rope+cache adapter on this node
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:Gluon
+    provider: gluon
+    skip_reason: no Gluon fused rope+cache kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.fused_rope_cache:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only (no rope/cache op)

@@ -1,0 +1,79 @@
+kernel: hgemm_splitk
+op_type: gemm
+dtype: bf16
+layout_contract:
+  a: "row-major (M, K), contiguous"
+  b: "row-major (N, K), contiguous (stored transposed: one row per output column)"
+  c: "row-major (M, N); C = A @ B^T"
+  note: "all providers take the SAME a,b -- no layout conversion (includes_layout_conversion=False)"
+reference_provider: pytorch
+# FlyDSL hgemm_splitk is f16/bf16 only; the shared gemm ledger also carries
+# int8/fp4/fp8 rows (gemm_a16w16 / gemm_afp4wfp4 kernels) which every adapter
+# here rejects in supports() (dtype not in {bf16,fp16}). Only the bf16 rows are
+# reachable for this kernel.
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.gemm:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >-
+      candidate; kernels.hgemm_splitk.hgemm_splitk_ split-K MFMA, preallocated C,
+      f16/bf16 only. supports() rejects non-16-bit dtypes AND shapes with no valid
+      tile config (N%TILE_N, K%SPLIT_K, (K/SPLIT_K)%TILE_K divisibility). Picks a
+      validated/conservative config per (M,N,K); JIT amortized in warmup.
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.gemm:PyTorch
+    provider: pytorch
+    notes: torch.matmul(a, b.T); also the fp32 (A.float()@B.float().T) reference source
+  hipblaslt:
+    enabled: true
+    entrypoint: benchmarks.providers.gemm:HipBLASLt
+    provider: hipblaslt
+    backend_visibility_required: true
+    notes: >-
+      torch.matmul(a, b.T) -- bf16/fp16 mm routes through hipBLASLt on ROCm; the
+      backend is not Python-selectable so this is the same call as pytorch, labeled
+      honestly. (Unlike norm ops, hipBLASLt IS the GEMM library, so this row is enabled.)
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.gemm:Aiter
+    provider: aiter
+    backend_visibility_required: true
+    notes: >-
+      aiter.ops.gemm_op_a16w16.gemm_a16w16_asm (compiled ASM/CK a16w16, out-param);
+      preallocated out, inner ASM-vs-CK backend opaque from Python. A@B^T orientation
+      to confirm on first run (start bpreshuffle=False, splitK=None).
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.gemm:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.triton.gemm_a16w16.gemm_a16w16 (pure Triton; Y = X @ W^T, same semantics)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.gemm:Triton
+    provider: triton
+    skip_reason: >-
+      no standalone non-aiter Triton GEMM on this node; triton.ops removed in triton
+      3.6.0; the only Triton GEMM is aiter.ops.triton.gemm_a16w16 (see aiter_triton)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.gemm:AiterCK
+    provider: aiter_ck
+    skip_reason: CK gemm backend not separately selectable from Python; folded into 'aiter'
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.gemm:AiterASM
+    provider: aiter_asm
+    skip_reason: no separately-selectable ASM gemm entrypoint; gemm_a16w16_asm exposed as 'aiter'
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.gemm:CK
+    provider: ck
+    skip_reason: no standalone CK gemm adapter on this node (use 'aiter' for compiled CK/ASM)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.gemm:Gluon
+    provider: gluon
+    skip_reason: no Gluon gemm kernel on this node

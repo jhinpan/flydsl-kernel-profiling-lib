@@ -515,3 +515,67 @@ The agent's job stops at producing the bundle; the user opens the viewers.
   MFMA latency table + register pressure formulas
 - Existing `examples/pa_mqa_logits_fp4/` — reference for layout, naming, and
   report structure
+
+## Multi-shape benchmark
+
+There is a second, separate layer in `benchmarks/` that lives **beside** the ATT
+trace bundles. The ATT layer asks "where does this one kernel stall on one
+diagnostic shape." The benchmark layer asks "across the shapes that occur in
+models and serving, is FlyDSL's kernel faster than the field, and if not, why."
+Both write under `examples/<op>/`, but the benchmark layer's files **never
+clobber** the ATT bundle's `REPORT.md` or the per-example `README.md`.
+
+Full agent contract: `.claude/skills/flydsl-kernel-multishape-benchmark/SKILL.md`.
+How-to + env recipe: `benchmarks/README.md`. Shape sources: `benchmarks/shape_ledgers/README.md`.
+
+### Environment
+
+GPU runners MUST be launched via `benchmarks/env.sh` (or the `benchmarks/bench`
+wrapper). The FlyDSL build-tree `PYTHONPATH`
+(`/sgl-workspace/FlyDSL-lab/build-fly/python_packages`) + `LD_LIBRARY_PATH`
+(`_mlir_libs`) is what makes `import flydsl.*` work — and **also** unblocks
+`import aiter` (aiter/`__init__` imports `flydsl.expr` transitively; without the
+build tree it raises `ModuleNotFoundError: flydsl._mlir`). Verified node: MI350X
+gfx950, ROCm 7.2, torch 2.9.1+rocm, triton 3.6. Importers and report generators
+are pure-data and run without the GPU env.
+
+### Required artifacts (per kernel, under `examples/<op>/`)
+
+Every benchmarked kernel must produce all of:
+
+- `shape_ledger.jsonl` — shapes, stable `shape_id`, source kind, weights.
+- `baseline_matrix.yaml` — which providers run + honest `enabled`/`skip_reason`.
+- `correctness_results.jsonl` — the correct-only view of the result rows (the
+  `correct` field is recorded inline in `benchmark_results.jsonl`; correctness
+  is not a separate runner).
+- `benchmark_results.jsonl` + `benchmark_results.csv` — one row per
+  (shape, provider); failed/unsupported/incorrect/disabled rows are KEPT.
+- `coverage_matrix.md` — per-shape × per-provider status grid.
+- `benchmark_summary.md` — headline + splits + classification + decision.
+
+### Reporting rules (non-negotiable)
+
+- Report `speedup = baseline_median / flydsl_median` (>1 => FlyDSL faster) vs
+  **each baseline**, vs **best-available**, plus **unweighted + weighted
+  geomeans** and a **prefill/decode (per-stage) split**. The headline metric is
+  **kernel-only CUDA-graph time**; eager time + `host_overhead_us` are reported
+  separately (the `@flyc.jit` launcher's per-call host overhead is a launcher
+  problem, not a kernel problem).
+- **Never claim production perf from synthetic/diagnostic shapes alone.** Those
+  carry no traffic weight; the weighted geomean stays `n/a` until a serving
+  trace populates it.
+- **Never compare vs opaque `aiter` without labeling the backend.** aiter's
+  compiled `module_rmsnorm` picks CK/HIP/ASM internally; record the visible
+  Python branch (e.g. `>8192 → CK`) and mark the inner choice opaque.
+- **Auto-fire rocprofv3** on any HOT shape whose kernel-only
+  `speedup_vs_best < 0.90` (the profiler gate). Unstable timing (p90/p10 > 1.2)
+  is re-measured, not profiled.
+
+### Classification + decision vocabulary
+
+Classify each sub-parity hot shape as one of: `tuning_gap`,
+`implementation_gap`, `algorithm_gap`, `flydsl_codegen_gap`,
+`launch_or_roofline_limited`, `measurement_issue`,
+`baseline_unfair_or_unmatched` (plus `ok` for parity-or-better). Then emit one
+overall decision: `promote`, `promote_with_guardrails`, `tune_needed`,
+`rewrite_needed`, `codegen_issue`, or `no_go`.
