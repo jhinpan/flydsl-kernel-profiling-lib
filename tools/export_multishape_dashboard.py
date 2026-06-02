@@ -83,7 +83,7 @@ def compute_ms(op):
             wsum += w
     if not ratios:
         return {"n_shapes": len(by), "n_flydsl_correct": n_fly_ok,
-                "geomean_vs_best": None, "weighted_geomean": None,
+                "geomean_vs_best": None, "weighted_geomean": None, "vs_best_n": 0,
                 "models": sorted(models), "verdict": "blocked",
                 "summary_url": f"{GH}/{op}/benchmark_summary.md"}
     g = math.exp(sum(math.log(x) for x in ratios) / len(ratios))
@@ -139,6 +139,8 @@ def main():
         "parity": sorted(k["example"] for k in ms_kernels if k["multishape"]["verdict"] == "parity"),
         "tune_needed": sorted(k["example"] for k in ms_kernels if k["multishape"]["verdict"] == "tune_needed"),
         "rewrite_needed": sorted(k["example"] for k in ms_kernels if k["multishape"]["verdict"] == "rewrite_needed"),
+        "baseline_blocked": sorted(k["example"] for k in ms_kernels if k["multishape"]["verdict"] == "baseline_blocked"),
+        "blocked": sorted(k["example"] for k in ms_kernels if k["multishape"]["verdict"] == "blocked"),
         "models": sorted({m for k in ms_kernels for m in k["multishape"]["models"]}),
         "metric": "kernel-only cold-cache (CUDA-graph + L2 flush), geomean of best-correct-baseline / flydsl",
     }

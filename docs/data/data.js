@@ -1746,6 +1746,7 @@ window.KERNEL_DATA = {
         "n_flydsl_correct": 0,
         "geomean_vs_best": null,
         "weighted_geomean": null,
+        "vs_best_n": 0,
         "models": [
           "deepseek-v3",
           "kimi-k2"
@@ -2847,6 +2848,12 @@ window.KERNEL_DATA = {
     "rewrite_needed": [
       "hgemm_splitk",
       "pa"
+    ],
+    "baseline_blocked": [
+      "moe_gemm"
+    ],
+    "blocked": [
+      "moe_blockscale"
     ],
     "models": [
       "DeepSeek-R1",

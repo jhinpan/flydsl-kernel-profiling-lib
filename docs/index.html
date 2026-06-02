@@ -97,6 +97,26 @@ select:focus,input:focus{border-color:var(--fly)}
 .v-warn{background:rgba(255,194,75,.14);color:var(--warn)}
 .v-bad{background:rgba(255,98,117,.15);color:var(--bad)}
 .v-none{background:rgba(91,107,130,.16);color:var(--ink2)}
+/* multishape verdict badges (reuse .verdict box styling) */
+.v-promote{background:rgba(55,224,160,.14);color:var(--good)}
+.v-parity{background:rgba(159,176,198,.14);color:var(--ink2)}
+.v-tune{background:rgba(255,194,75,.14);color:var(--warn)}
+.v-rewrite{background:rgba(255,98,117,.15);color:var(--bad)}
+.v-blocked{background:rgba(91,107,130,.16);color:var(--ink3)}
+/* multishape strip on cards */
+.msrow{display:flex;align-items:center;gap:10px;margin:11px 0 2px;padding:9px 11px;background:var(--bg2);
+  border:1px solid var(--line);border-radius:9px}
+.msrow .msv{font-family:var(--mono);font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1}
+.msrow .msmeta{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.msrow .mslbl{font-size:10px;color:var(--ink3);font-family:var(--mono);letter-spacing:.03em}
+.msrow .mssub{font-size:11px;color:var(--ink2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msrow a{font-family:var(--mono)}
+.mschip{font-family:var(--mono);font-size:10.5px;color:var(--ink2);background:var(--panel);border:1px solid var(--line2);
+  border-radius:999px;padding:2px 8px;cursor:help}
+.metricbar{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 2px;font-size:12.5px;color:var(--ink2)}
+.metricbar b{color:var(--ink)}
+.metricbar .leg{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.metricbar .leg code{color:var(--ink2)}
 .metrics{display:flex;gap:18px;margin:13px 0 11px}
 .metric .mv{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.01em}
 .metric .ml{font-size:11px;color:var(--ink3)}
@@ -150,8 +170,11 @@ footer .mono{color:var(--ink2)}
     <h1>FlyDSL Kernel Atlas <span class="grad">· MI350X / gfx950</span></h1>
     <p class="sub">Every major FlyDSL GPU kernel, captured with <b>rocprofv3 Advanced Thread Trace</b> on AMD Instinct
       MI350X (CDNA4, gfx950) — timed, stall-mapped to the exact Python source line, and measured against
-      <b>AIter / CK / hipBLASLt</b> baselines. FlyDSL is the subject; baselines are the yardstick.</p>
+      <b>AIter / CK / hipBLASLt</b> baselines. FlyDSL is the subject; baselines are the yardstick.
+      Now joined by a <b>multi-shape cold-cache sweep</b> across <b>17 kernels · 781 shapes · 3 models
+      (Qwen / DeepSeek / Kimi)</b>.</p>
     <div class="chips" id="chips"></div>
+    <div class="metricbar" id="metricbar"></div>
     <div class="kpis" id="kpis"></div>
   </div>
 </header>
@@ -176,13 +199,27 @@ footer .mono{color:var(--ink2)}
 <section style="padding-top:6px">
   <div class="wrap">
     <div class="h2"><h2>All kernels</h2><span class="tag" id="grid-tag"></span></div>
+    <p class="lead">Each card carries <b>two independent measurements</b>: the <b>rocprof 1-shape</b> speedup
+      (single matched-shape ATT capture, top half) and the <b>multishape cold-cache geomean</b>
+      (kernel-only, CUDA-graph + L2 flush, across many real model shapes — the strip below the rocprof metrics).
+      A multishape value &gt; 1.00× means FlyDSL beats the best correct baseline on average.</p>
     <div class="controls">
       <div class="pills" id="catpills"></div>
       <span class="spacer"></span>
       <input type="search" id="search" placeholder="filter kernels…" autocomplete="off">
+      <select id="msverdict">
+        <option value="all">multishape: all verdicts</option>
+        <option value="promote">multishape: promote</option>
+        <option value="parity">multishape: parity</option>
+        <option value="tune_needed">multishape: tune_needed</option>
+        <option value="rewrite_needed">multishape: rewrite_needed</option>
+        <option value="baseline_blocked">multishape: baseline_blocked</option>
+        <option value="blocked">multishape: blocked</option>
+      </select>
       <select id="sort">
         <option value="cat">sort: category</option>
-        <option value="spd">sort: speedup</option>
+        <option value="spd">sort: rocprof speedup</option>
+        <option value="msgeo">sort: multishape geomean</option>
         <option value="us">sort: FlyDSL µs</option>
         <option value="occ">sort: occupancy</option>
         <option value="stall">sort: stall %</option>
