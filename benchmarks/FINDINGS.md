@@ -6,7 +6,7 @@ reported separately. Per-kernel detail in `examples/<kernel>/benchmark_summary.m
 
 | kernel | shapes | geomean vs best (kernel-only) | decision | headline |
 |---|---:|---:|---|---|
-| rmsnorm | 117 | 0.76 (weighted 0.70) | tune_needed | wins 2048-aligned; loses non-aligned generic path; **crash bug fixed → PR #615** |
+| rmsnorm | 159 | 0.71 (weighted **0.65**, 2 models) | tune_needed | wins 2048-aligned; loses non-aligned generic path; **crash fixed → PR #615** |
 | layernorm | 73 | 0.84 | tune_needed | wins aligned/large (1.08–1.10×); loses small-M/non-aligned (0.71×) |
 | softmax | 73 | **1.13** | promote | **wins overall** despite vectorized path being dead-coded off → headroom |
 | gemm (hgemm_splitk) | 30 bf16 | 0.37 | tune/rewrite | ≈parity vs aiter (0.98×) but 0.42–0.44× vs hipBLASLt/aiter_triton on small-N model shapes; worst 0.10× |
@@ -33,6 +33,7 @@ reported separately. Per-kernel detail in `examples/<kernel>/benchmark_summary.m
 ## Per-kernel notes
 
 ### rmsnorm — tune_needed
+- **Two live serving traces** (Qwen3-4B hidden=2560 + DeepSeek-R1-MXFP4 hidden=7168, both captured via SGLang `bench_serving` ISL/OSL/concurrency sweeps; DeepSeek-R1 ran fine on TP=8, no MXFP4 blocker). Production-weighted geomean vs best = **0.65×** (unweighted 0.71×). Serving-stage by model: DeepSeek-R1 0.61×, Qwen3-4B 0.69× — the heavily-weighted non-2048-aligned hidden sizes (2560/7168) are exactly where FlyDSL drops to the generic scalar path. The more real traffic you weight by, the worse it looks.
 - Wins on 2048-aligned shapes (synthetic 0.94×, diagnostic 1.04×; beats PyTorch ~1.4×). Fastest kernel on the 32768×8192 diagnostic.
 - `implementation_gap`: non-2048-aligned N (2560/5120/7168 — the real model hidden sizes) drop to the generic scalar path; profiler shows same block count as triton, slower per block.
 - Eager launcher host-overhead ~46 µs (decode) — separate `launch_or_roofline_limited` (eager only; CUDA-graph decode hides it).
