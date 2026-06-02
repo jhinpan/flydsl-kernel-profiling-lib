@@ -94,8 +94,84 @@ class RmsNormOp(Op):
         return f"M={M},N={N}"
 
 
+class LayerNormOp(Op):
+    op_type = "layernorm"
+
+    def _MN(self, shape):
+        a = shape["args"]
+        return int(a["M"]), int(a["N"])
+
+    def _eps(self, shape):
+        return float(shape.get("args", {}).get("eps", 1e-5))
+
+    def make_inputs(self, shape, seed):
+        import torch
+
+        M, N = self._MN(shape)
+        td = common.torch_dtype(shape["dtype"])
+        g = common.make_generator(seed)
+        x = torch.randn((M, N), device="cuda", dtype=torch.float32, generator=g).to(td).contiguous()
+        gamma = torch.rand((N,), device="cuda", dtype=torch.float32, generator=g).to(td).contiguous()
+        beta = torch.rand((N,), device="cuda", dtype=torch.float32, generator=g).to(td).contiguous()
+        return {"x": x, "gamma": gamma, "beta": beta, "eps": self._eps(shape), "M": M, "N": N, "dtype": td}
+
+    def reference(self, shape, inputs):
+        import torch
+
+        return torch.nn.functional.layer_norm(inputs["x"].float(), (inputs["N"],),
+                                              inputs["gamma"].float(), inputs["beta"].float(), eps=inputs["eps"])
+
+    def bytes_moved(self, shape):
+        M, N = self._MN(shape)
+        return (2 * M * N + 2 * N) * _elem_bytes(shape["dtype"])
+
+    def flops(self, shape):
+        M, N = self._MN(shape)
+        return 6 * M * N
+
+    def args_summary(self, shape):
+        M, N = self._MN(shape)
+        return f"M={M},N={N}"
+
+
+class SoftmaxOp(Op):
+    op_type = "softmax"
+
+    def _MN(self, shape):
+        a = shape["args"]
+        return int(a["M"]), int(a["N"])
+
+    def make_inputs(self, shape, seed):
+        import torch
+
+        M, N = self._MN(shape)
+        td = common.torch_dtype(shape["dtype"])
+        g = common.make_generator(seed)
+        x = torch.randn((M, N), device="cuda", dtype=torch.float32, generator=g).to(td).contiguous()
+        return {"x": x, "M": M, "N": N, "dtype": td}
+
+    def reference(self, shape, inputs):
+        import torch
+
+        return torch.softmax(inputs["x"].float(), dim=-1)
+
+    def bytes_moved(self, shape):
+        M, N = self._MN(shape)
+        return 2 * M * N * _elem_bytes(shape["dtype"])
+
+    def flops(self, shape):
+        M, N = self._MN(shape)
+        return 5 * M * N
+
+    def args_summary(self, shape):
+        M, N = self._MN(shape)
+        return f"M={M},N={N}"
+
+
 _REGISTRY: dict[str, Op] = {
     RmsNormOp.op_type: RmsNormOp(),
+    LayerNormOp.op_type: LayerNormOp(),
+    SoftmaxOp.op_type: SoftmaxOp(),
 }
 
 
