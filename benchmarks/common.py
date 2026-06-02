@@ -338,14 +338,15 @@ def benchmark(fn, *, warmup_iters: int = 20, repeat_iters: int = 100,
 # Misc
 # --------------------------------------------------------------------------- #
 def benchmark_cudagraph(fn, *, warmup_iters: int = 15, rep_ms: float = 15.0,
-                        n_retries: int = 15, max_capture: int = 2000) -> dict:
+                        n_retries: int = 15, max_capture: int = 2000,
+                        flush_l2: bool = True) -> dict:
     """Kernel-only timing via CUDA/HIP graph capture.
 
     Pays host launch overhead + JIT/autotune + allocation ONCE (at warmup/capture),
-    then replays N unrolled launches and divides -- so the result is pure device
-    time, the fair metric for comparing kernel implementations on short shapes
-    where Python launch overhead would otherwise dominate. Raises on capture
-    failure (caller falls back to eager event timing).
+    then replays the captured kernel and times device work with CUDA/HIP events.
+    By default we flush L2 before each replay, so memory-bound kernels are not
+    measured as warm-cache graph replays. Set flush_l2=False to get the old
+    unrolled warm-replay metric.
 
     IMPORTANT: closures that launch on a specific stream MUST fetch
     torch.cuda.current_stream() at CALL time so they land on the capture stream.
@@ -367,32 +368,39 @@ def benchmark_cudagraph(fn, *, warmup_iters: int = 15, rep_ms: float = 15.0,
     e1.record()
     torch.cuda.synchronize()
     est_us = e0.elapsed_time(e1) * 1e3 / 10.0
-    n = int(np.clip(round(rep_ms * 1000.0 / est_us) if est_us > 0 else max_capture, 1, max_capture))
+    if flush_l2:
+        n = 1
+    else:
+        n = int(np.clip(round(rep_ms * 1000.0 / est_us) if est_us > 0 else max_capture, 1, max_capture))
 
+    # Keep capture and replay on one side stream so the L2 flush, timing events,
+    # and graph replay are ordered together.
+    cache = (torch.empty(_L2_FLUSH_BYTES // 4, dtype=torch.int32, device="cuda")
+             if flush_l2 else None)
     side = torch.cuda.Stream()
+    g = torch.cuda.CUDAGraph()
+    times_us = []
     with torch.cuda.stream(side):
         for _ in range(3):
             fn()
-    torch.cuda.current_stream().wait_stream(side)
-    torch.cuda.synchronize()
-
-    g = torch.cuda.CUDAGraph()
-    with torch.cuda.graph(g):
-        for _ in range(n):
-            fn()
-    torch.cuda.synchronize()
-
-    times_us = []
-    for _ in range(n_retries):
-        a = torch.cuda.Event(enable_timing=True)
-        b = torch.cuda.Event(enable_timing=True)
-        a.record()
-        g.replay()
-        b.record()
+        with torch.cuda.graph(g):
+            for _ in range(n):
+                fn()
         torch.cuda.synchronize()
-        times_us.append(a.elapsed_time(b) * 1e3 / n)
+        for _ in range(n_retries):
+            a = torch.cuda.Event(enable_timing=True)
+            b = torch.cuda.Event(enable_timing=True)
+            if cache is not None:
+                cache.zero_()
+            a.record()
+            g.replay()
+            b.record()
+            torch.cuda.synchronize()
+            times_us.append(a.elapsed_time(b) * 1e3 / n)
     stats = _stats(times_us, loops_per_measure=n)
     stats["timing_method"] = "cudagraph"
+    stats["cache_state"] = "l2_flushed_graph" if flush_l2 else "warm_graph_replay"
+    stats["graph_replay_count"] = n
     return stats
 
 

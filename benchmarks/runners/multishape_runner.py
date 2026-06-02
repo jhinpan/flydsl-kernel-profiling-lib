@@ -31,10 +31,13 @@ from benchmarks.providers import base
 _CSV_COLS = ["run_id", "shape_id", "model", "stage", "dtype", "op_type", "args",
              "provider", "provider_detail", "correct", "benchmark_status",
              "median_us", "timing_method", "eager_median_us", "host_overhead_us",
+             "graph_median_us", "cache_state", "graph_replay_count",
              "p10_us", "p90_us", "mean_us", "std_us", "min_us",
              "stable", "effective_gbps", "effective_tflops",
              "includes_allocation", "includes_layout_conversion", "includes_jit",
-             "skip_reason", "candidate_commit", "gpu", "arch", "rocm_version"]
+             "skip_reason", "candidate_commit", "baseline_commit", "gpu", "arch",
+             "rocm_version", "driver_version", "torch_version", "triton_version",
+             "sglang_commit"]
 
 
 def _now_id(op: str, prov: dict) -> str:
@@ -171,6 +174,9 @@ def _row(run_id, shape, provider, prov, *, status, correct=None, cerr=None, stat
         "baseline_commit": prov.get("aiter_commit") if provider.startswith("aiter") else None,
         "gpu": prov.get("gpu"), "arch": prov.get("arch"), "rocm_version": prov.get("rocm_version"),
         "driver_version": prov.get("driver_version"),
+        "torch_version": prov.get("torch_version"),
+        "triton_version": prov.get("triton_version"),
+        "sglang_commit": prov.get("sglang_commit"),
         "correct": correct, "correctness_error": cerr,
         "warmup_iters": warmup_iters, "repeat_iters": repeat_iters,
         "loops_per_measure": stats.get("loops_per_measure"),
@@ -181,6 +187,8 @@ def _row(run_id, shape, provider, prov, *, status, correct=None, cerr=None, stat
         "timing_method": stats.get("timing_method"),
         "eager_median_us": stats.get("eager_median_us"),
         "graph_median_us": stats.get("graph_median_us"),
+        "cache_state": stats.get("cache_state"),
+        "graph_replay_count": stats.get("graph_replay_count"),
         "host_overhead_us": stats.get("host_overhead_us"),
         "graph_capture_error": stats.get("graph_capture_error"),
         "effective_tflops": eff.get("effective_tflops"), "effective_gbps": eff.get("effective_gbps"),

@@ -14,9 +14,13 @@ from __future__ import annotations
 from benchmarks import common
 
 
-def _elem_bytes(dtype: str) -> int:
-    return {"fp32": 4, "f32": 4, "fp16": 2, "f16": 2, "bf16": 2, "bfloat16": 2,
-            "fp8": 1, "fp8_e4m3": 1, "fp8_e5m2": 1}.get(dtype, 2)
+def _elem_bytes(dtype: str) -> float:
+    # quantized dtypes need real byte widths or effective_gbps is wrong for
+    # int8/fp4/mixed GEMM+MoE shapes. fp4 = 0.5 B, a8w4 ~ 0.75 B.
+    return {"fp32": 4, "f32": 4, "float32": 4,
+            "fp16": 2, "f16": 2, "float16": 2, "bf16": 2, "bfloat16": 2,
+            "fp8": 1, "fp8_e4m3": 1, "fp8_e5m2": 1, "int8": 1, "i8": 1,
+            "fp4": 0.5, "f4": 0.5, "mixed_a8w4": 0.75}.get(dtype, 2.0)
 
 
 def _safe_torch_dtype(name: str):

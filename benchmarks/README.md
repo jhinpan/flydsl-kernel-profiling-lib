@@ -92,9 +92,17 @@ Verified node recipe: GPU **MI350X gfx950**, **ROCm 7.2**, **torch
 
 The PRIMARY metric is **kernel-only CUDA-graph time** (`common.benchmark_cudagraph`).
 It pays host launch overhead + JIT/autotune + allocation ONCE at capture, then
-replays N unrolled launches and divides — leaving pure device time. This is the
-fair metric across providers, especially on short shapes where Python launch
-overhead would otherwise dominate.
+replays the captured kernel under event timing - leaving pure device time. By
+default the graph metric flushes L2 before each replay and records
+`cache_state=l2_flushed_graph` with `graph_replay_count=1`, so memory-bound
+kernels are not reported as warm-cache graph replays. Older result rows that
+lack `cache_state` were produced before this distinction was recorded; use them
+for relative historical context, not as cold-cache bandwidth/roofline evidence.
+
+Set `flush_l2=False` in `common.benchmark_cudagraph` only when intentionally
+reproducing the old unrolled warm-graph metric (`cache_state=warm_graph_replay`).
+The L2-flushed graph metric is the fair default across providers, especially on
+short shapes where Python launch overhead would otherwise dominate.
 
 Reported separately:
 
@@ -107,7 +115,8 @@ Reported separately:
   serving captures decode in a CUDA/hipgraph (as SGLang does).
 
 `common.measure_both` returns both; the result row carries `median_us` (primary),
-`eager_median_us`, `graph_median_us`, `host_overhead_us`, and `timing_method`.
+`eager_median_us`, `graph_median_us`, `host_overhead_us`, `timing_method`,
+`cache_state`, and `graph_replay_count`.
 
 **Speedups.** `speedup = baseline_median / flydsl_median` (>1 => FlyDSL faster).
 A shape's headline is its kernel-only speedup vs the **best available** correct

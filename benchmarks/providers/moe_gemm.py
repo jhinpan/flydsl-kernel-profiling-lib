@@ -210,7 +210,8 @@ class FlyDSL(ProviderAdapter):
             model_dim=model_dim, inter_dim=inter_dim, experts=experts, topk=topk,
             tile_m=_TILE_M, tile_n=_TILE_N2, tile_k=_TILE_K2,
             doweight_stage2=True, in_dtype=in_dtype, out_dtype=out_dtype_s,
-            accumulate=True, use_cshuffle_epilog=False)
+            # stage2 f16/bf16 output requires the CShuffle epilogue.
+            accumulate=True, use_cshuffle_epilog=True)
 
         def s2_args(o, a2flat, w, sa2, sw2, st, eids, swt):
             return (o, a2flat, w, sa2, sw2, st, eids, swt, num_valid_ids,

@@ -18,7 +18,7 @@
 | 3497a37892a75980 | DeepSeek-R1 | decode | bf16 | M=8,N=1536 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | cd984e749ef26488 | DeepSeek-R1 | decode | bf16 | M=64,N=1536 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | 690428797e218ab9 | DeepSeek-R1 | decode | bf16 | M=256,N=1536 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
-| deb3b412a092b3aa | Qwen3-4B | decode | bf16 | M=8,N=2560 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok | yes |
+| deb3b412a092b3aa | Qwen3-4B | decode | bf16 | M=8,N=2560 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | e497e54a4bd401da | Qwen3-4B | decode | bf16 | M=32,N=2560 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | d497f1fe07ad8689 | Qwen3-4B | decode | bf16 | M=128,N=2560 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | 6035e2d3c0035e28 | Qwen3-4B | decode | bf16 | M=512,N=2560 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
@@ -65,7 +65,7 @@
 | b155bfa94a449032 | Llama4 Maverick | model_config | bf16 | M=256,N=5120 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | cd7c706821398e69 | Llama4 Maverick | model_config | bf16 | M=2048,N=5120 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | 0644a453d16b3a35 | Llama4 Maverick | model_config | bf16 | M=16384,N=5120 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
-| 6e14a5f6aebc31c9 | DeepSeek-R1 | model_config | bf16 | M=1,N=7168 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok | yes |
+| 6e14a5f6aebc31c9 | DeepSeek-R1 | model_config | bf16 | M=1,N=7168 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | 0ba9931601f3f183 | DeepSeek-R1 | model_config | bf16 | M=32,N=7168 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | 0dee51d54829c0e9 | DeepSeek-R1 | model_config | bf16 | M=256,N=7168 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |
 | f171e19248a35e8f | DeepSeek-R1 | model_config | bf16 | M=2048,N=7168 | ok | ok | ok | n/c | n/c | n/c | ok | n/c | n/c | ok |  |

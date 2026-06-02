@@ -7,6 +7,7 @@
 - FlyDSL commit: 7255fff8  |  AITER commit: 32e1e6d76  |  SGLang commit: b6f71d585
 - Shapes: 265 (sources: aiter_model_shapes=265)
 - Headline metric: **kernel-only** (CUDA-graph) median speedup vs best available baseline. Eager/host-overhead reported separately.
+- Graph cache state: l2_flushed_graph=134.
 
 ## Coverage
 
@@ -23,54 +24,54 @@
 
 | Aggregate | value |
 |---|---:|
-| unweighted geomean vs best | 0.37x  (n=30) |
+| unweighted geomean vs best | 0.50x  (n=30) |
 | production-weighted geomean vs best | n/a (no weights yet — add a serving trace) |
-| vs aiter | 0.98x  (n=14) |
-| vs aiter_triton | 0.42x  (n=30) |
-| vs hipblaslt | 0.43x  (n=30) |
-| vs pytorch | 0.43x  (n=30) |
-| worst hot shape | 0.10x  (M=1,N=256,K=7168 vs aiter_triton) |
+| vs aiter | 0.89x  (n=14) |
+| vs aiter_triton | 0.59x  (n=30) |
+| vs hipblaslt | 0.55x  (n=30) |
+| vs pytorch | 0.55x  (n=30) |
+| worst hot shape | 0.26x  (M=1,N=256,K=7168 vs aiter_triton) |
 
 ## Stage Split (kernel-only vs best)
 
 | Stage | Shapes | Geomean vs best |
 |---|---:|---:|
-| model_config | 30 | 0.37x |
+| model_config | 30 | 0.50x |
 
 ## Model Split (kernel-only vs best)
 
 | Model | Shapes | Geomean vs best |
 |---|---:|---:|
-| DeepSeek-R1 | 5 | 0.27x |
-| GPT-OSS 120B | 15 | 0.47x |
-| Llama4 Maverick | 5 | 0.29x |
-| Qwen3-235B-A22B | 5 | 0.32x |
+| DeepSeek-R1 | 5 | 0.41x |
+| GPT-OSS 120B | 15 | 0.62x |
+| Llama4 Maverick | 5 | 0.38x |
+| Qwen3-235B-A22B | 5 | 0.43x |
 
 ## Top Wins (kernel-only)
 
 | shape | stage | dtype | FlyDSL us | best baseline | baseline us | speedup |
 |---|---|---|---:|---|---:|---:|
-| M=16384,N=128,K=4096 | model_config | bf16 | 31.95 | aiter_triton | 36.49 | 1.14x |
-| M=16384,N=256,K=7168 | model_config | bf16 | 83.01 | aiter_triton | 93.47 | 1.13x |
-| M=16384,N=128,K=2880 | model_config | bf16 | 24.83 | hipblaslt | 27.72 | 1.12x |
-| M=1,N=2880,K=512 | model_config | bf16 | 2.52 | aiter_triton | 2.63 | 1.04x |
-| M=16384,N=128,K=5120 | model_config | bf16 | 42.00 | aiter_triton | 42.16 | 1.00x |
-| M=2048,N=640,K=2880 | model_config | bf16 | 20.96 | pytorch | 20.27 | 0.97x |
-| M=32,N=2880,K=512 | model_config | bf16 | 2.68 | aiter_triton | 2.45 | 0.91x |
-| M=256,N=2880,K=512 | model_config | bf16 | 5.56 | aiter_triton | 4.00 | 0.72x |
+| M=1,N=2880,K=512 | model_config | bf16 | 13.48 | aiter_triton | 13.56 | 1.01x |
+| M=32,N=2880,K=512 | model_config | bf16 | 13.56 | aiter_triton | 13.60 | 1.00x |
+| M=2048,N=640,K=2880 | model_config | bf16 | 31.84 | aiter | 29.80 | 0.94x |
+| M=16384,N=256,K=7168 | model_config | bf16 | 115.88 | pytorch | 104.60 | 0.90x |
+| M=256,N=2880,K=512 | model_config | bf16 | 17.96 | aiter_triton | 14.36 | 0.80x |
+| M=16384,N=128,K=2880 | model_config | bf16 | 49.72 | pytorch | 37.44 | 0.75x |
+| M=16384,N=640,K=2880 | model_config | bf16 | 114.40 | pytorch | 76.08 | 0.67x |
+| M=256,N=640,K=2880 | model_config | bf16 | 30.40 | aiter_triton | 18.40 | 0.61x |
 
 ## Top Regressions (kernel-only) + diagnosis
 
 | shape | stage | dtype | FlyDSL us | best | baseline us | speedup | classification |
 |---|---|---|---:|---|---:|---:|---|
-| M=1,N=256,K=7168 | model_config | bf16 | 43.47 | aiter_triton | 4.39 | 0.10x | implementation_gap |
-| M=32,N=256,K=7168 | model_config | bf16 | 43.66 | aiter_triton | 5.97 | 0.14x | implementation_gap |
-| M=32,N=128,K=5120 | model_config | bf16 | 31.48 | aiter_triton | 5.10 | 0.16x | implementation_gap |
-| M=1,N=128,K=4096 | model_config | bf16 | 25.87 | aiter_triton | 4.56 | 0.18x | implementation_gap |
-| M=1,N=128,K=5120 | model_config | bf16 | 31.27 | aiter_triton | 5.57 | 0.18x | implementation_gap |
-| M=256,N=256,K=7168 | model_config | bf16 | 44.02 | hipblaslt | 8.58 | 0.19x | implementation_gap |
-| M=256,N=128,K=5120 | model_config | bf16 | 31.96 | aiter_triton | 6.50 | 0.20x | implementation_gap |
-| M=32,N=128,K=4096 | model_config | bf16 | 26.13 | aiter_triton | 5.47 | 0.21x | implementation_gap |
+| M=1,N=256,K=7168 | model_config | bf16 | 60.64 | aiter_triton | 15.96 | 0.26x | algorithm_gap |
+| M=32,N=256,K=7168 | model_config | bf16 | 61.08 | aiter_triton | 16.60 | 0.27x | algorithm_gap |
+| M=256,N=256,K=7168 | model_config | bf16 | 62.32 | hipblaslt | 19.96 | 0.32x | algorithm_gap |
+| M=1,N=128,K=4096 | model_config | bf16 | 43.48 | aiter | 14.40 | 0.33x | algorithm_gap |
+| M=1,N=128,K=5120 | model_config | bf16 | 46.36 | aiter_triton | 15.44 | 0.33x | algorithm_gap |
+| M=32,N=128,K=5120 | model_config | bf16 | 47.16 | aiter_triton | 15.96 | 0.34x | algorithm_gap |
+| M=2048,N=128,K=5120 | model_config | bf16 | 66.84 | hipblaslt | 23.60 | 0.35x | algorithm_gap |
+| M=16384,N=2880,K=512 | model_config | bf16 | 235.72 | hipblaslt | 84.20 | 0.36x | algorithm_gap |
 
 ## FlyDSL hard failures (crash / incorrect)
 
@@ -278,638 +279,635 @@ FlyDSL's `@flyc.jit` launcher rebuilds its cache-key every call; on short shapes
 
 | shape | FlyDSL kernel us | FlyDSL eager us | host overhead us |
 |---|---:|---:|---:|
-| M=16384,N=128,K=5120 | 42.00 | 86.76 | 44.76 |
-| M=16384,N=128,K=4096 | 31.95 | 70.26 | 38.31 |
-| M=16384,N=256,K=7168 | 83.01 | 114.72 | 31.71 |
-| M=2048,N=128,K=5120 | 32.33 | 59.88 | 27.55 |
-| M=256,N=128,K=5120 | 31.96 | 56.16 | 24.20 |
-| M=16384,N=2880,K=512 | 202.00 | 221.78 | 19.78 |
+| M=256,N=128,K=5120 | 49.12 | 56.34 | 7.22 |
+| M=16384,N=256,K=7168 | 115.88 | 115.32 | -0.56 |
+| M=16384,N=640,K=2880 | 114.40 | 111.68 | -2.72 |
+| M=32,N=128,K=5120 | 47.16 | 41.18 | -5.98 |
+| M=16384,N=128,K=4096 | 76.20 | 70.22 | -5.98 |
+| M=1,N=128,K=5120 | 46.36 | 39.96 | -6.40 |
 
 ## Diagnosis
 
-- `M=1,N=256,K=7168` (bf16, vs-best 0.10x): **implementation_gap**
-  - evidence: N=256 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.10x). Compounded at small M=1: grid=(M,1,1) launches one workgroup per row, so only ~1 of the ~256 CUs are used (under-occupied).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
-- `M=32,N=256,K=7168` (bf16, vs-best 0.14x): **implementation_gap**
-  - evidence: N=256 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.14x). Compounded at small M=32: grid=(M,1,1) launches one workgroup per row, so only ~32 of the ~256 CUs are used (under-occupied).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
-- `M=32,N=128,K=5120` (bf16, vs-best 0.16x): **implementation_gap**
-  - evidence: N=128 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.16x). Compounded at small M=32: grid=(M,1,1) launches one workgroup per row, so only ~32 of the ~256 CUs are used (under-occupied).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
-- `M=1,N=128,K=4096` (bf16, vs-best 0.18x): **implementation_gap**
-  - evidence: N=128 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.18x). Compounded at small M=1: grid=(M,1,1) launches one workgroup per row, so only ~1 of the ~256 CUs are used (under-occupied).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
-- `M=1,N=128,K=5120` (bf16, vs-best 0.18x): **implementation_gap**
-  - evidence: N=128 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.18x). Compounded at small M=1: grid=(M,1,1) launches one workgroup per row, so only ~1 of the ~256 CUs are used (under-occupied).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
-- `M=256,N=256,K=7168` (bf16, vs-best 0.19x): **implementation_gap**
-  - evidence: N=256 misses the fast-vectorized path (needs N>=2048 & N%2048==0 & 16-bit) -> generic scalar path; per-block efficiency loss (kernel-only vs-best 0.19x).
-  - likely fix: vectorize the generic/tail path (widen loads, handle remainder); for small M also split work across N so >1 workgroup runs
+- `M=1,N=256,K=7168` (bf16, vs-best 0.26x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.26x) for args={'K': 7168, 'M': 1, 'N': 256}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
+- `M=32,N=256,K=7168` (bf16, vs-best 0.27x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.27x) for args={'K': 7168, 'M': 32, 'N': 256}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
+- `M=256,N=256,K=7168` (bf16, vs-best 0.32x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.32x) for args={'K': 7168, 'M': 256, 'N': 256}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
+- `M=1,N=128,K=4096` (bf16, vs-best 0.33x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.33x) for args={'K': 4096, 'M': 1, 'N': 128}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
+- `M=1,N=128,K=5120` (bf16, vs-best 0.33x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.33x) for args={'K': 5120, 'M': 1, 'N': 128}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
+- `M=32,N=128,K=5120` (bf16, vs-best 0.34x): **algorithm_gap**
+  - evidence: hgemm_splitk is slower than the best GEMM baseline (0.34x) for args={'K': 5120, 'M': 32, 'N': 128}
+  - likely fix: retune tile/split-K selection or route this shape to a stronger GEMM backend
 - `M=1,N=512,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=512,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=512,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=512,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=512,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=768,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=768,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=768,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=768,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=768,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=1280,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=1280,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=1280,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=1280,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=1280,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=2112,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=2112,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=2112,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=2112,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=2112,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=2304,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=2304,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=2304,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=2304,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=2304,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=3072,K=1536` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=3072,K=1536` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=3072,K=1536` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=3072,K=1536` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=3072,K=1536` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=3584,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=3584,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=3584,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=3584,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=3584,K=4096` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=1792` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=512` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=512` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=1792` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=512` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=1792` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=1792` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=512` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=1792` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=512` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4608,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4608,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4608,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4608,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4608,K=7168` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=7168,K=256` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=7168,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=7168,K=2304` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=7168,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=7168,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=7168,K=256` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=7168,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=7168,K=2304` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=7168,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=7168,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=7168,K=2304` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=7168,K=256` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=7168,K=2304` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=7168,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=7168,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=7168,K=256` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=7168,K=256` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=7168,K=2304` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=7168,K=8192` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=7168,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=8192,K=3584` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=8192,K=1024` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=8192,K=1024` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=8192,K=3584` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=8192,K=3584` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=8192,K=1024` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=8192,K=3584` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=8192,K=1024` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=8192,K=3584` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=8192,K=1024` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=13312,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=13312,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=13312,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=13312,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=13312,K=16384` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=16384,K=6656` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=16384,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=16384,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=16384,K=6656` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=16384,K=6656` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=16384,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=16384,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=16384,K=6656` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=16384,K=6656` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=16384,K=2048` (fp4): **failed** — input/reference build: 'fp4'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=768,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=768,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=768,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=768,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=768,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=896,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=896,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=896,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=896,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=896,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=1152,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=1152,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=1152,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=1152,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=1152,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=1280,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=1280,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=1280,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=1280,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=1280,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=2048,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=2048,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=2048,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=2048,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=2048,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=2304,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=2304,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=2304,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=2304,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=2304,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=3584,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=3584,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=3584,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=3584,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=3584,K=4096` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=512` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=4096,K=1792` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=1792` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=512` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=4096,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=512` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=4096,K=1792` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=512` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=1792` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=4096,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=512` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=1792` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=4096,K=5120` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=5120,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=5120,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=5120,K=640` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=5120,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=5120,K=640` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=5120,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=5120,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=5120,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=5120,K=640` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=5120,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=5120,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=5120,K=640` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=5120,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=5120,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=5120,K=640` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=7168,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=7168,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=7168,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=7168,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=7168,K=8192` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=8192,K=3584` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=8192,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=8192,K=3584` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=8192,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=8192,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=8192,K=3584` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=8192,K=3584` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=8192,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=8192,K=1024` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=8192,K=3584` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=13312,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=13312,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=13312,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=13312,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=13312,K=16384` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=16384,K=6656` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=1,N=16384,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=16384,K=6656` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=32,N=16384,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=16384,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=256,N=16384,K=6656` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=16384,K=6656` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=2048,N=16384,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=16384,K=2048` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 - `M=16384,N=16384,K=6656` (int8): **failed** — input/reference build: 'int8'
-  - classification: **flydsl_codegen_gap** (illegal launch config)
-  - likely fix: annotate known_block_size / clamp block size to <=256 in the large-M small-N path
+  - classification: **measurement_issue**
+  - likely fix: exclude unsupported dtype rows from this op run, or implement input/reference support
 
 ## Promotion Decision
 
-**rewrite_needed** — well below parity (geomean 0.37x); structural rework needed
+**rewrite_needed** — well below parity (geomean 0.50x) + hard failures on a shape class; structural rework needed
 
-Regime-specific reading:
-- **Large-M aligned (prefill-like):** kernel-only parity-or-better (diagnostic ~1.03x, beats PyTorch ~1.5x). Promotable.
-- **Small-M large-N (decode):** one-block-per-row underutilizes the GPU (kernel-only worst ~0.36x). Needs a parallelization change.
-- **Eager decode latency:** ~tens-of-us launcher host overhead per call. Needs a launch cache (host-side).
-- **Large-M small-N:** hard crash (block size > AMDGPU max_flat_workgroup_size). Must-fix bug.
+Reading:
+- Correct+timed FlyDSL-vs-baseline pairs: 30/265.
+- Hard FlyDSL failures must be fixed or explicitly scoped out before broad promotion.
+- Only supported bf16/f16 rows should drive the hgemm_splitk verdict; quantized rows need separate adapters.
 
 ## Reproduction
 
 ```bash
-# 1. build the ledger
+# 1. use the checked-in shape ledger, or refresh model_config rows when this op is importer-backed
 python -m benchmarks.shape_ledgers.aiter_model_shapes_importer \
   --aiter-model-shapes /sgl-workspace/aiter/op_tests/op_benchmarks/triton/model_benchmarking_tool/model_shapes.json \
-  --out benchmarks/examples --tp 8 --gpu MI350X --arch gfx950 --ops rmsnorm
-python -m benchmarks.shape_ledgers.manual_shape_importer --op rmsnorm --out benchmarks/examples \
-  --synthetic-boundary --diagnostic 32768,8192,bf16
+  --out benchmarks/examples --tp 8 --gpu MI350X --arch gfx950 --ops gemm
 # 2. run (env.sh sets the FlyDSL build-tree PYTHONPATH/LD that also unblocks aiter)
 HIP_VISIBLE_DEVICES=7 benchmarks/bench -m benchmarks.runners.multishape_runner \
   --op gemm --shape-ledger benchmarks/examples/gemm/shape_ledger.jsonl \
@@ -917,7 +915,8 @@ HIP_VISIBLE_DEVICES=7 benchmarks/bench -m benchmarks.runners.multishape_runner \
   --out benchmarks/examples/gemm --warmup-iters 20 --repeat-iters 60
 # 3. reports
 python -m benchmarks.reports.summarize_results --shape-ledger benchmarks/examples/gemm/shape_ledger.jsonl \
-  --results benchmarks/examples/gemm/benchmark_results.jsonl --out benchmarks/examples/gemm/benchmark_summary.md
+  --results benchmarks/examples/gemm/benchmark_results.jsonl --out benchmarks/examples/gemm/benchmark_summary.md \
+  --kernel gemm
 ```
 
 Raw artifacts: `shape_ledger.jsonl`, `benchmark_results.jsonl`, `benchmark_results.csv`, `coverage_matrix.md`, `profiles/`

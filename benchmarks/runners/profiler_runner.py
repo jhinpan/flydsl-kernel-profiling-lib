@@ -44,11 +44,49 @@ torch.cuda.synchronize()
 '''
 
 _ENTRYPOINTS = {
-    "flydsl": "benchmarks.providers.flydsl:RmsNormAdapter",
-    "pytorch": "benchmarks.providers.pytorch:RmsNormAdapter",
-    "aiter": "benchmarks.providers.aiter:RmsNormAdapter",
-    "aiter_triton": "benchmarks.providers.aiter_triton:RmsNormAdapter",
-    "triton": "benchmarks.providers.triton:RmsNormAdapter",
+    "rmsnorm": {
+        "flydsl": "benchmarks.providers.flydsl:RmsNormAdapter",
+        "pytorch": "benchmarks.providers.pytorch:RmsNormAdapter",
+        "aiter": "benchmarks.providers.aiter:RmsNormAdapter",
+        "aiter_triton": "benchmarks.providers.aiter_triton:RmsNormAdapter",
+        "triton": "benchmarks.providers.triton:RmsNormAdapter",
+    },
+    "layernorm": {
+        "flydsl": "benchmarks.providers.layernorm:FlyDSL",
+        "pytorch": "benchmarks.providers.layernorm:PyTorch",
+        "aiter": "benchmarks.providers.layernorm:Aiter",
+        "aiter_triton": "benchmarks.providers.layernorm:AiterTriton",
+        "triton": "benchmarks.providers.layernorm:Triton",
+    },
+    "softmax": {
+        "flydsl": "benchmarks.providers.softmax:FlyDSL",
+        "pytorch": "benchmarks.providers.softmax:PyTorch",
+        "aiter": "benchmarks.providers.softmax:Aiter",
+        "aiter_triton": "benchmarks.providers.softmax:AiterTriton",
+        "triton": "benchmarks.providers.softmax:Triton",
+    },
+    "gemm": {
+        "flydsl": "benchmarks.providers.gemm:FlyDSL",
+        "pytorch": "benchmarks.providers.gemm:PyTorch",
+        "hipblaslt": "benchmarks.providers.gemm:HipBLASLt",
+        "aiter": "benchmarks.providers.gemm:Aiter",
+        "aiter_triton": "benchmarks.providers.gemm:AiterTriton",
+        "triton": "benchmarks.providers.gemm:Triton",
+    },
+    "fused_rope_cache": {
+        "flydsl": "benchmarks.providers.fused_rope_cache:FlyDSL",
+        "pytorch": "benchmarks.providers.fused_rope_cache:PyTorch",
+        "aiter": "benchmarks.providers.fused_rope_cache:Aiter",
+        "aiter_triton": "benchmarks.providers.fused_rope_cache:AiterTriton",
+        "triton": "benchmarks.providers.fused_rope_cache:Triton",
+    },
+    "moe_gemm": {
+        "flydsl": "benchmarks.providers.moe_gemm:FlyDSL",
+        "pytorch": "benchmarks.providers.moe_gemm:PyTorch",
+        "aiter": "benchmarks.providers.moe_gemm:Aiter",
+        "aiter_triton": "benchmarks.providers.moe_gemm:AiterTriton",
+        "triton": "benchmarks.providers.moe_gemm:Triton",
+    },
 }
 
 
@@ -112,9 +150,14 @@ def run(op: str, shape_id: str, provider: str, ledger_path: str, out_root: str,
     shape = shapes.get(shape_id)
     if shape is None:
         raise SystemExit(f"shape_id {shape_id} not in {ledger_path}")
-    entry = _ENTRYPOINTS.get(provider)
+    entry = _ENTRYPOINTS.get(op, {}).get(provider)
     if entry is None:
-        raise SystemExit(f"no entrypoint for provider {provider}")
+        supported = ", ".join(sorted(_ENTRYPOINTS))
+        available = ", ".join(sorted(_ENTRYPOINTS.get(op, {}))) or "<none>"
+        raise SystemExit(
+            f"no profiler entrypoint for op={op!r}, provider={provider!r} "
+            f"(supported ops: {supported}; providers for this op: {available})"
+        )
 
     outdir = os.path.join(out_root, shape_id.replace("sha1:", ""), provider)
     os.makedirs(outdir, exist_ok=True)

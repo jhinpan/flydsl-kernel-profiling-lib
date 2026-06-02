@@ -2,7 +2,7 @@
 
 | shape_id | model | stage | dtype | args | flydsl | aiter | aiter_triton | aiter_ck | aiter_asm | ck | triton | gluon | hipblaslt | pytorch | profile |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2a239e8c7cb60a18 | Qwen3-235B-A22B | model_config | bf16 | M=1,N=128,K=4096 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
+| 2a239e8c7cb60a18 | Qwen3-235B-A22B | model_config | bf16 | M=1,N=128,K=4096 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | 4cbab47416333528 | GPT-OSS 120B | model_config | bf16 | M=1,N=128,K=2880 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | 987b3009773ac115 | Llama4 Maverick | model_config | bf16 | M=1,N=128,K=5120 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | 419c1180f1fd2f73 | Qwen3-235B-A22B | model_config | bf16 | M=32,N=128,K=4096 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
@@ -17,7 +17,7 @@
 | 45cbcfd18820e3c9 | Qwen3-235B-A22B | model_config | bf16 | M=16384,N=128,K=4096 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | ea893d1fc5a2b40f | Llama4 Maverick | model_config | bf16 | M=16384,N=128,K=5120 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | f59d7962fa5dd3db | GPT-OSS 120B | model_config | bf16 | M=16384,N=128,K=2880 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
-| 55fdf3dcb9d71b2a | DeepSeek-R1 | model_config | bf16 | M=1,N=256,K=7168 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
+| 55fdf3dcb9d71b2a | DeepSeek-R1 | model_config | bf16 | M=1,N=256,K=7168 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | df905e6d25fffdd7 | DeepSeek-R1 | model_config | bf16 | M=32,N=256,K=7168 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | 5c34bb2994714f4a | DeepSeek-R1 | model_config | bf16 | M=256,N=256,K=7168 | ok | incorrect | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |
 | e1fcce2b4e143067 | DeepSeek-R1 | model_config | bf16 | M=2048,N=256,K=7168 | ok | ok | ok | n/c | n/c | n/c | n/c | n/c | ok | ok |  |

@@ -19,3 +19,7 @@ out_*_code_object_id_*.out
 out_results.def
 out_results.otf2
 out_results.pftrace
+
+# stray bench_serving output
+sglang_*.jsonl
+bench_*.jsonl
