@@ -202,7 +202,7 @@ def _row(run_id, shape, provider, prov, *, status, correct=None, cerr=None, stat
 
 def _write_csv(path, results):
     with open(path, "w", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(_CSV_COLS)
         for r in results:
             w.writerow([common.canonical_json(r["args"]) if c == "args" else r.get(c) for c in _CSV_COLS])
