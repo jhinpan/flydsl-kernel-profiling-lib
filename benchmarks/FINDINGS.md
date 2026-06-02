@@ -53,7 +53,7 @@ reported separately. Per-kernel detail in `examples/<kernel>/benchmark_summary.m
 | finding | kernel | status |
 |---|---|---|
 | large-M small-N block size > max_flat_workgroup_size (crash) | rmsnorm | **filed: #614 / PR #615** |
-| softmax vectorized path dead-coded off (`False and ...`) | softmax | candidate — re-enable + verify (high value, low risk) |
+| softmax vectorized path dead-coded off + won't compile (fastmath bool + LLVM cast) | softmax | **filed: #627** |
 | narrow fast-path (N==8192 only) + small-M one-block-per-row | layernorm, rmsnorm | candidate — needs profiler pass; parallelize across N for small M |
 
 ## Pending kernels
