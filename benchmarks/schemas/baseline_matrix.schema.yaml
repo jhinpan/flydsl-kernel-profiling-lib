@@ -1,0 +1,38 @@
+# JSON-Schema (expressed in YAML) for a per-kernel baseline_matrix.yaml.
+# A baseline_matrix declares, for one kernel, which providers to run and how to
+# reach each adapter. The runner skips disabled providers (recording them as
+# benchmark_status=not_configured with skip_reason) and never silently drops one.
+$schema: "http://json-schema.org/draft-07/schema#"
+title: FlyDSL kernel baseline matrix
+type: object
+required: [kernel, op_type, dtype, providers]
+additionalProperties: true
+properties:
+  kernel: {type: string}
+  op_type: {type: string}
+  dtype: {type: string}
+  layout_contract:
+    type: object
+    description: the layout every provider must honor (else mark layout-converted)
+  reference_provider:
+    type: string
+    description: provider whose output is the golden fp32 reference (default pytorch)
+  providers:
+    type: object
+    additionalProperties:
+      type: object
+      required: [enabled, entrypoint]
+      properties:
+        enabled: {type: boolean}
+        entrypoint:
+          type: string
+          description: "pkg.module:Attr resolving to a ProviderAdapter subclass or factory"
+        provider:
+          type: string
+          description: benchmark_result.provider enum value this adapter reports as
+        commit_required: {type: boolean}
+        backend_visibility_required:
+          type: boolean
+          description: if true, must record selected backend or mark backend_unknown
+        skip_reason: {type: [string, "null"]}
+        notes: {type: string}

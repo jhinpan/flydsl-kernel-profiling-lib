@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FlyDSL benchmark shape-ledger row",
+  "description": "One JSONL row per benchmarked shape. shape_id is a stable sha1 over the identity fields.",
+  "type": "object",
+  "required": ["shape_id", "op_type", "kernel_name", "model", "stage", "arch", "gpu", "dtype", "layout", "args", "source", "weight", "baselines_available", "notes"],
+  "additionalProperties": true,
+  "properties": {
+    "shape_id": {"type": "string", "pattern": "^sha1:[0-9a-f]{8,}$"},
+    "op_type": {"type": "string"},
+    "kernel_name": {"type": "string"},
+    "model": {"type": "string"},
+    "stage": {"type": "string", "enum": ["prefill", "decode", "mixed", "synthetic", "diagnostic", "model_config"]},
+    "arch": {"type": "string"},
+    "gpu": {"type": "string"},
+    "dtype": {"type": "string"},
+    "layout": {"type": "object"},
+    "args": {"type": "object"},
+    "source": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["aiter_model_shapes", "sglang_trace", "atom_workload", "manual", "synthetic", "diagnostic", "model_config"]},
+        "file": {"type": ["string", "null"]},
+        "input_len": {"type": ["integer", "null"]},
+        "output_len": {"type": ["integer", "null"]},
+        "concurrency": {"type": ["integer", "null"]},
+        "notes": {"type": "string"}
+      }
+    },
+    "weight": {
+      "type": "object",
+      "properties": {
+        "occurrences": {"type": ["integer", "null"]},
+        "traffic_weight": {"type": ["number", "null"]},
+        "baseline_time_weight": {"type": ["number", "null"]}
+      }
+    },
+    "baselines_available": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"}
+  }
+}

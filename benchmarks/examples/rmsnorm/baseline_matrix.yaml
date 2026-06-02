@@ -1,0 +1,61 @@
+kernel: rmsnorm
+op_type: rmsnorm
+dtype: bf16
+layout_contract:
+  x: "row-major (M, N), contiguous"
+  weight: "(N,), same dtype as x"
+  eps: "1e-5 (FlyDSL kernel constant)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.flydsl:RmsNormAdapter
+    provider: flydsl
+    commit_required: true
+    notes: candidate; build_rmsnorm_module, preallocated out (no alloc/JIT in timed region)
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.pytorch:RmsNormAdapter
+    provider: pytorch
+    notes: torch.nn.functional.rms_norm; also the fp32 reference source
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.aiter:RmsNormAdapter
+    provider: aiter
+    backend_visibility_required: true
+    notes: compiled module_rmsnorm (CK/HIP); records the Python >8192 CK branch, inner backend opaque
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.aiter_triton:RmsNormAdapter
+    provider: aiter_triton
+    notes: explicit Triton path (aiter.ops.triton.normalization.rmsnorm)
+  triton:
+    enabled: true
+    entrypoint: benchmarks.providers.triton:RmsNormAdapter
+    provider: triton
+    notes: sglang standalone one-pass Triton kernel
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.aiter_ck:RmsNormAdapter
+    provider: aiter_ck
+    skip_reason: CK norm backend not separately selectable from Python; use 'aiter'
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.aiter_asm:RmsNormAdapter
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM rmsnorm path in AITER
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.ck:RmsNormAdapter
+    provider: ck
+    skip_reason: no standalone CK rmsnorm adapter on this node
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.gluon:RmsNormAdapter
+    provider: gluon
+    skip_reason: no Gluon rmsnorm kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.hipblaslt:RmsNormAdapter
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only (no rmsnorm op)

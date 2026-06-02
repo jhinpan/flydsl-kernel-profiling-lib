@@ -1,0 +1,29 @@
+W20260602 10:30:59.062994 123840007454208 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000400 sec
+W20260602 10:30:59.063116 123840007454208 simple_timer.cpp:55] [rocprofv3] 'python benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/triton/repro.py' ::     0.000000 sec
+W20260602 10:30:59.939487 123840007454208 tool.cpp:2422] HSA version 8.20.0 initialized (instance=0)
+W20260602 10:31:03.090931 126101448588800 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000412 sec
+W20260602 10:31:03.091051 126101448588800 simple_timer.cpp:55] [rocprofv3] '/opt/rocm-7.2.0/bin/hipconfig --version' ::     0.000000 sec
+W20260602 10:31:03.230381 132223070203392 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000424 sec
+W20260602 10:31:03.230480 132223070203392 simple_timer.cpp:55] [rocprofv3] 'sh -c /opt/rocm-7.2.0/lib/llvm/bin/clang++ --version' ::     0.000000 sec
+W20260602 10:31:03.372845 137151159668288 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000413 sec
+W20260602 10:31:03.373963 137151159668288 simple_timer.cpp:55] [rocprofv3] '/opt/rocm-7.2.0/lib/llvm/bin/clang++ --version' ::     0.000000 sec
+W20260602 10:31:03.374817 137151159668288 simple_timer.cpp:55] [rocprofv3] '/opt/rocm-7.2.0/lib/llvm/bin/clang++ --version' ::     0.000855 sec
+W20260602 10:31:03.375322 137151159668288 simple_timer.cpp:55] [rocprofv3] output generation ::     0.000408 sec
+W20260602 10:31:03.375365 137151159668288 simple_timer.cpp:55] [rocprofv3] tool finalization ::     0.000511 sec
+W20260602 10:31:03.379926 126101448588800 simple_timer.cpp:55] [rocprofv3] '/opt/rocm-7.2.0/bin/hipconfig --version' ::     0.288875 sec
+W20260602 10:31:03.380829 126101448588800 simple_timer.cpp:55] [rocprofv3] output generation ::     0.000704 sec
+W20260602 10:31:03.380890 126101448588800 simple_timer.cpp:55] [rocprofv3] tool finalization ::     0.000899 sec
+W20260602 10:31:03.823402 128340190014976 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000429 sec
+W20260602 10:31:03.823517 128340190014976 simple_timer.cpp:55] [rocprofv3] '/bin/sh -c cat /proc/sys/kernel/numa_balancing' ::     0.000000 sec
+W20260602 10:31:03.976141 124321683668480 simple_timer.cpp:55] [rocprofv3] tool initialization ::     0.000399 sec
+W20260602 10:31:03.976251 124321683668480 simple_timer.cpp:55] [rocprofv3] 'cat /proc/sys/kernel/numa_balancing' ::     0.000000 sec
+W20260602 10:31:03.976437 124321683668480 simple_timer.cpp:55] [rocprofv3] 'cat /proc/sys/kernel/numa_balancing' ::     0.000186 sec
+W20260602 10:31:03.976955 124321683668480 simple_timer.cpp:55] [rocprofv3] output generation ::     0.000378 sec
+W20260602 10:31:03.977004 124321683668480 simple_timer.cpp:55] [rocprofv3] tool finalization ::     0.000532 sec
+[aiter] import [module_aiter_core] under /sgl-workspace/aiter/aiter/jit/module_aiter_core.so
+[aiter] merge tuned file under model_configs/ and configs/ /sgl-workspace/aiter/aiter/configs/bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/dsv3_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/dsv4_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/glm5_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/gptoss_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/kimik2_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/llama405B_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/llama70B_bf16_tuned_gemm.csv:/sgl-workspace/aiter/aiter/configs/model_configs/qwen32B_bf16_tuned_gemm.csv
+W20260602 10:31:11.015503 123840007454208 simple_timer.cpp:55] [rocprofv3] 'python benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/triton/repro.py' ::    11.952387 sec
+E20260602 10:31:11.022357 123840007454208 output_stream.cpp:111] Opened result file: benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/triton/nimrodmi350/1858978_kernel_trace.csv
+E20260602 10:31:11.025066 123840007454208 output_stream.cpp:111] Opened result file: benchmarks/examples/rmsnorm/profiles/6e14a5f6aebc31c9/triton/nimrodmi350/1858978_agent_info.csv
+W20260602 10:31:11.025190 123840007454208 simple_timer.cpp:55] [rocprofv3] output generation ::     0.007464 sec
+W20260602 10:31:11.025496 123840007454208 simple_timer.cpp:55] [rocprofv3] tool finalization ::     0.007801 sec
