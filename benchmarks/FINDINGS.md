@@ -9,6 +9,26 @@ reported separately. Per-kernel detail in `examples/<kernel>/benchmark_summary.m
 | rmsnorm | 117 | 0.76 (weighted 0.70) | tune_needed | wins 2048-aligned; loses non-aligned generic path; **crash bug fixed → PR #615** |
 | layernorm | 73 | 0.84 | tune_needed | wins aligned/large (1.08–1.10×); loses small-M/non-aligned (0.71×) |
 | softmax | 73 | **1.13** | promote | **wins overall** despite vectorized path being dead-coded off → headroom |
+| gemm (hgemm_splitk) | 30 bf16 | 0.37 | tune/rewrite | ≈parity vs aiter (0.98×) but 0.42–0.44× vs hipBLASLt/aiter_triton on small-N model shapes; worst 0.10× |
+| fused_rope_cache | 30 | ≈0.99 vs aiter_triton | promote_with_guardrails | ≈parity with aiter_triton (kernel-only); pytorch-eager ~17× slower; worst 0.66× |
+| moe_gemm (2-stage) | 0 FlyDSL ok | blocked | needs adapter work | FlyDSL fp8 2-stage compose **fails on all shapes**; aiter/pytorch baselines run; int8/fp4/mixed unsupported |
+
+### fused_rope_cache — promote_with_guardrails
+- Kernel-only ≈ parity with aiter_triton (0.99×); the eager-vs-graph gap is large (single 64-lane wave/block → launch-overhead-bound), so kernel-only is the fair metric. PyTorch eager rope is ~17× slower.
+- Worst 0.66× at head_dim=64, T=2048. (The discovery noted a 0.17× rocprof point at a specific GPT-OSS-TP8 trivial-T shape — serialized `lgkmcnt(0)` fences; not hit hard in this ledger but worth a profiler pass.)
+
+### moe_gemm — blocked (adapter work needed, not a FlyDSL verdict)
+- FlyDSL has no fused MoE call; the adapter composes `compile_moe_gemm1 → fp8 requant → compile_moe_gemm2`. That fp8 2-stage compose currently **fails on every shape** (9 fp8 failed) and int8/fp4/mixed are unsupported (20). The aiter `fused_moe` + pytorch `torch_moe` baselines DO run, so the ledger/matrix/reference are sound — the FlyDSL adapter itself needs debugging (requant scales, weight preshuffle, routing/sorting buffers, fp8 e4m3fn vs fnuz). **No FlyDSL perf verdict yet** — do not read 0 as a FlyDSL regression. Tracked as a TODO.
+
+### gemm (hgemm_splitk) — tune/rewrite
+- Only bf16 in scope (30/265 shapes; int8/fp4/fp8 are other kernels → correctly unsupported). Tolerance is op-aware now (GEMM accumulates over K → (0.1,0.1), matching FlyDSL's own hgemm_splitk test).
+- FlyDSL split-K hgemm ≈ parity with aiter compiled (0.98×) but **0.42–0.44× vs hipBLASLt / aiter_triton** on the AITER model GEMM shapes (small N=128/256/640, large K) — these are GEMV-ish; hgemm_splitk isn't tuned for them. Worst M=1,N=256,K=7168 → 0.10×.
+- NOTE: aiter `gemm_a16w16_asm` returns structurally-wrong output on some small-M N=128 shapes (flagged `incorrect`, excluded from best) — likely an adapter orientation issue for those shapes, to refine.
+
+### Adapter bugs found + fixed during the campaign (harness, not FlyDSL)
+- fused_rope_cache adapters cached T-sized output/KV-cache buffers under a key that omitted T → cross-shape buffer reuse → **GPU memory access fault**. Fixed (T in cache key).
+- moe_gemm Op.make_inputs KeyError on quant dtypes (fp4/int8/mixed) → guarded (`_safe_torch_dtype`), so those become per-provider `unsupported` not a shared crash.
+- Added an op-aware correctness tolerance hook (`Op.tolerance`): GEMM (0.1,0.1) accumulation; RoPE atol-dominated (near-zero rotation outputs) so a correct f16 baseline isn't false-failed and doesn't inflate FlyDSL's vs-best.
 
 ## Per-kernel notes
 

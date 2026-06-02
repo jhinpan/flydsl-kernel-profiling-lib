@@ -62,7 +62,9 @@ class ProviderAdapter:
             out = self.output(shape, inputs)
             if out is None:
                 return False, "no output"
-            rtol, atol = common.tol_for(shape.get("dtype", "bf16"))
+            from benchmarks import ops as _ops
+            _op = _ops.get_op(shape.get("op_type"))
+            rtol, atol = _op.tolerance(shape) if _op else common.tol_for(shape.get("dtype", "bf16"))
             ref = reference.float()
             got = out.float()
             if got.shape != ref.shape:
