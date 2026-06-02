@@ -1,0 +1,63 @@
+kernel: flash_attn
+op_type: flash_attn
+dtype: bf16
+layout_contract:
+  q: "BSHD (batch, seq_len, num_heads, head_dim), contiguous f16/bf16"
+  k: "BSHD, contiguous f16/bf16 (num_heads == kv heads here; MHA, no GQA)"
+  v: "BSHD, contiguous f16/bf16"
+  out: "BSHD, same dtype; FlyDSL launcher uses 1-D flattened q,k,v,o + (B,S)"
+  scale: "sm_scale = 1/sqrt(head_dim)"
+  constraints: "seq_len % 128 == 0, head_dim % 32 == 0, head_dim >= 64"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.flash_attn:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; build_flash_attn_func_module(num_heads,head_dim,causal,dtype_str,sm_scale,waves_per_eu=2,daz=True). Launcher takes 1-D flattened q,k,v,o + (B,S). f16/bf16 only; seq%128, hd%32, hd>=64
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.flash_attn:PyTorch
+    provider: pytorch
+    notes: F.scaled_dot_product_attention on the [B,H,S,D] transpose, scale=1/sqrt(hd); also the fp32 reference
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.flash_attn:Aiter
+    provider: aiter
+    notes: aiter.mha_fwd (compiled CK forward; f16/bf16; BSHD); exact call from test_flash_attn_func.py run_aiter_bench("ck")
+  aiter_asm:
+    enabled: true
+    entrypoint: benchmarks.providers.flash_attn:AiterASM
+    provider: aiter_asm
+    notes: aiter.fmha_v3_fwd (compiled ASM v3 forward; bf16 ONLY -- skipped for f16; how_v3_bf16_cvt=2)
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.flash_attn:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.triton.attention.mha.flash_attn_func (pure Triton; BSHD; causal= kwarg)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.flash_attn:Triton
+    provider: triton
+    skip_reason: no standalone non-aiter Triton flash-attention on this node (only aiter.ops.triton flash_attn_func, exposed as aiter_triton)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.flash_attn:AiterCK
+    provider: aiter_ck
+    skip_reason: CK fwd is exposed as 'aiter' (aiter.mha_fwd); not a second separately-selectable entrypoint
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.flash_attn:CK
+    provider: ck
+    skip_reason: no standalone CK flash-attention adapter (use 'aiter' for the compiled CK path)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.flash_attn:Gluon
+    provider: gluon
+    skip_reason: no Gluon flash-attention kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.flash_attn:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is a GEMM library (no fused attention op)

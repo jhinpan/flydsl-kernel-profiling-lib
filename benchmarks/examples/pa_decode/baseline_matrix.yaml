@@ -1,0 +1,88 @@
+kernel: pa_decode
+op_type: pa_decode
+dtype: fp8
+layout_contract:
+  query: "[B*query_length, num_q_heads, head_size] bf16; PS launcher casts q->fp8 internally (unit query scale). NOT pre-quantized."
+  key_cache: "paged fp8 (torch.uint8 packed): [num_blocks, num_kv_heads, head_size//16, block_size, 16]"
+  value_cache: "paged fp8: reference [num_blocks, num_kv_heads, head_size, block_size]; trans_v=True relays out to 5-D shuffled [num_blocks, num_kv_heads, block_size//16, head_size, 16]"
+  context_lengths: "[batch] int32; kv_page_indices [total_pages] int32; kv_indptr [batch+1] int32; block_tables [batch, max_blocks_per_seq] int32"
+  key_scale/value_scale: "per_token -> 'original' [num_blocks, num_kv_heads, block_size, 1]; per_tensor -> [1]. PS launcher detects mode by scale.ndim. Reference uses flat [num_kv_heads, total_tokens] scales."
+  args: "ledger args num_q_heads, num_kv_heads, head_size(=128), context_length, batch, query_length(1..4), block_size(=1024), quant_mode(per_token|per_tensor), sliding_window(default 0)"
+  note: >
+    fp8-compute PS paged decode (kernels/pa_decode_fp8.py). The paged fp8 cache build +
+    symmetric KV quantization happen ONCE in the shared make_inputs (untimed) ->
+    real providers set includes_layout_conversion=True. FlyDSL builds PS metadata
+    (get_pa_metadata) + partial buffers + output ONCE per shape key (untimed); run()
+    launches the PS main kernel + aiter pa_reduce_v1. Gluon builds its exp_sums/
+    max_logits/temporary_output ONCE (untimed); run() calls
+    torch.ops.aiter.pa_decode_gluon(ps=True). All providers consume the SAME quantized
+    cache + scales (identical bits). fp8 quant round-trip -> wide tol (5e-2, matches the
+    test's kv_varlen/sliding-window bar).
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.pa_decode:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >
+      candidate; kernels.pa_decode_fp8.pa_decode_ps_launch (PS split-reduce path,
+      get_pa_metadata + pa_reduce_v1). fp8-compute / bf16-query, head_size=128,
+      block_size=1024, trans_v=True. supports() re-checks heads divisibility +
+      head_size/block_size. RUNTIME DEP: pa_decode_ps_launch needs aiter's compiled
+      get_pa_metadata_v1/pa_reduce_v1 (module_pa_metadata.so) loadable in-process.
+  gluon:
+    enabled: true
+    entrypoint: benchmarks.providers.pa_decode:Gluon
+    provider: gluon
+    notes: >
+      recipe baseline: torch.ops.aiter.pa_decode_gluon(..., ps=True) (AITER Gluon Triton
+      paged-decode-PS). Consumes the SAME quantized paged cache; intermediate buffers
+      (exp_sums/max_logits/temporary_output) sized via get_recommended_splits (non-SW) or
+      get_sw_ps_max_context_partition_num (SW) and built ONCE (untimed). query_scale=None.
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.pa_decode:PyTorch
+    provider: pytorch
+    notes: >
+      torch_mha_extend (eager paged-cache gather -> dequant -> masked causal attention);
+      also the fp32 golden source. Slow; correctness reference.
+  aiter:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:Aiter
+    provider: aiter
+    skip_reason: >
+      no compiled (CK/ASM) AITER paged-attn-decode-PS op selectable from Python; the only
+      AITER PA-decode-PS path on this node is the Gluon Triton op (see gluon provider)
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:AiterTriton
+    provider: aiter_triton
+    skip_reason: >
+      AITER's Triton paged-decode IS the Gluon kernel (triton.experimental.gluon); exposed
+      as the gluon provider, not a separate plain-Triton aiter op
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK paged-attn-decode-PS from Python on this node
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM paged-attn-decode-PS path in AITER
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:CK
+    provider: ck
+    skip_reason: no standalone CK paged-attn-decode adapter on this node
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton paged-attn-decode-PS kernel (only aiter's Gluon op; see gluon)
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.pa_decode:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is a GEMM library (no paged-attention op)

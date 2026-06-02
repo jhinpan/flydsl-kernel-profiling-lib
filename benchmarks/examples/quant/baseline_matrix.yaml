@@ -1,0 +1,59 @@
+kernel: quant
+op_type: quant
+dtype: fp16
+layout_contract:
+  x: "row-major (M, N), contiguous fp16; per-token (per-row) symmetric int8 quant over last dim N"
+  output: "q int8 (M, N) + scales fp32 (M,); judged on dequant = q.float()*scale vs fp32 golden"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.quant:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; tests/kernels/test_quant.py build_quant_module(N), launch(Input,Output,Scales,M). f16->int8 load atom (BufferCopy128b 8xf16) so f16-only; cached by (M,N). Sets FLYDSL_RUN_QUANT=1 before import (module skips at import otherwise)
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.quant:PyTorch
+    provider: pytorch
+    notes: torch per-token int8 quant (amax/127, round, clamp); also the fp32 dequant reference
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.quant:Aiter
+    provider: aiter
+    notes: aiter.ops.quant.per_token_quant_hip(x, quant_dtype=int8) (compiled HIP dynamic per-token scaled quant)
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.quant:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.quant.per_token_quant_triton(x, quant_dtype=int8) (Triton)
+  triton:
+    enabled: true
+    entrypoint: benchmarks.providers.quant:Triton
+    provider: triton
+    notes: self-contained inline Triton per-token int8 quant (no sglang standalone exists)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.quant:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK per-token quant from Python (HIP path exposed as 'aiter')
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.quant:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM per-token quant path in AITER
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.quant:CK
+    provider: ck
+    skip_reason: no standalone CK per-token quant adapter (use 'aiter' for the compiled HIP path)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.quant:Gluon
+    provider: gluon
+    skip_reason: no Gluon per-token quant kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.quant:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only (no per-token quant op)

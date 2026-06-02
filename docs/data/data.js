@@ -170,7 +170,22 @@ window.KERNEL_DATA = {
       "ck_candidate": "aiter.mha_fwd with softmax_scale=1/sqrt(head_dim), causal=True",
       "aiter_comparable": "aiter.mha_fwd (CK backend) or aiter.fmha_v3_fwd (ASM backend, bf16 only)",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 16,
+        "n_flydsl_correct": 16,
+        "geomean_vs_best": 0.87,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-V3",
+          "Kimi-K2",
+          "Qwen3",
+          "synthetic"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 16,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/flash_attn/benchmark_summary.md"
+      }
     },
     {
       "name": "MLA Decode (fp8)",
@@ -266,7 +281,21 @@ window.KERNEL_DATA = {
       "ck_candidate": "hipBLASLt-based paged attention if available; else DeepSeek-V3 reference attention",
       "aiter_comparable": "aiter.hk_mla_decode_fwd + aiter.mla_decode_stage1_asm_fwd",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 14,
+        "n_flydsl_correct": 14,
+        "geomean_vs_best": 0.939,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "DeepSeek-V3",
+          "Kimi-K2"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 14,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/mla_decode/benchmark_summary.md"
+      }
     },
     {
       "name": "Paged-Attn Decode (PS)",
@@ -436,7 +465,23 @@ window.KERNEL_DATA = {
       "ck_candidate": "No CK baseline available; use AIter Gluon pa_decode_gluon as reference. For paged-attention performance comparison, AIter uses Triton Gluon compiled at runtime.",
       "aiter_comparable": "torch.ops.aiter.pa_decode_gluon (Gluon reference paged-attention kernel; invoked via run_gluon_ps() at test_pa.py:802\u2013823)",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 12,
+        "n_flydsl_correct": 12,
+        "geomean_vs_best": 0.493,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek/Kimi GQA decode (TP shard -> hkv=1)",
+          "Qwen-like (hidden 2560, 8 q-heads/shard) long-ctx decode",
+          "sliding-window model (e.g. Mistral-style)",
+          "sliding-window model long window",
+          "test_pa normal_accuracy"
+        ],
+        "verdict": "rewrite_needed",
+        "vs_best_n": 12,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/pa_decode/benchmark_summary.md"
+      }
     },
     {
       "name": "Vector Add",
@@ -549,7 +594,21 @@ window.KERNEL_DATA = {
       "ck_candidate": "Not applicable (vector add is elementwise; rocBLAS/CK target GEMM/reduction)",
       "aiter_comparable": "torch.add (PyTorch baseline already in test)",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 12,
+        "n_flydsl_correct": 12,
+        "geomean_vs_best": 0.949,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-V3",
+          "Kimi-K2",
+          "Qwen3"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 12,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/vec_add/benchmark_summary.md"
+      }
     },
     {
       "name": "Preshuffle GEMM v2",
@@ -880,7 +939,21 @@ window.KERNEL_DATA = {
       "ck_candidate": "CK gemm A8W8 blockscale_bpreshuffle (weight layout 16x16, scale_block 128x128)",
       "aiter_comparable": "aiter.gemm_a8w8_blockscale_bpreshuffle",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 14,
+        "n_flydsl_correct": 14,
+        "geomean_vs_best": 0.935,
+        "weighted_geomean": null,
+        "models": [
+          "deepseek-v3",
+          "kimi-k2",
+          "qwen3"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 14,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/blockscale_preshuffle_gemm/benchmark_summary.md"
+      }
     },
     {
       "name": "FP8 Row-Scale GEMM",
@@ -926,7 +999,22 @@ window.KERNEL_DATA = {
       "ck_candidate": "rocBLAS fp8_mm or CK scaled_gemm for FP8 with row-wise scales",
       "aiter_comparable": "torch._scaled_mm (with --vs_torch flag)",
       "capture_error": null,
-      "has_bundle": false
+      "has_bundle": false,
+      "multishape": {
+        "n_shapes": 14,
+        "n_flydsl_correct": 13,
+        "geomean_vs_best": 0.687,
+        "weighted_geomean": null,
+        "models": [
+          "deepseek-v3",
+          "kimi-k2",
+          "qwen3-32b",
+          "synthetic"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 13,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/fp8_gemm_rowscale/benchmark_summary.md"
+      }
     },
     {
       "name": "HGEMM Split-K",
@@ -1089,7 +1177,26 @@ window.KERNEL_DATA = {
       "ck_candidate": "rocBLAS hemm or hgemm (MI350X tuned); CK GEMM bf16 for comparison",
       "aiter_comparable": "torch.mm(a_bf16, b_bf16.T) via torch.cuda.Event timing",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 265,
+        "n_flydsl_correct": 30,
+        "geomean_vs_best": 0.502,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "DeepSeek-R1|Llama3 8B",
+          "GPT-OSS 120B",
+          "Llama3 405B",
+          "Llama3 70B",
+          "Llama3 8B",
+          "Llama4 Maverick",
+          "Qwen3-235B-A22B"
+        ],
+        "verdict": "rewrite_needed",
+        "vs_best_n": 30,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/gemm/benchmark_summary.md"
+      }
     },
     {
       "name": "MoE GEMM (2-stage)",
@@ -1265,7 +1372,24 @@ window.KERNEL_DATA = {
       "ck_candidate": "ck_moe_stage1_fwd,ck_moe_stage2_fwd",
       "aiter_comparable": "moe_gemm1,moe_gemm2",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 29,
+        "n_flydsl_correct": 3,
+        "geomean_vs_best": 157.594,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "GPT-OSS 120B",
+          "Llama4 Maverick",
+          "Qwen3-235B-A22B",
+          "synthetic-profiled-att",
+          "synthetic-smallest-passing"
+        ],
+        "verdict": "baseline_blocked",
+        "vs_best_n": 3,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/moe_gemm/benchmark_summary.md"
+      }
     },
     {
       "name": "Preshuffle GEMM",
@@ -1436,7 +1560,21 @@ window.KERNEL_DATA = {
       "ck_candidate": "rocblas_gemm_ex or composable_kernels preshuffle fp8 variant",
       "aiter_comparable": "aiter.gemm_a8w8_bpreshuffle",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 14,
+        "n_flydsl_correct": 14,
+        "geomean_vs_best": 0.72,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-V3",
+          "Kimi-K2",
+          "Qwen"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 14,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/preshuffle_gemm/benchmark_summary.md"
+      }
     },
     {
       "name": "MoE Block-Scale (2-stage)",
@@ -1602,7 +1740,19 @@ window.KERNEL_DATA = {
       "ck_candidate": "ck_moe_stage1_fwd and ck_moe_stage2_fwd from aiter.ops.moe_op (blockscale)",
       "aiter_comparable": "aiter.fmoe_fp8_blockscale_g1u1 (fused 1-stage)",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 12,
+        "n_flydsl_correct": 0,
+        "geomean_vs_best": null,
+        "weighted_geomean": null,
+        "models": [
+          "deepseek-v3",
+          "kimi-k2"
+        ],
+        "verdict": "blocked",
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/moe_blockscale/benchmark_summary.md"
+      }
     },
     {
       "name": "TopK Gating Softmax",
@@ -1716,7 +1866,23 @@ window.KERNEL_DATA = {
       "ck_candidate": "vLLM::topk_gating_softmax (reference: softmax + topk + renormalization)",
       "aiter_comparable": "None",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 16,
+        "n_flydsl_correct": 13,
+        "geomean_vs_best": 1.606,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "Kimi-K2",
+          "Llama4-class",
+          "Mixtral-8x22B-class",
+          "Mixtral-8x7B"
+        ],
+        "verdict": "promote",
+        "vs_best_n": 13,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/topk_gating_softmax/benchmark_summary.md"
+      }
     },
     {
       "name": "LayerNorm",
@@ -1826,7 +1992,27 @@ window.KERNEL_DATA = {
       "ck_candidate": "CK LayerNorm (ck_launch_and_time baseline if available)",
       "aiter_comparable": "aiter.ops.triton.norm.layer_norm",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 73,
+        "n_flydsl_correct": 73,
+        "geomean_vs_best": 0.878,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "GPT-OSS 120B",
+          "Llama3 405B",
+          "Llama3 70B",
+          "Llama3 8B|Qwen3-235B-A22B",
+          "Llama4 Maverick",
+          "Qwen3-235B-A22B",
+          "diagnostic",
+          "synthetic"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 73,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/layernorm/benchmark_summary.md"
+      }
     },
     {
       "name": "RMSNorm",
@@ -1959,7 +2145,28 @@ window.KERNEL_DATA = {
       "ck_candidate": "none (RMSNorm is a reduction/normalization op, not GEMM; rocBLAS does not provide RMSNorm)",
       "aiter_comparable": "aiter.ops.triton.rmsnorm.rms_norm",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 159,
+        "n_flydsl_correct": 153,
+        "geomean_vs_best": 0.881,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "GPT-OSS 120B",
+          "Llama3 405B",
+          "Llama3 70B",
+          "Llama3 8B|Qwen3-235B-A22B",
+          "Llama4 Maverick",
+          "Qwen3-235B-A22B",
+          "Qwen3-4B",
+          "diagnostic",
+          "synthetic"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 153,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/rmsnorm/benchmark_summary.md"
+      }
     },
     {
       "name": "Per-Token Quant",
@@ -2127,7 +2334,24 @@ window.KERNEL_DATA = {
       "ck_candidate": "none",
       "aiter_comparable": "per_token_quant_hip",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 12,
+        "n_flydsl_correct": 12,
+        "geomean_vs_best": 0.891,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-V3",
+          "Kimi-K2",
+          "Qwen3",
+          "flydsl_test",
+          "flydsl_test_default",
+          "stress"
+        ],
+        "verdict": "tune_needed",
+        "vs_best_n": 12,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/quant/benchmark_summary.md"
+      }
     },
     {
       "name": "MoE Reduction",
@@ -2256,7 +2480,22 @@ window.KERNEL_DATA = {
       "ck_candidate": "N/A (reduction, not GEMM; torch.sum is built-in baseline)",
       "aiter_comparable": "torch.sum(dim=1) on [1,6,5120] f16 tensor",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 16,
+        "n_flydsl_correct": 16,
+        "geomean_vs_best": 1.026,
+        "weighted_geomean": null,
+        "models": [
+          "deepseek-v3",
+          "ep-k6",
+          "kimi-k2",
+          "qwen3-moe"
+        ],
+        "verdict": "parity",
+        "vs_best_n": 16,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/moe_reduce/benchmark_summary.md"
+      }
     },
     {
       "name": "Softmax",
@@ -2400,7 +2639,27 @@ window.KERNEL_DATA = {
       "ck_candidate": "none (softmax is elementwise reduction; no direct CK/rocBLAS baseline. PyTorch softmax torch.nn.functional.softmax serves as reference.)",
       "aiter_comparable": "aiter.ops.triton.softmax",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 73,
+        "n_flydsl_correct": 73,
+        "geomean_vs_best": 1.079,
+        "weighted_geomean": null,
+        "models": [
+          "DeepSeek-R1",
+          "GPT-OSS 120B",
+          "Llama3 405B",
+          "Llama3 70B",
+          "Llama3 8B|Qwen3-235B-A22B",
+          "Llama4 Maverick",
+          "Qwen3-235B-A22B",
+          "diagnostic",
+          "synthetic"
+        ],
+        "verdict": "promote",
+        "vs_best_n": 73,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/softmax/benchmark_summary.md"
+      }
     },
     {
       "name": "Fused RoPE + KV-Cache",
@@ -2532,7 +2791,23 @@ window.KERNEL_DATA = {
       "ck_candidate": "false",
       "aiter_comparable": "true",
       "capture_error": null,
-      "has_bundle": true
+      "has_bundle": true,
+      "multishape": {
+        "n_shapes": 30,
+        "n_flydsl_correct": 30,
+        "geomean_vs_best": 1.724,
+        "weighted_geomean": null,
+        "models": [
+          "GPT-OSS 120B",
+          "Llama3 405B",
+          "Llama3 70B|Qwen3-235B-A22B",
+          "Llama3 8B",
+          "Llama4 Maverick"
+        ],
+        "verdict": "promote",
+        "vs_best_n": 30,
+        "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/fused_rope_cache/benchmark_summary.md"
+      }
     }
   ],
   "deferred": [
@@ -2546,5 +2821,71 @@ window.KERNEL_DATA = {
       "reason": "mori shmem, 2 PEs, no perf print",
       "op_category": "comm"
     }
-  ]
+  ],
+  "multishape_summary": {
+    "kernels": 17,
+    "total_shapes": 781,
+    "promote": [
+      "fused_rope_cache",
+      "softmax",
+      "topk_gating_softmax"
+    ],
+    "parity": [
+      "moe_reduce"
+    ],
+    "tune_needed": [
+      "blockscale_preshuffle_gemm",
+      "flash_attn_func",
+      "fp8_gemm_rowscale",
+      "layernorm",
+      "mla_decode",
+      "preshuffle_gemm",
+      "quant",
+      "rmsnorm",
+      "vec_add"
+    ],
+    "rewrite_needed": [
+      "hgemm_splitk",
+      "pa"
+    ],
+    "models": [
+      "DeepSeek-R1",
+      "DeepSeek-R1|Llama3 8B",
+      "DeepSeek-V3",
+      "DeepSeek/Kimi GQA decode (TP shard -> hkv=1)",
+      "GPT-OSS 120B",
+      "Kimi-K2",
+      "Llama3 405B",
+      "Llama3 70B",
+      "Llama3 70B|Qwen3-235B-A22B",
+      "Llama3 8B",
+      "Llama3 8B|Qwen3-235B-A22B",
+      "Llama4 Maverick",
+      "Llama4-class",
+      "Mixtral-8x22B-class",
+      "Mixtral-8x7B",
+      "Qwen",
+      "Qwen-like (hidden 2560, 8 q-heads/shard) long-ctx decode",
+      "Qwen3",
+      "Qwen3-235B-A22B",
+      "Qwen3-4B",
+      "deepseek-v3",
+      "diagnostic",
+      "ep-k6",
+      "flydsl_test",
+      "flydsl_test_default",
+      "kimi-k2",
+      "qwen3",
+      "qwen3-32b",
+      "qwen3-moe",
+      "sliding-window model (e.g. Mistral-style)",
+      "sliding-window model long window",
+      "stress",
+      "synthetic",
+      "synthetic-profiled-att",
+      "synthetic-smallest-passing",
+      "test_pa normal_accuracy"
+    ],
+    "metric": "kernel-only cold-cache (CUDA-graph + L2 flush), geomean of best-correct-baseline / flydsl"
+  }
 };

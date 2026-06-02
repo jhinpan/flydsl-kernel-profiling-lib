@@ -1,0 +1,78 @@
+kernel: topk_gating_softmax
+op_type: topk_gating_softmax
+dtype: bf16
+layout_contract:
+  gating: "row-major (num_tokens, num_experts), contiguous; fp32-built (uniform(-2,2)) then cast"
+  topk_weights: "(num_tokens, topk) f32; comparable tensor = sorted-descending topk_weights, renormalized to sum 1 over topk"
+  topk_indices: "(num_tokens, topk) i32; NOT compared (ties at the K-th boundary may diverge)"
+  token_expert_indices: "(num_tokens, topk) i32; k*num_tokens+token_row convention (kernel-internal, not compared)"
+  args: "ledger args num_tokens, num_experts, topk"
+  note: >
+    Fused softmax(dim=1) -> iterative top-K argmax -> renormalize. FlyDSL builds with
+    renormalize=True. The FlyDSL layout fast path requires num_experts // VPT to be a
+    power of 2 <= WARP_SIZE(64) for some VPT in [16,8,4,2,1]; num_experts=384 (Kimi-K2)
+    has no valid layout -> flydsl skips it (baselines still cover it). aiter.topk_gating
+    softmax forces need_renorm=False, so the adapter renormalizes the gathered top-K
+    weights to match the renorm reference (includes_layout_conversion). The fp32 golden is
+    softmax->topk->renorm->sort.
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.topk_gating_softmax:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >
+      candidate; build_topk_gating_softmax_module(num_experts, topk, dtype_str, renormalize=True)
+      from kernels/topk_gating_softmax_kernel.py. Fused softmax+topk+renorm, f32/f16/bf16.
+      supports() pre-rejects num_experts with no valid VPT layout (e.g. 384).
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.topk_gating_softmax:PyTorch
+    provider: pytorch
+    notes: torch.softmax(dim=1) -> torch.topk -> renorm; also the fp32 reference
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.topk_gating_softmax:Aiter
+    provider: aiter
+    notes: >
+      aiter.ops.topk.topk_gating(score_func="softmax") compiled C++ MoE-topk kernel; softmax
+      forces need_renorm=False so the adapter renormalizes the gathered top-K weights to match
+      the renorm reference (includes_layout_conversion=True).
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.topk_gating_softmax:AiterTriton
+    provider: aiter_triton
+    notes: >
+      torch.softmax(dim=1) -> aiter.ops.triton.topk.topk (1-/2-stage Triton top-K) -> renorm;
+      the accelerated kernel is the Triton top-K selection (includes_layout_conversion=True).
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:Triton
+    provider: triton
+    skip_reason: no standalone fused topk-gating-softmax Triton kernel (only aiter.ops.triton.topk, exposed as aiter_triton)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:AiterCK
+    provider: aiter_ck
+    skip_reason: aiter MoE-topk gating is one C++/HIP kernel (use aiter); no separately-selectable CK topk-gating from Python
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:AiterASM
+    provider: aiter_asm
+    skip_reason: aiter ASM topk paths (moe_fused_gate/biased_grouped_topk_hip) are grouped/biased routing, not plain softmax topk-gating-softmax
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:CK
+    provider: ck
+    skip_reason: no standalone CK topk-gating-softmax adapter (CK topk is reached via aiter)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:Gluon
+    provider: gluon
+    skip_reason: no Gluon topk-gating-softmax kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.topk_gating_softmax:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is a GEMM library (no topk-gating-softmax op)

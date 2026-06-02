@@ -1,0 +1,94 @@
+kernel: mla_decode
+op_type: mla_decode
+dtype: fp8
+layout_contract:
+  query: "row-major [num_seqs, 128, 576] fp8 (NHEAD=128, QK_HEAD_DIM=576); per-provider cast from shared fp32 bits"
+  kv_buffer: "row-major [num_page, 1, 1, 576] fp8 (page_size=1, nhead_kv=1); paged via int32 kv_indices permutation"
+  final_output: "row-major [num_seqs, 128, 512] bf16 (V_HEAD_DIM=512=KV_LORA_RANK)"
+  note: >-
+    DeepSeek-V3/R1 MLA dims: KV_LORA_RANK=512, QK_ROPE=64, QK_HEAD_DIM=576,
+    V_HEAD_DIM=512, NHEAD=128, page_size=1. All providers take the SAME shared
+    fp32 q/kv + kv_indices (includes_layout_conversion=False); each casts to fp8
+    itself and builds the aiter work-map metadata once per shape (untimed). run()
+    times decode stage1 + mla_reduce_v1 split-combine together so every provider
+    yields the same comparable [num_seqs,128,512] tensor.
+reference_provider: pytorch
+# The FlyDSL kernel (mla_fwd_decode_m16x8_fp8_fp8) ONLY exists for the fp8 Q/KV,
+# num_heads==128, page_size==1 path; every adapter rejects non-fp8 dtypes in
+# supports(). aiter's hk_mla_decode_fwd (HK work-map) and mla_decode_stage1_asm_fwd
+# (ASM) are the real compiled baselines; both chain into aiter.mla_reduce_v1.
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.mla_decode:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >-
+      candidate; kernels.mla_fwd_decode.flydsl_mla_fwd_decode -> (num_heads==128
+      fp8/fp8) mla_fwd_decode_m16x8_fp8_fp8.launch_mla_fwd_decode_m16x8_fp8_fp8
+      (split-K m16x8 MFMA stage1) then aiter.mla_reduce_v1 combine. Metadata
+      (get_mla_metadata_info_v1 / get_mla_metadata_v1) + split/lse buffers built
+      once per shape (excluded from timing). JIT amortized in warmup.
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.mla_decode:Aiter
+    provider: aiter
+    backend_visibility_required: true
+    notes: >-
+      aiter.ops.attention.hk_mla_decode_fwd (work-map driven fp8/fp8 stage1) ->
+      aiter.mla_reduce_v1 combine; same shared work_indptr/work_info_set metadata.
+      Compiled HK path; inner backend opaque from Python.
+  aiter_asm:
+    enabled: true
+    entrypoint: benchmarks.providers.mla_decode:AiterASM
+    provider: aiter_asm
+    backend_visibility_required: true
+    notes: >-
+      aiter.ops.attention.mla_decode_stage1_asm_fwd (ASM stage1, q_scale=kv_scale=1)
+      -> aiter.mla_reduce_v1 combine; uses work_meta_data + work_indptr + work_info_set.
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.mla_decode:PyTorch
+    provider: pytorch
+    notes: >-
+      torch_mla_extend (eager paged MLA over the fp8-cast Q/KV, upcast to float);
+      also the fp32 golden source (delegates to ops.MlaDecodeOp.reference). Slow.
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:AiterTriton
+    provider: aiter_triton
+    skip_reason: >-
+      no Triton MLA-decode stage1 in aiter.ops.triton wired for this fp8 nhead=128
+      page_size=1 work-map contract (decode MLA is ASM/HK only on this node)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton MLA-decode kernel on this node
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:AiterCK
+    provider: aiter_ck
+    skip_reason: >-
+      CK MLA-decode backend not separately selectable from Python; compiled stage1
+      paths are exposed as 'aiter' (HK) / 'aiter_asm' (ASM)
+  aiter_asm_dummy:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:AiterASM
+    provider: aiter_asm
+    skip_reason: placeholder (real aiter_asm row above is enabled)
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:CK
+    provider: ck
+    skip_reason: no standalone CK MLA-decode adapter (reach CK via aiter, see aiter_ck)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:Gluon
+    provider: gluon
+    skip_reason: no Gluon MLA-decode kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.mla_decode:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is a dense-GEMM library (no attention / MLA-decode op)

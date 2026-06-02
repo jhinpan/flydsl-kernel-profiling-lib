@@ -1,0 +1,63 @@
+kernel: moe_blockscale
+op_type: moe_blockscale
+dtype: fp8
+layout_contract:
+  x: "row-major (tokens, model_dim) fp32 golden; per-provider block-quant to fp8 per-(1x128)"
+  w1: "(E, 2*inter_dim, model_dim) fp32 golden; per-expert (128x128) block-quant + preshuffle(16,16)"
+  w2: "(E, model_dim, inter_dim) fp32 golden; per-expert (128x128) block-quant + preshuffle(16,16)"
+  topk_ids: "(tokens, topk) int32"
+  topk_weights: "(tokens, topk) fp32 softmax of topk routing scores"
+  out: "(tokens, model_dim) f16; topk-reduced (routed weight applied in stage2)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_blockscale:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; compose moe_blockscale_gemm1 -> block-requant -> moe_blockscale_gemm2 (fp8 per-1x128 block scale, tile_m16xn256xk128, stage2 cshuffle+atomic). un-fused; inter-stage block-requant timed
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_blockscale:Aiter
+    provider: aiter
+    notes: aiter.fmoe_fp8_blockscale_g1u1 (end-to-end fused block-scale MoE; both GEMMs + reduce one launch). NOT a per-kernel match -> includes_layout_conversion
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_blockscale:PyTorch
+    provider: pytorch
+    notes: torch block-scale MoE (block quant->dequant + eager experts; fp32). Also the fp32 reference
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:AiterTriton
+    provider: aiter_triton
+    skip_reason: no aiter Triton block-scale MoE entrypoint; aiter block-scale MoE is the compiled fmoe_fp8_blockscale_g1u1 (exposed as aiter)
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:AiterCK
+    provider: aiter_ck
+    skip_reason: ck_moe_stage1_fwd/stage2_fwd (QuantType.per_1x128) are per-stage (REPORT.md head-to-head); this adapter models the full op
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM block-scale MoE path exercised here
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:CK
+    provider: ck
+    skip_reason: no standalone CK block-scale MoE adapter (reached via aiter, see aiter_ck)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton block-scale MoE kernel on this node
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:Gluon
+    provider: gluon
+    skip_reason: no Gluon block-scale MoE kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_blockscale:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is dense-GEMM only (no expert-grouped block-scale MoE op)
