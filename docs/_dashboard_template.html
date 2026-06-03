@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlyDSL Kernel Atlas · MI350X / gfx950</title>
+<meta name="description" content="An instrument-panel atlas of every FlyDSL GPU kernel on AMD MI350X (gfx950): a multi-shape cold-cache sweep (17 kernels / 781 shapes / 3 model families) plus rocprofv3 ATT stall maps, vs AITER / CK / Triton / hipBLASLt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d13; --bg2:#0c1018; --panel:#111723; --panel2:#151d2b;
+  --line:#1c2636; --line2:#283546;
+  --ink:#eaf0f8; --ink2:#9aabc2; --ink3:#5d6d84;
+  --amber:#ff9233; --amber2:#ffb96b; --amberdim:rgba(255,146,51,.13);
+  --promote:#3ed598; --parity:#54b3e6; --tune:#f3cf4e; --rewrite:#ff6573; --blocked:#5d6d84;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:'Bricolage Grotesque',system-ui,sans-serif;
+  --r:13px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:var(--bg);overflow-x:hidden}
+/* atmosphere: amber phosphor glow + faint grid + grain */
+.bgfx{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+   radial-gradient(900px 600px at 88% -8%,rgba(255,146,51,.10),transparent 60%),
+   radial-gradient(700px 500px at 6% 4%,rgba(84,179,230,.06),transparent 55%),
+   var(--bg)}
+.bgfx:before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 47px,rgba(154,171,194,.035) 47px 48px),
+   repeating-linear-gradient(0deg,transparent 0 47px,rgba(154,171,194,.028) 47px 48px);
+  mask:radial-gradient(1100px 700px at 70% 0%,#000 0%,transparent 75%)}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.4;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+a{color:var(--amber);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp)}
+.dim{color:var(--ink2)} .dim3{color:var(--ink3)}
+
+/* topbar */
+.top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(10,13,19,.92),rgba(10,13,19,.6));border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:-.01em}
+.brand .mk{width:22px;height:22px;display:inline-block;color:var(--amber)}
+.brand b{color:var(--amber)}
+.top .sp{flex:1}
+.navlink{font-size:12.5px;color:var(--ink2);padding:6px 4px}
+.navlink:hover{color:var(--ink);text-decoration:none}
+.langtog{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;background:var(--panel)}
+.langtog button{font-family:var(--mono);font-size:12px;font-weight:600;background:transparent;color:var(--ink3);border:0;
+  padding:6px 13px;cursor:pointer;transition:.15s}
+.langtog button.on{background:var(--amber);color:#1a0f02}
+.langtog button:not(.on):hover{color:var(--ink)}
+
+/* hero */
+header{padding:56px 0 30px;position:relative}
+.eyebrow{font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber);font-weight:600}
+h1{font-family:var(--disp);font-size:clamp(34px,5.6vw,60px);line-height:1;margin:14px 0 8px;font-weight:800;letter-spacing:-.025em}
+h1 .gr{background:linear-gradient(96deg,var(--amber),var(--amber2) 55%,#ffe1b0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--ink2);max-width:720px;font-size:15px;line-height:1.6}
+.sub b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
+.chip{font-size:11.5px;background:var(--panel);border:1px solid var(--line2);padding:6px 11px;border-radius:999px;color:var(--ink2)}
+.chip b{color:var(--ink)} .chip.live b{color:var(--promote)}
+.chip .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--promote);margin-right:6px;vertical-align:middle;box-shadow:0 0 7px var(--promote);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:28px 0 6px}
+.kpi{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:var(--r);padding:15px 15px 13px;position:relative;overflow:hidden}
+.kpi:after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line2)}
+.kpi.fly:after{background:var(--amber)} .kpi.good:after{background:var(--promote)} .kpi.bad:after{background:var(--tune)}
+.kpi .n{font-family:var(--disp);font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.kpi .l{font-size:11px;color:var(--ink2);margin-top:5px;line-height:1.3}
+.kpi.fly .n{color:var(--amber)} .kpi.good .n{color:var(--promote)} .kpi.bad .n{color:var(--tune)}
+.metricbar{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;font-size:12px;color:var(--ink2);align-items:center}
+.metricbar b{color:var(--ink)} .metricbar code{color:var(--amber2);font-size:11.5px}
+.metricbar .leg{color:var(--ink3)}
+
+/* sections */
+section{padding:40px 0;position:relative}
+.h2{display:flex;align-items:baseline;gap:12px;margin:0 0 4px;flex-wrap:wrap}
+.h2 .ix{font-family:var(--mono);font-size:12px;color:var(--amber);font-weight:600}
+.h2 h2{font-family:var(--disp);font-size:25px;font-weight:700;margin:0;letter-spacing:-.015em}
+.h2 .tag{font-size:11.5px;color:var(--ink3);margin-left:auto}
+.lead{color:var(--ink2);margin:0 0 22px;max-width:840px;font-size:13.5px;line-height:1.6}
+.lead b{color:var(--ink)}
+
+/* architecture svg */
+.archbox{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line2);border-radius:16px;padding:8px;overflow:hidden}
+.archsvg{width:100%;height:auto;display:block}
+.archsvg .nlabel{font-family:var(--disp);font-weight:700;fill:var(--ink)}
+.archsvg .nsub{font-family:var(--mono);fill:var(--ink3)}
+.archsvg .stage{font-family:var(--mono);fill:var(--ink3);letter-spacing:.12em;text-transform:uppercase}
+.flowdot{fill:var(--amber)}
+.archsvg .conn{stroke:var(--line2);stroke-width:1.5;fill:none}
+.archsvg .conn.hot{stroke:rgba(255,146,51,.55)}
+
+/* verdict donut + legend */
+.atlas-head{display:grid;grid-template-columns:170px 1fr;gap:24px;align-items:center;margin-bottom:22px}
+.donutwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.vlegend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+.vleg{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+.vleg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.vleg .vt{font-size:12px;color:var(--ink);font-weight:600}
+.vleg .vn{font-family:var(--disp);font-size:17px;font-weight:800;margin-left:auto}
+.vleg .vd{font-size:10.5px;color:var(--ink3);display:block}
+
+/* kernel atlas — grouped by family */
+.fam{margin-bottom:26px}
+.famhead{display:flex;align-items:center;gap:10px;margin:0 0 11px}
+.famhead .fdot{width:9px;height:9px;border-radius:2px}
+.famhead h3{font-family:var(--disp);font-size:15px;margin:0;font-weight:700;letter-spacing:.01em}
+.famhead .fc{font-size:11px;color:var(--ink3)}
+.famgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:12px}
+.ktile{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:12px;
+  padding:13px 14px 12px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
+.ktile:hover{transform:translateY(-3px);border-color:#3a4a63;box-shadow:0 16px 40px -20px #000}
+.ktile .vbar{position:absolute;left:0;top:0;bottom:0;width:3px}
+.ktile .kt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.ktile h4{font-family:var(--disp);font-size:14.5px;margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.ktile .kt-cat{font-size:9.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.ktile .gauge{width:100%;height:62px;margin:8px 0 4px;display:block}
+.ktile .kt-foot{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--ink3)}
+.vchip{font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap}
+.v-promote{background:rgba(62,213,152,.14);color:var(--promote)}
+.v-parity{background:rgba(84,179,230,.14);color:var(--parity)}
+.v-tune{background:rgba(243,207,78,.14);color:var(--tune)}
+.v-rewrite{background:rgba(255,101,115,.15);color:var(--rewrite)}
+.v-blocked{background:rgba(93,109,132,.18);color:var(--ink2)}
+
+/* ledger bars */
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:18px}
+.pill{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s;user-select:none}
+.pill:hover{border-color:var(--amber);color:var(--ink)}
+.pill.on{background:var(--amberdim);border-color:var(--amber);color:var(--amber2)}
+.sp{flex:1}
+select,input[type=search]{font-family:var(--mono);font-size:12.5px;background:var(--panel);color:var(--ink);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;outline:none}
+select:focus,input:focus{border-color:var(--amber)}
+.chart{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:18px 20px}
+.bar-row{display:grid;grid-template-columns:182px 1fr 70px;align-items:center;gap:12px;padding:5px 0;cursor:pointer}
+.bar-row:hover .bk{color:var(--amber)}
+.bk{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk .cat{font-size:9.5px;color:var(--ink3);display:block}
+.track{position:relative;height:21px;background:var(--bg2);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.track .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line2)}
+.fillbar{position:absolute;top:0;bottom:0;border-radius:5px;opacity:.92}
+.bv{font-family:var(--mono);font-size:12.5px;text-align:right;font-weight:600}
+
+/* coverage */
+.cov{border:1px solid var(--line2);background:var(--panel);border-radius:14px;overflow:hidden}
+.covrow{display:grid;grid-template-columns:160px 64px 1fr 320px;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.covrow:last-child{border-bottom:0}
+.covrow:hover{background:rgba(255,146,51,.04)}
+.ck b{display:block;font-size:12.5px;color:var(--ink)}
+.ck span,.cc span{display:block;font-size:10px;color:var(--ink3)}
+.cc b{display:block;font-family:var(--disp);font-size:18px;color:var(--amber);font-weight:800}
+.fbar{height:17px;border-radius:5px;background:var(--bg2);display:flex;overflow:hidden;border:1px solid var(--line)}
+.fbar span{height:100%;min-width:3px}
+.cchips{display:flex;gap:5px;flex-wrap:wrap}
+.cchip{font-size:10px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:2px 7px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cchip b{color:var(--ink)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(4,7,12,.68);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(640px,95vw);background:var(--bg2);border-left:1px solid var(--amber);
+  transform:translateX(100%);transition:.28s cubic-bezier(.4,0,.2,1);z-index:50;overflow-y:auto;box-shadow:-30px 0 80px -30px #000}
+.drawer.on{transform:none}
+.dhead{padding:22px 24px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(180deg,var(--bg2),rgba(12,16,24,.92));backdrop-filter:blur(6px);z-index:2}
+.dhead .x{position:absolute;top:18px;right:20px;font-size:20px;color:var(--ink2);cursor:pointer;line-height:1}
+.dhead .x:hover{color:var(--ink)}
+.dhead h2{font-family:var(--disp);margin:0 0 3px;font-size:23px;font-weight:800}
+.dhead .kn{font-size:11.5px;color:var(--amber)}
+.dbody{padding:20px 24px 60px}
+.dbody h5{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:22px 0 9px;font-weight:600}
+.dbody h5:first-child{margin-top:4px}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.kv .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kv .cell .v{font-family:var(--disp);font-size:19px;font-weight:800}
+.kv .cell .k{font-size:10.5px;color:var(--ink3);margin-top:1px}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:6px 8px;border-bottom:1px solid var(--line2)}
+table.t td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.minibar{height:16px;border-radius:4px;display:flex;overflow:hidden;background:var(--bg)}
+.minibar span{height:100%}
+.note{font-size:12.5px;color:var(--ink2);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;padding:11px 13px;margin-top:8px}
+.dlinks{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
+.dlink{font-size:11.5px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:7px 11px;color:var(--ink)}
+.dlink:hover{border-color:var(--amber);text-decoration:none;color:var(--amber)}
+.modelblock{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:8px}
+.modelblock summary{display:grid;grid-template-columns:12px minmax(110px,1fr) minmax(140px,1.4fr) 66px;gap:8px;align-items:center;padding:9px 10px;cursor:pointer;list-style:none}
+.modelblock summary::-webkit-details-marker{display:none}
+.modelblock[open] summary{border-bottom:1px solid var(--line)}
+.famdot{width:9px;height:9px;border-radius:50%}
+.modelname{font-size:12px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modelmeta{font-size:10px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modelgeo{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right}
+
+footer{border-top:1px solid var(--line);padding:30px 0 70px;color:var(--ink3);font-size:12.5px}
+footer .wrap b{color:var(--ink2)}
+.fly-tag{color:var(--amber)}
+@media(max-width:880px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .atlas-head{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:120px 1fr 58px}
+  .covrow{grid-template-columns:1fr 60px}.fbar,.cchips{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="bgfx"></div><div class="grain"></div>
+
+<div class="top"><div class="wrap">
+  <span class="brand"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-5-5-5M13 7l8 0M13 12l8 0M13 17l5 0"/></svg>FlyDSL <b>Atlas</b></span>
+  <span class="sp"></span>
+  <a class="navlink" data-i18n="nav_arch" href="#architecture"></a>
+  <a class="navlink" data-i18n="nav_atlas" href="#atlas"></a>
+  <a class="navlink" data-i18n="nav_ledger" href="#ledger"></a>
+  <a class="navlink" href="https://github.com/jhinpan/flydsl-kernel-profiling" target="_blank">GitHub ↗</a>
+  <span class="langtog"><button id="lang-en" onclick="setLang('en')">EN</button><button id="lang-zh" onclick="setLang('zh')">中文</button></span>
+</div></div>
+
+<header><div class="wrap">
+  <div class="eyebrow" data-i18n="hero_eyebrow"></div>
+  <h1 data-i18n-html="hero_title"></h1>
+  <p class="sub" data-i18n-html="hero_sub"></p>
+  <div class="chips" id="chips"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="metricbar" id="metricbar"></div>
+</div></header>
+
+<section id="architecture"><div class="wrap">
+  <div class="h2"><span class="ix">01</span><h2 data-i18n="arch_title"></h2></div>
+  <p class="lead" data-i18n-html="arch_lead"></p>
+  <div class="archbox"><div id="archsvg"></div></div>
+</div></section>
+
+<section id="atlas"><div class="wrap">
+  <div class="h2"><span class="ix">02</span><h2 data-i18n="atlas_title"></h2><span class="tag" id="atlas-tag"></span></div>
+  <p class="lead" data-i18n-html="atlas_lead"></p>
+  <div class="atlas-head">
+    <div class="donutwrap"><div id="donut"></div><div style="font-size:11px;color:var(--ink3)" data-i18n="atlas_donut"></div></div>
+    <div class="vlegend" id="vlegend"></div>
+  </div>
+  <div id="famgroups"></div>
+</div></section>
+
+<section id="ledger"><div class="wrap">
+  <div class="h2"><span class="ix">03</span><h2 data-i18n="ledger_title"></h2><span class="tag" id="ledger-tag"></span></div>
+  <p class="lead" data-i18n-html="ledger_lead"></p>
+  <div class="controls">
+    <span class="pill on" data-metric="msgeo" data-i18n="ledger_m1"></span>
+    <span class="pill" data-metric="spd" data-i18n="ledger_m2"></span>
+    <span class="sp"></span>
+    <input type="search" id="search" data-i18n-ph="search_ph" autocomplete="off">
+  </div>
+  <div class="chart"><div id="ledgerchart"></div></div>
+</div></section>
+
+<section id="coverage"><div class="wrap">
+  <div class="h2"><span class="ix">04</span><h2 data-i18n="cov_title"></h2><span class="tag" id="cov-tag"></span></div>
+  <p class="lead" data-i18n-html="cov_lead"></p>
+  <div class="cov" id="cov"></div>
+</div></section>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"><div id="drawer-content"></div></aside>
+
+<script>window.KERNEL_DATA = __KERNEL_DATA__;</script>
+<script>
+(function(){
+const D=window.KERNEL_DATA;
+if(!D){document.body.innerHTML='<p style="padding:40px;font-family:monospace">data failed to load.</p>';return;}
+const K=D.kernels, MS=D.multishape_summary, P=D.provenance;
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- i18n ---------- */
+const STR={
+ en:{
+  nav_arch:'Architecture',nav_atlas:'Kernel atlas',nav_ledger:'Ledger',
+  hero_eyebrow:'AMD MI350X · gfx950 · CDNA4 — kernel profiling atlas',
+  hero_title:'FlyDSL Kernel <span class="gr">Atlas</span>',
+  hero_sub:'Every major FlyDSL GPU kernel, swept across <b>17 kernels / 781 shapes / 3 model families</b> with a kernel-only <b>cold-cache</b> metric, and cross-checked against <b>AITER · CK · Triton · hipBLASLt · PyTorch</b>. FlyDSL is the subject; the baselines are the yardstick. Each kernel also carries a rocprofv3 ATT stall map.',
+  k_kernels:'kernels',k_shapes:'shapes swept',k_promote:'promote + parity',k_tune:'tune / rewrite',k_att:'rocprof ATT traces',
+  metric_lead:'metric',geo_note:'geomean &gt; <code>1.00×</code> ⇒ FlyDSL faster than the best correct baseline',
+  arch_title:'How the atlas is built',
+  arch_lead:'The benchmark harness is one pipeline: real <b>shape sources</b> feed a shared <b>op registry</b>, every op runs through FlyDSL <b>and</b> its baselines under one cold-cache <b>runner</b>, and the verified per-shape results become the reports and this atlas. FlyDSL is measured; nothing is hand-picked.',
+  atlas_title:'Every kernel, at a glance',
+  atlas_lead:'17 kernels grouped by op family. Each tile is a <b>gauge</b>: the needle points to the cold-cache geomean vs the best correct baseline — straight up is parity (1.00×), right is faster, left is slower. Colour is the verdict. Click any tile for the full stall map and per-model shapes.',
+  atlas_donut:'verdict mix',
+  ledger_title:'Verdict ledger',
+  ledger_lead:'Every kernel on one diverging axis. Centre is parity; bars to the right mean FlyDSL beats the strongest correct baseline on average, bars to the left are optimization headroom.',
+  ledger_m1:'multishape cold-cache',ledger_m2:'rocprof 1-shape',search_ph:'filter kernels…',
+  cov_title:'Model × shape coverage',
+  cov_lead:'How each kernel’s sweep spreads across model families (Qwen · DeepSeek · Kimi · Llama · …). Click a kernel for exact model names, stages, dtypes and shape tuples.',
+  cov_shapes:'shapes',
+  /* verdicts */
+  promote:'promote',parity:'parity',tune_needed:'tune',rewrite_needed:'rewrite',baseline_blocked:'baseline-blocked',blocked:'blocked',
+  vd_promote:'FlyDSL wins on average',vd_parity:'within ±3% of best',vd_tune_needed:'real headroom, tunable',vd_rewrite_needed:'needs a rewrite',vd_baseline_blocked:'only a slow baseline left',vd_blocked:'kernel bug / unsupported',
+  /* drawer */
+  dr_rocprof:'rocprof · 1-shape ATT capture',dr_ms:'multishape cold-cache (CUDA-graph + L2 flush)',
+  dr_lat:'FlyDSL latency',dr_spd:'FlyDSL vs baseline (1 shape)',dr_thr:'throughput',
+  dr_geo:'geomean vs best correct baseline',dr_swept:'shapes swept',dr_correct:'FlyDSL correct',dr_models:'models covered',
+  dr_occ:'Occupancy & register pressure (ATT)',dr_stall:'Stall taxonomy',dr_src:'Top hotspot source lines',
+  dr_cover:'Model × shape coverage',dr_rec:'#1 optimization',dr_art:'Artifacts',dr_noms:'No multishape run for this kernel.',
+  /* family names */
+  fam_norm:'Normalization',fam_gemm:'GEMM',fam_attention:'Attention',fam_moe:'Mixture-of-Experts',
+  fam_reduction:'Reduction',fam_elementwise:'Elementwise',fam_quant:'Quantization',fam_rope:'RoPE',
+  foot:'Generated by an 8-GPU rocprofv3 ATT + cold-cache sweep on <b>__GPU__</b> · FlyDSL <b>__VER__</b> (__COMMIT__) · ROCm <b>__ROCM__</b> · __DATE__. FlyDSL is the subject; AITER / CK / Triton / hipBLASLt are the yardstick.',
+ },
+ zh:{
+  nav_arch:'架构',nav_atlas:'内核图谱',nav_ledger:'结论',
+  hero_eyebrow:'AMD MI350X · gfx950 · CDNA4 — 内核性能图谱',
+  hero_title:'FlyDSL 内核<span class="gr">图谱</span>',
+  hero_sub:'对每一个主要 FlyDSL GPU 内核做了 <b>17 内核 / 781 形状 / 3 个模型家族</b> 的扫描，采用 only-kernel 的 <b>冷缓存</b> 指标，并与 <b>AITER · CK · Triton · hipBLASLt · PyTorch</b> 逐一对比。FlyDSL 是被测对象，baseline 是标尺。每个内核还附带一张 rocprofv3 ATT 停顿热点图。',
+  k_kernels:'内核数',k_shapes:'扫描形状',k_promote:'promote + parity',k_tune:'tune / rewrite',k_att:'rocprof ATT 轨迹',
+  metric_lead:'指标',geo_note:'geomean &gt; <code>1.00×</code> ⇒ FlyDSL 快于最优正确 baseline',
+  arch_title:'图谱是怎么构建的',
+  arch_lead:'整个 benchmark harness 是一条流水线：真实的<b>形状来源</b>喂给共享的<b>算子注册表</b>，每个算子在统一的冷缓存<b>运行器</b>下同时跑 FlyDSL <b>和</b> baseline，经过校验的逐形状结果再生成报告和这张图谱。FlyDSL 是被测量的，没有任何手挑。',
+  atlas_title:'一眼看全部内核',
+  atlas_lead:'17 个内核按算子家族分组。每块是一个<b>仪表</b>：指针指向冷缓存下相对最优正确 baseline 的 geomean——正上方是持平 (1.00×)，向右更快，向左更慢。颜色代表结论。点任意一块查看完整停顿图和逐模型形状。',
+  atlas_donut:'结论分布',
+  ledger_title:'结论总账',
+  ledger_lead:'所有内核放在同一条分叉轴上。中心是持平；偏右表示 FlyDSL 平均上胜过最强的正确 baseline，偏左则是优化空间。',
+  ledger_m1:'多形状冷缓存',ledger_m2:'rocprof 单形状',search_ph:'筛选内核…',
+  cov_title:'模型 × 形状覆盖',
+  cov_lead:'每个内核的扫描在各模型家族（Qwen · DeepSeek · Kimi · Llama · …）上的分布。点击查看精确的模型名、阶段、dtype 和形状参数。',
+  cov_shapes:'形状',
+  promote:'promote',parity:'parity',tune_needed:'tune',rewrite_needed:'rewrite',baseline_blocked:'baseline 受阻',blocked:'blocked',
+  vd_promote:'FlyDSL 平均胜出',vd_parity:'在最优的 ±3% 内',vd_tune_needed:'有真实优化空间',vd_rewrite_needed:'需要重写',vd_baseline_blocked:'只剩慢 baseline',vd_blocked:'内核 bug / 不支持',
+  dr_rocprof:'rocprof · 单形状 ATT 捕获',dr_ms:'多形状冷缓存（CUDA-graph + L2 flush）',
+  dr_lat:'FlyDSL 延迟',dr_spd:'FlyDSL vs baseline（单形状）',dr_thr:'吞吐',
+  dr_geo:'相对最优正确 baseline 的 geomean',dr_swept:'扫描形状数',dr_correct:'FlyDSL 正确数',dr_models:'覆盖模型数',
+  dr_occ:'占用率与寄存器压力（ATT）',dr_stall:'停顿分类',dr_src:'热点源代码行',
+  dr_cover:'模型 × 形状覆盖',dr_rec:'首要优化',dr_art:'产物',dr_noms:'此内核没有多形状运行。',
+  fam_norm:'归一化',fam_gemm:'GEMM',fam_attention:'注意力',fam_moe:'专家混合 (MoE)',
+  fam_reduction:'规约',fam_elementwise:'逐元素',fam_quant:'量化',fam_rope:'RoPE',
+  foot:'由 8 卡 rocprofv3 ATT + 冷缓存扫描生成于 <b>__GPU__</b> · FlyDSL <b>__VER__</b>（__COMMIT__）· ROCm <b>__ROCM__</b> · __DATE__。FlyDSL 是被测对象；AITER / CK / Triton / hipBLASLt 是标尺。',
+ }
+};
+const LS={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+let lang=LS.get('flydsl_lang')||((navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en');
+if(lang!=='zh'&&lang!=='en')lang='en';
+const t=k=>{const s=(STR[lang]||STR.en)[k];return s==null?(STR.en[k]||k):s;};
+
+/* ---------- palette (literals — SVG presentation attributes do NOT resolve var()) ---------- */
+const PAL={bg2:'#0c1018',panel2:'#151d2b',line:'#1c2636',line2:'#283546',
+ ink:'#eaf0f8',ink2:'#9aabc2',ink3:'#5d6d84',amber:'#ff9233',amber2:'#ffb96b',
+ promote:'#3ed598',parity:'#54b3e6',tune:'#f3cf4e',rewrite:'#ff6573',blocked:'#5d6d84'};
+const VC={promote:PAL.promote,parity:PAL.parity,tune_needed:PAL.tune,rewrite_needed:PAL.rewrite,baseline_blocked:PAL.blocked,blocked:PAL.blocked};
+const VCLS={promote:'promote',parity:'parity',tune_needed:'tune',rewrite_needed:'rewrite',baseline_blocked:'blocked',blocked:'blocked'};
+const vcol=v=>VC[v]||'var(--blocked)';
+const STALL_COLORS={'VMEM-wait':'#54b3e6','VMEM-load':'#ffb86b','VMEM-store':'#ff9233','LDS/SMEM-wait':'#9b8cff','MFMA/FMA':'#3ed598','barrier':'#ff6573','LDS':'#6ad27f','SMEM':'#3a4a63','other':'#5d6d84'};
+const sc=x=>STALL_COLORS[x]||'#5d6d84';
+const FAMCOL={'DeepSeek':'#3ed598','Kimi':'#54b3e6','Qwen':'#37e0a0','Llama':'#ffb86b','GPT-OSS':'#9b8cff','Mixtral':'#ff9233','Mixed':'#c084fc','DeepSeek/Kimi':'#27b8d6','Proxy/test':'#5d6d84','Synthetic/test':'#64748b','Other':'#9fb0c6'};
+const famcol=f=>FAMCOL[f]||'#9fb0c6';
+const CATKEY={norm:'fam_norm',gemm:'fam_gemm',attention:'fam_attention',moe:'fam_moe',reduction:'fam_reduction',elementwise:'fam_elementwise',quant:'fam_quant',rope:'fam_rope'};
+const CATORDER=['attention','gemm','moe','norm','reduction','rope','quant','elementwise'];
+
+const f1=x=>x==null?'—':(Math.abs(x)>=100?Math.round(x):x.toFixed(1));
+const fx=x=>x==null?'—':x.toFixed(2)+'×';
+const msGeo=g=>g==null?'—':(g>=10?Math.round(g):g.toFixed(2))+'×';
+const msReal=k=>{const m=k.multishape;if(!m||m.geomean_vs_best==null)return null;if(m.verdict==='blocked'||m.verdict==='baseline_blocked')return null;return m.geomean_vs_best;};
+const geoColor=(g,v)=>{if(g==null||v==='blocked'||v==='baseline_blocked')return PAL.ink3;return g>=1.0?PAL.promote:g>=0.95?PAL.tune:PAL.rewrite;};
+const DISPF="'Bricolage Grotesque',system-ui,sans-serif", MONOF="'IBM Plex Mono',ui-monospace,monospace";
+
+/* ---------- radial gauge (SVG) — parity at 12 o'clock, log2 in [-1,1] ⇒ [0.5×,2×] ---------- */
+function gauge(g,v){
+ const col=geoColor(g,v);
+ const W=180,H=110,cx=90,cy=98,R=70;
+ const ang=a=>({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)}); // a in rad, 0=right
+ // map: parity(0) at top(-90°); clamp log2(g) to [-1,1] -> ±90°
+ let frac=0,has=g!=null;
+ if(has){frac=Math.max(-1,Math.min(1,Math.log2(g)));}
+ const a0=-Math.PI/2, a1=-Math.PI/2+frac*(Math.PI/2);
+ const trackA0=-Math.PI, trackA1=0; // 180° track
+ const arc=(s,e,r)=>{const p=ang.bind(null);const A=p(s),B=p(e);const large=Math.abs(e-s)>Math.PI?1:0;const sweep=e>s?1:0;return `M${A.x.toFixed(1)} ${A.y.toFixed(1)} A${r} ${r} 0 ${large} ${sweep} ${B.x.toFixed(1)} ${B.y.toFixed(1)}`;};
+ const txt=has?msGeo(g):'—';
+ const fillArc=has?`<path d="${arc(a0,a1,R)}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round"/>`:'';
+ // needle
+ const n=ang(a1);
+ const needle=has?`<line x1="${cx}" y1="${cy}" x2="${n.x.toFixed(1)}" y2="${(cy-(cy-n.y)*.86).toFixed(1)}" stroke="${col}" stroke-width="2.4" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3.4" fill="${col}"/>`:'';
+ return `<svg class="gauge" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+   <path d="${arc(trackA0,trackA1,R)}" fill="none" stroke="rgba(154,171,194,.13)" stroke-width="9" stroke-linecap="round"/>
+   <line x1="${cx}" y1="${cy-R-7}" x2="${cx}" y2="${cy-R+5}" stroke="rgba(154,171,194,.4)" stroke-width="1.4"/>
+   ${fillArc}${needle}
+   <text x="${cx}" y="${cy-12}" text-anchor="middle" font-family="${DISPF}" font-weight="800" font-size="25" fill="${col}">${txt}</text>
+   <text x="14" y="${cy+4}" font-family="${MONOF}" font-size="9" fill="${PAL.ink3}">.5×</text>
+   <text x="${W-14}" y="${cy+4}" text-anchor="end" font-family="${MONOF}" font-size="9" fill="${PAL.ink3}">2×</text>
+ </svg>`;
+}
+
+/* ---------- architecture SVG ---------- */
+function archSVG(){
+ const zh=lang==='zh';
+ const L=zh?{
+  s1:'形状来源',s2:'算子注册表',s3:'Provider 适配器',s4:'冷缓存运行器',s5:'结果与图谱',
+  n1a:['AITER 模型形状','按真实部署维度'],n1b:['合成 / 诊断','边界 + 压力'],n1c:['SGLang 实时轨迹','Qwen · DeepSeek · Kimi'],
+  n2:['17 个算子',(MS.kernels)+' 内核 · '+MS.total_shapes+' 形状'],
+  n3a:['FlyDSL','被测对象'],n3b:['Baselines','AITER·CK·Triton·hipBLASLt·PyTorch'],
+  n4:['CUDA-graph + L2 flush','单流 · 正确性 vs fp32'],
+  n5a:['逐形状结果','geomean vs best'],n5b:['报告 + 本图谱','examples/ · docs/'],
+ }:{
+  s1:'Shape sources',s2:'Op registry',s3:'Provider adapters',s4:'Cold-cache runner',s5:'Results & atlas',
+  n1a:['AITER model shapes','real serving dims'],n1b:['Synthetic / diagnostic','boundary + stress'],n1c:['SGLang live traces','Qwen · DeepSeek · Kimi'],
+  n2:['17 ops',MS.kernels+' kernels · '+MS.total_shapes+' shapes'],
+  n3a:['FlyDSL','the subject'],n3b:['Baselines','AITER·CK·Triton·hipBLASLt·PyTorch'],
+  n4:['CUDA-graph + L2 flush','side-stream · correctness vs fp32'],
+  n5a:['Per-shape results','geomean vs best'],n5b:['Reports + this atlas','examples/ · docs/'],
+ };
+ const node=(x,y,w,h,title,sub,opt={})=>{
+  const fill=opt.fly?'url(#flyg)':PAL.panel2;const stroke=opt.fly?PAL.amber:PAL.line2;
+  const tc=opt.fly?PAL.amber2:PAL.ink;
+  return `<g>
+   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="${opt.fly?1.6:1}"/>
+   <text class="nlabel" x="${x+13}" y="${y+24}" font-size="14" style="fill:${tc}">${esc(title)}</text>
+   <text class="nsub" x="${x+13}" y="${y+41}" font-size="10.5">${esc(sub)}</text>
+  </g>`;
+ };
+ const stage=(x,txt)=>`<text class="stage" x="${x}" y="22" font-size="10.5">${esc(txt)}</text>`;
+ const conn=(x1,y1,x2,y2,hot)=>{const mx=(x1+x2)/2;return `<path class="conn${hot?' hot':''}" d="M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}"/>`;};
+ const dot=(x1,y1,x2,y2,hot,delay)=>{const mx=(x1+x2)/2;return `<circle r="${hot?3.2:2.4}" class="flowdot" opacity="${hot?'1':'.6'}"><animateMotion dur="2.4s" begin="${delay}s" repeatCount="indefinite" path="M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}"/></circle>`;};
+ // columns
+ const cx=[20,222,452,690,898];
+ let s='';
+ s+=stage(cx[0],L.s1)+stage(cx[1],L.s2)+stage(cx[2],L.s3)+stage(cx[3],L.s4)+stage(cx[4]-2,L.s5);
+ // connectors first (behind)
+ const c=[];
+ // s1(3)->s2
+ [70,150,230].forEach((y,i)=>c.push([182,y,222,150,false,i*.5]));
+ c.push([402,150,452,96,false,.2]);  // s2->s3a (fly)
+ c.push([402,150,452,200,false,.5]); // s2->s3b
+ c.push([632,96,690,150,true,.1]);   // s3a->runner (hot)
+ c.push([632,200,690,150,false,.6]); // s3b->runner
+ c.push([880,150,898,96,false,.3]);  // runner->res a
+ c.push([880,150,898,200,false,.7]); // runner->res b
+ s+='<g>'+c.map(a=>conn(...a)).join('')+'</g>';
+ s+='<g>'+c.map(a=>dot(...a)).join('')+'</g>';
+ // nodes
+ s+=node(20,46,162,48,L.n1a[0],L.n1a[1]);
+ s+=node(20,126,162,48,L.n1b[0],L.n1b[1]);
+ s+=node(20,206,162,48,L.n1c[0],L.n1c[1]);
+ s+=node(222,126,180,48,L.n2[0],L.n2[1]);
+ s+=node(452,72,180,48,L.n3a[0],L.n3a[1],{fly:true});
+ s+=node(452,176,180,48,L.n3b[0],L.n3b[1]);
+ s+=node(690,126,190,48,L.n4[0],L.n4[1]);
+ s+=node(898,72,150,48,L.n5a[0],L.n5a[1]);
+ s+=node(898,176,150,48,L.n5b[0],L.n5b[1]);
+ $('#archsvg').innerHTML=`<svg class="archsvg" viewBox="0 0 1058 270" preserveAspectRatio="xMidYMid meet">
+   <defs><linearGradient id="flyg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(255,146,51,.18)"/><stop offset="1" stop-color="rgba(255,146,51,.04)"/></linearGradient></defs>
+   ${s}</svg>`;
+}
+
+/* ---------- header ---------- */
+function header(){
+ $('#chips').innerHTML=[
+  `<span class="chip live"><span class="dot"></span><b>${MS.kernels}</b> kernels · <b>${MS.total_shapes}</b> shapes</span>`,
+  `<span class="chip">FlyDSL <b>${esc(P.flydsl_version)}</b> @ ${esc(P.flydsl_commit)}</span>`,
+  `<span class="chip">ROCm <b>${esc(P.rocm)}</b> · rocprofv3 ${esc(P.rocprofv3)}</span>`,
+  `<span class="chip">arch <b>gfx950</b> · CDNA4 · 8× MI350X</span>`,
+ ].join('');
+ const pr=MS.promote.length+MS.parity.length, tu=MS.tune_needed.length+MS.rewrite_needed.length;
+ $('#kpis').innerHTML=[
+  ['fly',MS.kernels,t('k_kernels')],['',MS.total_shapes,t('k_shapes')],
+  ['good',pr,t('k_promote')],['bad',tu,t('k_tune')],['',D.summary.with_att,t('k_att')],
+ ].map(([c,n,l])=>`<div class="kpi ${c}"><div class="n">${n}</div><div class="l">${esc(l)}</div></div>`).join('');
+ $('#metricbar').innerHTML=`<span><b>${t('metric_lead')}</b> = <code>${esc(MS.metric)}</code></span><span class="leg">${t('geo_note')}</span>`;
+}
+
+/* ---------- verdict donut + legend ---------- */
+function donut(){
+ const order=['promote','parity','tune_needed','rewrite_needed','baseline_blocked','blocked'];
+ const counts=order.map(v=>[v,(MS[v]||[]).length]).filter(([v,n])=>n>0);
+ const total=counts.reduce((a,[,n])=>a+n,0)||1;
+ const R=52,C=2*Math.PI*R;let off=0;
+ const segs=counts.map(([v,n])=>{const len=C*n/total;const s=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${vcol(v)}" stroke-width="16" stroke-dasharray="${len-2} ${C-len+2}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" stroke-linecap="butt"/>`;off+=len;return s;}).join('');
+ $('#donut').innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">${segs}
+   <text x="70" y="66" text-anchor="middle" font-family="${DISPF}" font-weight="800" font-size="30" fill="${PAL.ink}">${MS.kernels}</text>
+   <text x="70" y="84" text-anchor="middle" font-family="${MONOF}" font-size="9" fill="${PAL.ink3}">KERNELS</text></svg>`;
+ $('#vlegend').innerHTML=order.map(v=>{const n=(MS[v]||[]).length;if(!n)return '';
+  return `<div class="vleg"><span class="sw" style="background:${vcol(v)}"></span><div style="min-width:0"><span class="vt">${esc(t(v))}</span><span class="vd">${esc(t('vd_'+v))}</span></div><span class="vn" style="color:${vcol(v)}">${n}</span></div>`;
+ }).join('');
+}
+
+/* ---------- kernel atlas (grouped by family) ---------- */
+function atlas(){
+ const msK=K.filter(k=>k.multishape);
+ const byCat={};msK.forEach(k=>{(byCat[k.op_category]=byCat[k.op_category]||[]).push(k);});
+ const cats=Object.keys(byCat).sort((a,b)=>{const ia=CATORDER.indexOf(a),ib=CATORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);});
+ $('#atlas-tag').textContent=`${msK.length} · ${cats.length} families`;
+ $('#famgroups').innerHTML=cats.map(cat=>{
+  const ks=byCat[cat].sort((a,b)=>(msReal(b)??-1)-(msReal(a)??-1));
+  const ckey=CATKEY[cat], cname=ckey?t(ckey):cat;
+  const tiles=ks.map(k=>{const m=k.multishape,v=m.verdict;
+   return `<div class="ktile" onclick="window.__open('${k.stem}')">
+     <div class="vbar" style="background:${vcol(v)}"></div>
+     <div class="kt-top"><div><h4>${esc(k.name)}</h4><div class="kt-cat">${esc(k.op_category)}</div></div></div>
+     ${gauge(m.geomean_vs_best,v)}
+     <div class="kt-foot"><span>${m.n_shapes} ${t('cov_shapes')}</span><span class="vchip v-${VCLS[v]}">${esc(t(v))}</span></div>
+   </div>`;}).join('');
+  return `<div class="fam"><div class="famhead"><span class="fdot" style="background:var(--line2)"></span>
+    <h3>${esc(cname)}</h3><span class="fc">${ks.length} · ${esc(cat)}</span></div>
+    <div class="famgrid">${tiles}</div></div>`;
+ }).join('');
+}
+
+/* ---------- ledger (diverging bars) ---------- */
+let ledgerMetric='msgeo';
+function ledger(){
+ const MAXR=2.2;
+ let rows;
+ if(ledgerMetric==='spd'){rows=K.filter(k=>k.speedup_vs_baseline!=null).map(k=>({k,val:k.speedup_vs_baseline,col:k.verdict==='FlyDSL faster'?'var(--promote)':k.verdict==='comparable'?'var(--parity)':'var(--rewrite)',sub:'vs '+(k.baseline_name||'').replace(/\(.*/,'')}));}
+ else{rows=K.filter(k=>k.multishape&&k.multishape.geomean_vs_best!=null).map(k=>{const m=k.multishape;const blk=m.verdict==='blocked'||m.verdict==='baseline_blocked';return {k,val:m.geomean_vs_best,col:blk?'var(--blocked)':vcol(m.verdict),sub:m.n_shapes+' shapes',blk};});}
+ rows=rows.filter(r=>!r.blk||ledgerMetric!=='msgeo').sort((a,b)=>b.val-a.val);
+ const q=($('#search').value||'').toLowerCase();
+ if(q)rows=rows.filter(r=>r.k.name.toLowerCase().includes(q)||(r.k.op_category||'').includes(q));
+ $('#ledger-tag').textContent=`${rows.length} kernels`;
+ $('#ledgerchart').innerHTML=rows.map(({k,val,col,sub})=>{
+  let pct;if(val>=1)pct=50+Math.min((val-1)/(MAXR-1),1)*48;else pct=50-Math.min((1-val)/(1-1/MAXR),1)*48;
+  const left=Math.min(50,pct),width=Math.abs(pct-50);
+  return `<div class="bar-row" onclick="window.__open('${k.stem}')">
+    <div class="bk">${esc(k.name)}<span class="cat">${esc(k.op_category)} · ${esc(sub)}</span></div>
+    <div class="track"><div class="mid"></div><div class="fillbar" style="left:${left}%;width:${Math.max(width,.6)}%;background:${col}"></div></div>
+    <div class="bv" style="color:${col}">${ledgerMetric==='spd'?fx(val):msGeo(val)}</div></div>`;
+ }).join('');
+}
+
+/* ---------- coverage ---------- */
+function coverage(){
+ const rows=K.filter(k=>k.multishape&&k.multishape.model_shapes&&k.multishape.model_shapes.length).sort((a,b)=>(b.multishape.n_shapes||0)-(a.multishape.n_shapes||0));
+ $('#cov-tag').textContent=`${rows.length} kernels`;
+ $('#cov').innerHTML=rows.map(k=>{const m=k.multishape,total=m.n_shapes||1;const fam={};
+  (m.model_shapes||[]).forEach(x=>{fam[x.family]=(fam[x.family]||0)+x.n_shapes;});
+  const bars=Object.entries(fam).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<span style="width:${Math.max(3,c/total*100)}%;background:${famcol(n)}" title="${esc(n)}: ${c}"></span>`).join('');
+  const chips=(m.model_shapes||[]).slice(0,5).map(x=>`<span class="cchip" title="${esc(x.model)}">${esc(x.model)} <b>${x.n_shapes}</b></span>`).join('');
+  const more=m.model_shapes.length>5?`<span class="cchip" style="color:var(--ink3)">+${m.model_shapes.length-5}</span>`:'';
+  return `<div class="covrow" onclick="window.__open('${k.stem}')">
+    <div class="ck"><b>${esc(k.name)}</b><span>${esc(k.op_category)}</span></div>
+    <div class="cc"><b>${m.n_shapes}</b><span>${t('cov_shapes')}</span></div>
+    <div class="fbar">${bars}</div><div class="cchips">${chips}${more}</div></div>`;
+ }).join('');
+}
+
+/* ---------- drawer ---------- */
+function openDrawer(stem){
+ const k=K.find(x=>x.stem===stem);if(!k)return;
+ const m=k.multishape, v=m?m.verdict:'blocked', col=m?vcol(v):'var(--blocked)';
+ let h=`<div class="dhead" style="border-bottom:2px solid ${col}">
+   <span class="x" onclick="window.__close()">✕</span>
+   <h2>${esc(k.name)}</h2><div class="kn">${esc(k.jit_kernel||k.test||'')} · ${esc(k.op_category)}</div>
+   <div style="margin-top:9px">${m?`<span class="vchip v-${VCLS[v]}">${esc(t(v))}</span>`:''} <span class="dim" style="font-size:11.5px">${m&&m.models?esc(m.models.join(' · ')):''}</span></div>
+ </div><div class="dbody">`;
+ if(k.headline)h+=`<div class="note" style="border-left-color:${col}">${esc(k.headline)}</div>`;
+ // multishape
+ h+=`<h5>${t('dr_ms')}</h5>`;
+ if(!m){h+=`<div class="note">${t('dr_noms')}</div>`;}
+ else{const gc=geoColor(m.geomean_vs_best,v);
+  h+=`<div class="kv">
+   <div class="cell"><div class="v" style="color:${gc}">${msGeo(m.geomean_vs_best)}</div><div class="k">${t('dr_geo')}</div></div>
+   <div class="cell"><div class="v">${m.n_shapes??'—'}</div><div class="k">${t('dr_swept')}</div></div>
+   <div class="cell"><div class="v">${m.n_flydsl_correct??'—'}/${m.n_shapes??'—'}</div><div class="k">${t('dr_correct')}</div></div>
+   <div class="cell"><div class="v">${(m.models||[]).length}</div><div class="k">${t('dr_models')}</div></div></div>`;
+  h+=modelShapeHTML(m);
+  if(m.summary_url)h+=`<div class="dlinks"><a class="dlink" href="${m.summary_url}">📊 benchmark_summary.md</a></div>`;
+ }
+ // rocprof single-shape
+ if(k.flydsl_us!=null){h+=`<h5>${t('dr_rocprof')}</h5><div class="kv">
+   <div class="cell"><div class="v" style="color:var(--amber)">${f1(k.flydsl_us)} µs</div><div class="k">${t('dr_lat')}</div></div>
+   <div class="cell"><div class="v">${k.baseline_us?f1(k.baseline_us)+' µs':'—'}</div><div class="k">${esc((k.baseline_name||'baseline').replace(/\(.*/,''))}</div></div>
+   <div class="cell"><div class="v">${fx(k.speedup_vs_baseline)}</div><div class="k">${t('dr_spd')}</div></div>
+   <div class="cell"><div class="v">${k.tflops?f1(k.tflops)+' TF':(k.bandwidth_gbs?f1(k.bandwidth_gbs)+' GB/s':'—')}</div><div class="k">${t('dr_thr')}</div></div></div>`;}
+ if(k.has_bundle){
+  if(k.stall_breakdown&&k.stall_breakdown.length){h+=`<h5>${t('dr_stall')}</h5><div class="minibar">`+
+    k.stall_breakdown.filter(s=>s.pct>0).map(s=>`<span style="width:${s.pct}%;background:${sc(s.type)}" title="${esc(s.type)} ${s.pct}%"></span>`).join('')+`</div>
+    <table class="t" style="margin-top:8px"><tr><th>type</th><th>%</th></tr>`+
+    k.stall_breakdown.filter(s=>s.pct>0).map(s=>`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${sc(s.type)};margin-right:6px"></span>${esc(s.type)}</td><td>${s.pct}%</td></tr>`).join('')+`</table>`;}
+  if(k.top_source_lines&&k.top_source_lines.length){h+=`<h5>${t('dr_src')}</h5><table class="t"><tr><th>%</th><th>type</th><th>source:line</th></tr>`+
+    k.top_source_lines.slice(0,7).map(s=>`<tr><td style="color:${col}">${s.pct_total}%</td><td class="dim">${esc(s.domtype||'')}</td><td style="font-size:11px">${esc(s.source||'')}</td></tr>`).join('')+`</table>`;}
+ }
+ if(k.top_recommendation)h+=`<h5>${t('dr_rec')}</h5><div class="note" style="border-left-color:var(--promote)">${esc(k.top_recommendation)}</div>`;
+ if(k.has_bundle)h+=`<h5>${t('dr_art')}</h5><div class="dlinks"><a class="dlink" href="${k.report_url}">📄 REPORT.md</a><a class="dlink" href="${k.bundle_url}">📦 ATT bundle</a></div>`;
+ h+='</div>';
+ $('#drawer-content').innerHTML=h;$('#drawer').classList.add('on');$('#scrim').classList.add('on');
+}
+function modelShapeHTML(m){const g=m.model_shapes||[];if(!g.length)return '';
+ return `<h5>${t('dr_cover')}</h5>`+g.map((x,i)=>{const gc=geoColor(x.geomean_vs_best,m.verdict);
+  const st=Object.entries(x.stages||{}).map(([a,b])=>`${a} ${b}`).join(' · ');
+  const dt=Object.entries(x.dtypes||{}).map(([a,b])=>`${a} ${b}`).join(' · ');
+  const rows=(x.shapes||[]).map(s=>`<tr><td>${esc(s.stage||'')}</td><td>${esc(s.dtype||'')}</td><td style="word-break:break-word;color:var(--ink2)">${esc(s.args_summary||'')}</td><td style="color:${gc}">${msGeo(s.speedup_vs_best)}</td></tr>`).join('');
+  return `<details class="modelblock"${(g.length<=3||i<1)?' open':''}><summary>
+    <span class="famdot" style="background:${famcol(x.family)}"></span>
+    <span class="modelname">${esc(x.model)}</span>
+    <span class="modelmeta">${x.n_shapes} · ${esc(st)} · ${esc(dt)}</span>
+    <span class="modelgeo" style="color:${gc}">${msGeo(x.geomean_vs_best)}</span></summary>
+    <table class="t" style="font-size:11px"><tr><th>stage</th><th>dtype</th><th>args</th><th>×</th></tr>${rows}</table></details>`;
+ }).join('');
+}
+window.__open=openDrawer;
+window.__close=()=>{$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');};
+$('#scrim').onclick=window.__close;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')window.__close();});
+
+/* ---------- footer ---------- */
+function footer(){
+ $('#foot').innerHTML='<p>'+t('foot').replace('__GPU__',esc(P.gpu)).replace('__VER__',esc(P.flydsl_version)).replace('__COMMIT__',esc(P.flydsl_commit)).replace('__ROCM__',esc(P.rocm)).replace('__DATE__',esc(P.capture_date))+'</p>';
+}
+
+/* ---------- i18n apply + lang toggle ---------- */
+function applyText(){
+ $$('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));
+ $$('[data-i18n-html]').forEach(e=>e.innerHTML=t(e.dataset.i18nHtml));
+ $$('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.dataset.i18nPh));
+ document.documentElement.lang=lang;
+ $('#lang-en').classList.toggle('on',lang==='en');$('#lang-zh').classList.toggle('on',lang==='zh');
+}
+function renderAll(){applyText();header();archSVG();donut();atlas();ledger();coverage();footer();}
+window.setLang=l=>{lang=l;LS.set('flydsl_lang',l);renderAll();};
+
+/* controls */
+$$('.pill[data-metric]').forEach(p=>p.onclick=()=>{ledgerMetric=p.dataset.metric;$$('.pill[data-metric]').forEach(x=>x.classList.toggle('on',x===p));ledger();});
+$('#search').addEventListener('input',ledger);
+
+renderAll();
+})();
+</script>
+</body>
+</html>
