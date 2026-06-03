@@ -1,0 +1,69 @@
+kernel: blockscale_preshuffle_gemm
+op_type: blockscale_preshuffle_gemm
+dtype: fp8
+layout_contract:
+  x: "row-major (M, K) fp8 (e4m3fn on gfx950); A operand"
+  weight: "row-major (N, K) fp8 (one row per output column); PRESHUFFLED layout=(16,16) by each provider before launch"
+  x_scale: "fp32 (M, scale_k); per-(token, K-block) scale, scale_k=ceil(K/128). FlyDSL: transpose(0,1)->flatten; aiter: transpose(0,1)->2-D (M, scale_k)"
+  w_scale: "fp32 (scale_n, scale_k); per-(N-block, K-block) scale, scale_n=ceil(N/128). FlyDSL: flatten; aiter: as-is 2-D"
+  out: "row-major (M, N) bf16 or fp16 (args.out_dtype)"
+  block_shape: "(block_n=128, block_k=128), ScaleBlockM=1"
+reference_provider: pytorch
+notes: >-
+  FP8 A8W8 per-block-scaled GEMM. Inputs built once in fp16/10 then cast to fp8;
+  un-preshuffled weight + raw 2-D scales shared, each provider relayouts itself
+  (includes_layout_conversion=True on flydsl/aiter/aiter_triton). FlyDSL builder
+  compile_blockscale_preshuffle_gemm; tile auto-selected by the test's
+  select_tile_config heuristic.
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; compile_blockscale_preshuffle_gemm + flyc.compile launcher; weight preshuffle(16,16) + x_scale transpose-flatten built once
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:Aiter
+    provider: aiter
+    notes: aiter.gemm_a8w8_blockscale_bpreshuffle (compiled CK/ASM/cktile; backend auto-selected)
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:PyTorch
+    provider: pytorch
+    notes: run_torch_blockscale (per-block dequant -> F.linear in fp32); also the fp32 reference
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:AiterTriton
+    provider: aiter_triton
+    notes: aiter.ops.triton.gemm_a8w8_blockscale (pure Triton); honest skip if absent in this aiter build
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:AiterCK
+    provider: aiter_ck
+    skip_reason: CK blockscale-bpreshuffle backend auto-selected inside aiter; not separately selectable (use aiter)
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:AiterASM
+    provider: aiter_asm
+    skip_reason: ASM blockscale-bpreshuffle backend auto-selected inside aiter; not separately selectable (use aiter)
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:CK
+    provider: ck
+    skip_reason: no standalone CK blockscale-bpreshuffle adapter (reached via aiter)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:Triton
+    provider: triton
+    skip_reason: no standalone non-aiter Triton blockscale GEMM (use aiter_triton)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:Gluon
+    provider: gluon
+    skip_reason: no Gluon blockscale GEMM kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.blockscale_preshuffle_gemm:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt has no per-block-scaled fp8 preshuffle-GEMM op

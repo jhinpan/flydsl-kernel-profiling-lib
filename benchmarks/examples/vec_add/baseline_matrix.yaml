@@ -1,0 +1,59 @@
+kernel: vec_add
+op_type: vec_add
+dtype: fp32
+layout_contract:
+  a: "1-D (n,) contiguous fp32; n must be a multiple of block_dim*vec_width=1024"
+  b: "1-D (n,) contiguous fp32; same shape as a"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.vec_add:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; @flyc.jit vecAdd (block_dim=256, vec_width=4, BufferCopy128b). Launcher imported from tests.kernels.test_vec_add, else replicated inline. fp32 only; n%1024==0 (no tail handling)
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.vec_add:PyTorch
+    provider: pytorch
+    notes: torch.add(A,B); also the fp32 reference
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.vec_add:AiterTriton
+    provider: aiter_triton
+    notes: inline Triton vector-add (no standalone aiter vec_add op exists)
+  triton:
+    enabled: true
+    entrypoint: benchmarks.providers.vec_add:Triton
+    provider: triton
+    notes: self-contained inline Triton vector-add (standalone)
+  aiter:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:Aiter
+    provider: aiter
+    skip_reason: no standalone compiled aiter vector-add op
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK vector-add from Python
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM vector-add path
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:CK
+    provider: ck
+    skip_reason: no standalone CK vector-add adapter
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:Gluon
+    provider: gluon
+    skip_reason: no Gluon vector-add kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.vec_add:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only (no elementwise vector-add)

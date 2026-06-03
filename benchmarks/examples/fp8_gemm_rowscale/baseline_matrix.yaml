@@ -1,0 +1,93 @@
+kernel: fp8_gemm_rowscale
+op_type: fp8_gemm_rowscale
+dtype: fp8_e4m3
+layout_contract:
+  a: "row-major (M, K) fp8_e4m3fn, contiguous"
+  b: "row-major (N, K) fp8_e4m3fn, contiguous (stored transposed: one row per output column)"
+  scale_a: "(M,) fp32 per-row scale for A"
+  scale_b: "(N,) fp32 per-row scale for B"
+  c: "row-major (M, N) bf16; C = (A*scale_a) @ (B*scale_b)^T"
+  note: >-
+    all providers take the SAME pre-quantized fp8 A,B and fp32 row scales -- no
+    layout conversion (includes_layout_conversion=False). FlyDSL/aiter/torch differ
+    only in scale-tensor shaping ((M,)/(M,1)/(1,N)/(N,1)) done inside run().
+reference_provider: pytorch
+# CDNA4-only (gfx95*). FlyDSL fp8 row-scale GEMM (compile_fp8_gemm_4w/_8w) was
+# flagged compile-fail in the 2026-06-01 MI350X sweep (missing _reusable_slot_spec
+# fast-dispatch path); the adapter is fully wired and surfaces the error in run()
+# if it still fails, so the row stays honest. Baselines give coverage regardless.
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: >-
+      candidate; compile_fp8_gemm_4w (default) / _8w (args.use_8w=true), HipKittens-
+      derived 4/8-wave MFMA16x16x128, XCD swizzle, fp8_e4m3->bf16 row scales,
+      optional args.b_preshuffled. K%128==0 + N%BLOCK_N checked in supports().
+      KNOWN RISK: MI350X sweep saw flyc.compile() raise "missing _reusable_slot_spec";
+      if it still raises, the failure is recorded per-row, not silently dropped.
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:PyTorch
+    provider: pytorch
+    backend_visibility_required: true
+    notes: >-
+      torch._scaled_mm(a_fp8, b_fp8.t(), scale_a=(M,1), scale_b=(1,N), out_dtype=bf16);
+      recipe baseline (hipBLASLt-backed fp8 scaled GEMM on ROCm). NOT the fp32 golden
+      source -- the golden lives in ops.Fp8GemmRowscaleOp.reference (dequant matmul).
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:Aiter
+    provider: aiter
+    backend_visibility_required: true
+    notes: >-
+      aiter.ops.gemm_op_a8w8.gemm_a8w8 (compiled CK/ASM a8w8; accepts fp8 weights,
+      per-row x_scale (M,1) / w_scale (1,N), bf16 out; inner CK-vs-ASM opaque).
+  aiter_triton:
+    enabled: true
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:AiterTriton
+    provider: aiter_triton
+    notes: >-
+      aiter.ops.triton.gemm.basic.gemm_a8w8_per_token_scale (pure Triton; per-token
+      x_scale (M,1) + per-channel w_scale (N,1); Y = X @ W^T, same semantics).
+  gluon:
+    enabled: true
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:Gluon
+    provider: gluon
+    notes: >-
+      aiter.ops.triton.gluon.gemm_a8w8.gemm_a8w8 (Gluon a8w8; x_scale (M,1),
+      w_scale (1,N), bf16 out; Y = X @ W^T).
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:HipBLASLt
+    provider: hipblaslt
+    skip_reason: >-
+      torch._scaled_mm IS the hipBLASLt-backed fp8 scaled GEMM but the backend is not
+      Python-selectable and is already raced as 'pytorch'; stubbed to avoid a dup row
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:AiterCK
+    provider: aiter_ck
+    skip_reason: CK a8w8 backend not separately selectable from Python; folded into 'aiter'
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:AiterASM
+    provider: aiter_asm
+    skip_reason: >-
+      gemm_a8w8_ASM needs pre-shuffled weight (shuffle_weight(layout=(32,16))) + mandatory
+      bias + asm kernel-name lookup; not a fair row-major row-scale match (compiled CK/ASM
+      is exposed as 'aiter')
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:CK
+    provider: ck
+    skip_reason: no standalone CK fp8 row-scale gemm adapter on this node (use 'aiter')
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.fp8_gemm_rowscale:Triton
+    provider: triton
+    skip_reason: >-
+      no standalone non-aiter Triton fp8 row-scale GEMM on this node; the only Triton
+      a8w8 per-token-scale kernel is aiter's (see aiter_triton)

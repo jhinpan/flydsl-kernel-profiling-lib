@@ -1,0 +1,61 @@
+kernel: preshuffle_gemm
+op_type: preshuffle_gemm
+dtype: fp8
+layout_contract:
+  a: "row-major (M, K), per-token quantized to fp8 (e4m3), scale_a [M] fp32"
+  b: "row-major (N, K), per-token quantized to fp8, scale_b [N] fp32, then PRESHUFFLED via tests.utils.shuffle_weight(b_q, layout=(16,16)) -- done ONCE at build/cache time, outside the timed run"
+  c: "row-major (M, N), out_dtype bf16"
+  reference: "C = (a_q.float()*scale_a) @ (b_q.float()*scale_b)^T (dequant of the same quantized bits the kernels read)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.preshuffle_gemm:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; compile_preshuffle_gemm_a8(in_dtype=fp8,out=bf16). MFMA a8w8, per-token scales, B preshuffle (shuffle_weight layout=(16,16)) built once outside timed region
+  aiter:
+    enabled: true
+    entrypoint: benchmarks.providers.preshuffle_gemm:Aiter
+    provider: aiter
+    notes: aiter.gemm_a8w8_bpreshuffle (compiled CK/cktile a8w8 with B preshuffle; fp8 only); B preshuffle built once outside timed region
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.preshuffle_gemm:PyTorch
+    provider: pytorch
+    notes: dequant (a_q*scale_a) @ (b_q*scale_b)^T; also the fp32 reference
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:AiterTriton
+    provider: aiter_triton
+    skip_reason: no Triton a8w8 B-preshuffle GEMM exposed from aiter (preshuffle is a CK/MFMA concept)
+  triton:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:Triton
+    provider: triton
+    skip_reason: no standalone (non-aiter) Triton preshuffle GEMM on this node
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:AiterCK
+    provider: aiter_ck
+    skip_reason: CK a8w8-bpreshuffle backend not separately selectable from Python (folded into 'aiter')
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:AiterASM
+    provider: aiter_asm
+    skip_reason: no separately-selectable ASM a8w8-bpreshuffle entrypoint (dispatched internally by 'aiter')
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:CK
+    provider: ck
+    skip_reason: no standalone CK preshuffle-GEMM adapter (use 'aiter' for the compiled CK path)
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:Gluon
+    provider: gluon
+    skip_reason: no Gluon preshuffle-GEMM kernel on this node
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.preshuffle_gemm:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt has no preshuffled-B fp8 a8w8 path from Python (dense fp8 only)

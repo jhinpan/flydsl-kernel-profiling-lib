@@ -1,0 +1,59 @@
+kernel: moe_reduce
+op_type: moe_reduce
+dtype: bf16
+layout_contract:
+  x: "row-major (tokens, topk, model_dim), contiguous; reduce (sum) over topk dim -> y (tokens, model_dim)"
+  mask: "(tokens, topk) uint8 when use_mask=True; empty (0, topk) sentinel otherwise (kernel ignores it)"
+reference_provider: pytorch
+providers:
+  flydsl:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_reduce:FlyDSL
+    provider: flydsl
+    commit_required: true
+    notes: candidate; compile_moe_reduction(topk, model_dim, dtype_str, use_mask). f16/bf16/f32; non-atomic MoE stage-2 reduce
+  pytorch:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_reduce:PyTorch
+    provider: pytorch
+    notes: X.sum(dim=1) (masked if use_mask); also the fp32 reference
+  triton:
+    enabled: true
+    entrypoint: benchmarks.providers.moe_reduce:Triton
+    provider: triton
+    notes: self-contained inline Triton topk-reduce (no sglang/aiter standalone exists)
+  aiter:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:Aiter
+    provider: aiter
+    skip_reason: no standalone compiled aiter MoE-reduce op (folded inside fused_moe stage-2)
+  aiter_triton:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:AiterTriton
+    provider: aiter_triton
+    skip_reason: aiter triton reduce is internal to e2e_moe; no standalone topk-reduce op exposed
+  aiter_ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:AiterCK
+    provider: aiter_ck
+    skip_reason: no separately-selectable CK MoE-reduce from Python
+  aiter_asm:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:AiterASM
+    provider: aiter_asm
+    skip_reason: no Python-selectable ASM MoE-reduce path
+  ck:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:CK
+    provider: ck
+    skip_reason: no standalone CK MoE-reduce adapter
+  gluon:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:Gluon
+    provider: gluon
+    skip_reason: no Gluon MoE-reduce kernel
+  hipblaslt:
+    enabled: false
+    entrypoint: benchmarks.providers.moe_reduce:HipBLASLt
+    provider: hipblaslt
+    skip_reason: hipBLASLt is GEMM-only (no reduction op)

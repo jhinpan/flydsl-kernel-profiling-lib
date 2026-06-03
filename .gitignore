@@ -23,3 +23,6 @@ out_results.pftrace
 # stray bench_serving output
 sglang_*.jsonl
 bench_*.jsonl
+
+# transient benchmark run logs + serving logs (not the checked-in example traces)
+/traces/
