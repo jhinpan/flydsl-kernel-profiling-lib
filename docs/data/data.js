@@ -5363,8 +5363,8 @@ window.KERNEL_DATA = {
       "has_bundle": true,
       "multishape": {
         "n_shapes": 29,
-        "n_flydsl_correct": 3,
-        "geomean_vs_best": 2.93,
+        "n_flydsl_correct": 9,
+        "geomean_vs_best": 5.192,
         "weighted_geomean": null,
         "models": [
           "DeepSeek-R1",
@@ -5379,7 +5379,7 @@ window.KERNEL_DATA = {
             "model": "DeepSeek-R1",
             "family": "DeepSeek",
             "n_shapes": 10,
-            "n_flydsl_correct": 2,
+            "n_flydsl_correct": 5,
             "stages": {
               "model_config": 10
             },
@@ -5387,7 +5387,7 @@ window.KERNEL_DATA = {
               "fp4": 5,
               "fp8": 5
             },
-            "geomean_vs_best": 3.916,
+            "geomean_vs_best": 6.614,
             "weighted_geomean": null,
             "shapes": [
               {
@@ -5447,7 +5447,7 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=1,TopK=8",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": 2.409,
+                "speedup_vs_best": 2.455,
                 "best_baseline": "aiter"
               },
               {
@@ -5457,8 +5457,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=16384,TopK=8",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 11.105,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:4608b9916c92f9aa",
@@ -5467,8 +5467,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=2048,TopK=8",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 9.885,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:d48e60cdc80b5fae",
@@ -5477,8 +5477,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=256,TopK=8",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 7.495,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:3e1f04d82bff6672",
@@ -5487,7 +5487,7 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=32,TopK=8",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": 6.366,
+                "speedup_vs_best": 6.268,
                 "best_baseline": "aiter"
               }
             ]
@@ -5694,14 +5694,14 @@ window.KERNEL_DATA = {
             "model": "synthetic-profiled-att",
             "family": "Synthetic/test",
             "n_shapes": 3,
-            "n_flydsl_correct": 0,
+            "n_flydsl_correct": 3,
             "stages": {
               "synthetic": 3
             },
             "dtypes": {
               "fp8": 3
             },
-            "geomean_vs_best": null,
+            "geomean_vs_best": 5.117,
             "weighted_geomean": null,
             "shapes": [
               {
@@ -5711,8 +5711,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=6144,Dim2=8192,E=8,M=2048,TopK=2",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 7.239,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:2021925b86a88619",
@@ -5721,8 +5721,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=6144,Dim2=8192,E=8,M=256,TopK=2",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 4.646,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:3417b6c5516ca477",
@@ -5731,8 +5731,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=6144,Dim2=8192,E=8,M=32,TopK=2",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 3.984,
+                "best_baseline": "aiter"
               }
             ]
           },
@@ -5747,7 +5747,7 @@ window.KERNEL_DATA = {
             "dtypes": {
               "fp8": 1
             },
-            "geomean_vs_best": 1.64,
+            "geomean_vs_best": 1.616,
             "weighted_geomean": null,
             "shapes": [
               {
@@ -5757,14 +5757,14 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=1024,Dim2=512,E=4,M=256,TopK=2",
                 "weight": null,
                 "occurrences": null,
-                "speedup_vs_best": 1.64,
+                "speedup_vs_best": 1.616,
                 "best_baseline": "aiter"
               }
             ]
           }
         ],
         "verdict": "promote",
-        "vs_best_n": 3,
+        "vs_best_n": 9,
         "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/moe_gemm/benchmark_summary.md"
       }
     },
@@ -6326,10 +6326,9 @@ window.KERNEL_DATA = {
       "has_bundle": true,
       "multishape": {
         "n_shapes": 12,
-        "n_flydsl_correct": 0,
-        "geomean_vs_best": null,
+        "n_flydsl_correct": 4,
+        "geomean_vs_best": 7.089,
         "weighted_geomean": null,
-        "vs_best_n": 0,
         "models": [
           "deepseek-v3",
           "kimi-k2"
@@ -6339,14 +6338,14 @@ window.KERNEL_DATA = {
             "model": "deepseek-v3",
             "family": "DeepSeek",
             "n_shapes": 7,
-            "n_flydsl_correct": 0,
+            "n_flydsl_correct": 3,
             "stages": {
               "model_config": 7
             },
             "dtypes": {
               "fp8": 7
             },
-            "geomean_vs_best": null,
+            "geomean_vs_best": 5.219,
             "weighted_geomean": null,
             "shapes": [
               {
@@ -6396,8 +6395,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=256,M=256,TopK=8",
                 "weight": null,
                 "occurrences": 1,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 12.275,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:c115cec4c5728c9f",
@@ -6406,8 +6405,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=8,M=16,TopK=2",
                 "weight": null,
                 "occurrences": 1,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 3.135,
+                "best_baseline": "aiter"
               },
               {
                 "shape_id": "sha1:64617ad5198d0546",
@@ -6416,8 +6415,8 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=8,M=32,TopK=2",
                 "weight": null,
                 "occurrences": 1,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 3.694,
+                "best_baseline": "aiter"
               }
             ]
           },
@@ -6425,14 +6424,14 @@ window.KERNEL_DATA = {
             "model": "kimi-k2",
             "family": "Kimi",
             "n_shapes": 5,
-            "n_flydsl_correct": 0,
+            "n_flydsl_correct": 1,
             "stages": {
               "model_config": 5
             },
             "dtypes": {
               "fp8": 5
             },
-            "geomean_vs_best": null,
+            "geomean_vs_best": 17.77,
             "weighted_geomean": null,
             "shapes": [
               {
@@ -6482,13 +6481,14 @@ window.KERNEL_DATA = {
                 "args_summary": "Dim1=7168,Dim2=512,E=384,M=64,TopK=8",
                 "weight": null,
                 "occurrences": 1,
-                "speedup_vs_best": null,
-                "best_baseline": null
+                "speedup_vs_best": 17.77,
+                "best_baseline": "aiter"
               }
             ]
           }
         ],
-        "verdict": "blocked",
+        "verdict": "promote",
+        "vs_best_n": 4,
         "summary_url": "https://github.com/jhinpan/flydsl-kernel-profiling/blob/main/benchmarks/examples/moe_blockscale/benchmark_summary.md"
       }
     },
@@ -12157,6 +12157,7 @@ window.KERNEL_DATA = {
     "total_shapes": 781,
     "promote": [
       "fused_rope_cache",
+      "moe_blockscale",
       "moe_gemm",
       "softmax",
       "topk_gating_softmax"
@@ -12180,9 +12181,7 @@ window.KERNEL_DATA = {
       "pa"
     ],
     "baseline_blocked": [],
-    "blocked": [
-      "moe_blockscale"
-    ],
+    "blocked": [],
     "models": [
       "DeepSeek-R1",
       "DeepSeek-R1|Llama3 8B",
