@@ -328,11 +328,17 @@ class Aiter(ProviderAdapter):
             x_q, a1_scale = pertoken_quant(x_fp32, quant_dtype=fp8)
             w1_q, w1_scale = pertoken_quant(w1_fp32, quant_dtype=fp8)
             w2_q, w2_scale = pertoken_quant(w2_fp32, quant_dtype=fp8)
-            self.provider_detail = "aiter.fused_moe (end-to-end fused; QuantType.per_Token fp8; routing+sorting timed)"
+            self.provider_detail = "aiter.fused_moe (end-to-end fused; QuantType.per_Token fp8; bf16 out; routing+sorting timed)"
+            # Without an explicit `dtype`, fused_moe infers the output dtype from the
+            # fp8 inputs and asserts ("unsupported out dtype torch.float8_e4m3fn"),
+            # which is why aiter was `failed` on every fp8 row. Request bf16 out so
+            # the baseline at least RUNS. (It is still recorded `incorrect` vs our
+            # 2-stage reference -- aiter's end-to-end routing/normalization differs;
+            # see flydsl-kernel-profiling baseline-alignment issue.)
             return fused_moe(
                 x_q, w1_q, w2_q, topk_weights, topk_ids,
                 activation=ActivationType.Silu, quant_type=QuantType.per_Token,
-                doweight_stage1=False,
+                doweight_stage1=False, dtype=torch.bfloat16,
                 w1_scale=w1_scale, w2_scale=w2_scale, a1_scale=a1_scale)
         cast = torch.bfloat16 if dtype in ("bf16", "bfloat16") else torch.float16
         self.provider_detail = f"aiter.fused_moe (end-to-end fused; QuantType.No {dtype}; routing+sorting timed)"
