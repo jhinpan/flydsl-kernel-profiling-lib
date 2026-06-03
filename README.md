@@ -13,6 +13,8 @@ aggregates — without re-capturing the trace.
 > (AIter / CK / hipBLASLt).
 > → **[Interactive dashboard](https://jhinpan.github.io/flydsl-kernel-profiling/)**
 > · **[FINDINGS.md](FINDINGS.md)** (the bird's-eye read)
+> · Dashboard drawers now show exact **model → shape** coverage for every
+> multi-shape benchmarked kernel.
 >
 > Headline: FlyDSL **wins** Softmax 2.05×, HGEMM-SplitK 1.66×, MoE-GEMM 1.11×;
 > clear **headroom** on RoPE 0.17×, TopK-Gating 0.22×, Paged-Attn 0.48×. The
@@ -44,6 +46,33 @@ self-contained directory**.
 ### MI350X / gfx950 sweep — 2026-06-01 (FlyDSL 0.1.9.dev594 @ 18c5a7ed)
 
 Ordered FlyDSL-wins → parity → headroom. Speedups are FlyDSL vs. the strongest matched-shape baseline. See **[FINDINGS.md](FINDINGS.md)** + the **[dashboard](https://jhinpan.github.io/flydsl-kernel-profiling/)**.
+
+The dashboard now has a **Kernel × model coverage** visualization. Click any row
+or kernel card to open the drawer; the **Model × shape coverage** table lists the
+exact model/proxy name, stage, dtype, shape arguments, best baseline, speedup,
+and production weight when a trace supplied one. The same source of truth is
+checked in under `benchmarks/examples/<kernel>/shape_ledger.jsonl` and exported
+to `docs/data/kernels.json`.
+
+| kernel | shapes | model groups | models / proxies |
+|---|---:|---:|---|
+| `blockscale_preshuffle_gemm` | 14 | 3 | deepseek-v3 (10), kimi-k2 (2), qwen3 (2) |
+| `flash_attn_func` | 16 | 4 | synthetic (9), DeepSeek-V3 (3), Kimi-K2 (2), Qwen3 (2) |
+| `fp8_gemm_rowscale` | 14 | 4 | deepseek-v3 (6), kimi-k2 (3), qwen3-32b (3), synthetic (2) |
+| `fused_rope_cache` | 30 | 5 | GPT-OSS 120B (6), Llama3 405B (6), Llama3 70B\|Qwen3-235B-A22B (6), Llama3 8B (6), Llama4 Maverick (6) |
+| `hgemm_splitk` | 265 | 8 | DeepSeek-R1 (80), Llama3 405B (40), Llama3 70B (40), Llama3 8B (35), Llama4 Maverick (35), GPT-OSS 120B (15), Qwen3-235B-A22B (15), DeepSeek-R1\|Llama3 8B (5) |
+| `layernorm` | 73 | 9 | synthetic (27), DeepSeek-R1 (15), GPT-OSS 120B (5), Llama3 405B (5), Llama3 70B (5), Llama3 8B\|Qwen3-235B-A22B (5), Llama4 Maverick (5), Qwen3-235B-A22B (5), diagnostic (1) |
+| `mla_decode` | 14 | 3 | DeepSeek-R1 (6), DeepSeek-V3 (5), Kimi-K2 (3) |
+| `moe_blockscale` | 12 | 2 | deepseek-v3 (7), kimi-k2 (5) |
+| `moe_gemm` | 29 | 6 | DeepSeek-R1 (10), GPT-OSS 120B (5), Llama4 Maverick (5), Qwen3-235B-A22B (5), synthetic-profiled-att (3), synthetic-smallest-passing (1) |
+| `moe_reduce` | 16 | 4 | deepseek-v3 (6), ep-k6 (4), kimi-k2 (3), qwen3-moe (3) |
+| `pa` | 12 | 5 | test_pa normal_accuracy (8), DeepSeek/Kimi GQA decode (TP shard -> hkv=1) (1), Qwen-like (hidden 2560, 8 q-heads/shard) long-ctx decode (1), sliding-window model (e.g. Mistral-style) (1), sliding-window model long window (1) |
+| `preshuffle_gemm` | 14 | 4 | generic (6), DeepSeek-V3 (3), Qwen (3), Kimi-K2 (2) |
+| `quant` | 12 | 6 | DeepSeek-V3 (3), Qwen3 (3), flydsl_test (2), stress (2), Kimi-K2 (1), flydsl_test_default (1) |
+| `rmsnorm` | 159 | 10 | DeepSeek-R1 (57), Qwen3-4B (44), synthetic (27), GPT-OSS 120B (5), Llama3 405B (5), Llama3 70B (5), Llama3 8B\|Qwen3-235B-A22B (5), Llama4 Maverick (5), Qwen3-235B-A22B (5), diagnostic (1) |
+| `softmax` | 73 | 9 | synthetic (27), DeepSeek-R1 (15), GPT-OSS 120B (5), Llama3 405B (5), Llama3 70B (5), Llama3 8B\|Qwen3-235B-A22B (5), Llama4 Maverick (5), Qwen3-235B-A22B (5), diagnostic (1) |
+| `topk_gating_softmax` | 16 | 5 | DeepSeek-R1 (6), Kimi-K2 (3), Mixtral-8x22B-class (3), Llama4-class (2), Mixtral-8x7B (2) |
+| `vec_add` | 12 | 4 | micro (7), DeepSeek-V3 (2), Qwen3 (2), Kimi-K2 (1) |
 
 | folder | kernel | source | headline |
 |---|---|---|---|

@@ -113,11 +113,26 @@ select:focus,input:focus{border-color:var(--fly)}
 .msrow a{font-family:var(--mono)}
 .mschip{font-family:var(--mono);font-size:10.5px;color:var(--ink2);background:var(--panel);border:1px solid var(--line2);
   border-radius:999px;padding:2px 8px;cursor:help}
-.metricbar{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 2px;font-size:12.5px;color:var(--ink2)}
-.metricbar b{color:var(--ink)}
-.metricbar .leg{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
-.metricbar .leg code{color:var(--ink2)}
-.metrics{display:flex;gap:18px;margin:13px 0 11px}
+	.metricbar{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 2px;font-size:12.5px;color:var(--ink2)}
+	.metricbar b{color:var(--ink)}
+	.metricbar .leg{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+	.metricbar .leg code{color:var(--ink2)}
+	.modelviz{border:1px solid var(--line2);background:var(--panel);border-radius:var(--r);overflow:hidden}
+	.modelrow{display:grid;grid-template-columns:190px 82px 1fr 390px;gap:12px;align-items:center;
+	  padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+	.modelrow:last-child{border-bottom:0}
+	.modelrow:hover{background:rgba(51,224,200,.045)}
+	.mkernel b{display:block;font-size:13px;color:var(--ink)}
+	.mkernel span,.mcount span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--ink3)}
+	.mcount b{display:block;font-family:var(--mono);font-size:18px;color:var(--fly)}
+	.familybar{height:18px;border-radius:5px;background:var(--bg2);display:flex;overflow:hidden;border:1px solid var(--line)}
+	.familybar span{height:100%;min-width:3px}
+	.modelchips{display:flex;gap:5px;flex-wrap:wrap;min-width:0}
+	.modelchip{font-family:var(--mono);font-size:10.5px;color:var(--ink2);background:var(--bg2);
+	  border:1px solid var(--line);border-radius:999px;padding:3px 7px;max-width:178px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.modelchip b{color:var(--ink)}
+	.dimchip{color:var(--ink3)}
+	.metrics{display:flex;gap:18px;margin:13px 0 11px}
 .metric .mv{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.01em}
 .metric .ml{font-size:11px;color:var(--ink3)}
 .metric .mv.fly{color:var(--fly)}
@@ -153,14 +168,27 @@ table.t td.mono{font-family:var(--mono)}
 .minibar{height:18px;border-radius:4px;display:flex;overflow:hidden;background:var(--bg)}
 .minibar span{height:100%}
 .note{font-size:13px;color:var(--ink2);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--fly);border-radius:8px;padding:11px 13px;margin-top:8px}
-.dlinks{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.dlink{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;color:var(--ink)}
-.dlink:hover{border-color:var(--fly);text-decoration:none;color:var(--fly)}
+	.dlinks{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+	.dlink{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;color:var(--ink)}
+	.dlink:hover{border-color:var(--fly);text-decoration:none;color:var(--fly)}
+	.modelcover{display:flex;flex-direction:column;gap:8px}
+	.modelblock{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+	.modelblock summary{display:grid;grid-template-columns:12px minmax(120px,1fr) minmax(150px,1.5fr) 72px;
+	  gap:8px;align-items:center;padding:9px 10px;cursor:pointer;list-style:none}
+	.modelblock summary::-webkit-details-marker{display:none}
+	.modelblock[open] summary{border-bottom:1px solid var(--line)}
+	.famdot{width:9px;height:9px;border-radius:50%;display:inline-block}
+	.modelname{font-size:12px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.modelmeta{font-family:var(--mono);font-size:10.5px;color:var(--ink3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.modelgeo{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right}
+	.shapet{font-size:11.5px}
+	.shapet td.args{word-break:break-word;color:var(--ink2)}
 
 footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--ink3);font-size:13px}
 footer .mono{color:var(--ink2)}
 .hl{color:var(--fly)}
-@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.bar-row{grid-template-columns:130px 1fr 64px}}
+	@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.bar-row{grid-template-columns:130px 1fr 64px}
+	  .modelrow{grid-template-columns:1fr 70px}.familybar,.modelchips{grid-column:1/-1}.modelblock summary{grid-template-columns:12px 1fr 64px}.modelmeta{grid-column:2/-1}}
 </style>
 </head>
 <body>
@@ -171,8 +199,8 @@ footer .mono{color:var(--ink2)}
     <p class="sub">Every major FlyDSL GPU kernel, captured with <b>rocprofv3 Advanced Thread Trace</b> on AMD Instinct
       MI350X (CDNA4, gfx950) — timed, stall-mapped to the exact Python source line, and measured against
       <b>AIter / CK / hipBLASLt</b> baselines. FlyDSL is the subject; baselines are the yardstick.
-      Now joined by a <b>multi-shape cold-cache sweep</b> across <b>17 kernels · 781 shapes · 3 models
-      (Qwen / DeepSeek / Kimi)</b>.</p>
+	      Now joined by a <b>multi-shape cold-cache sweep</b> across <b>17 kernels · 781 shapes</b>,
+	      with exact model and shape coverage available for every kernel.</p>
     <div class="chips" id="chips"></div>
     <div class="metricbar" id="metricbar"></div>
     <div class="kpis" id="kpis"></div>
@@ -194,9 +222,18 @@ footer .mono{color:var(--ink2)}
       </div>
     </div>
   </div>
-</section>
+	</section>
 
-<section style="padding-top:6px">
+	<section style="padding-top:6px">
+	  <div class="wrap">
+	    <div class="h2"><h2>Kernel × model coverage</h2><span class="tag" id="modelviz-tag"></span></div>
+	    <p class="lead">Each row shows how that kernel's multi-shape sweep is distributed across model families.
+	      Click a kernel to see the exact model names, stages, dtypes, and every shape argument tuple used in the benchmark.</p>
+	    <div class="modelviz" id="modelviz"></div>
+	  </div>
+	</section>
+
+	<section style="padding-top:6px">
   <div class="wrap">
     <div class="h2"><h2>All kernels</h2><span class="tag" id="grid-tag"></span></div>
     <p class="lead">Each card carries <b>two independent measurements</b>: the <b>rocprof 1-shape</b> speedup

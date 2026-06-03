@@ -17,6 +17,7 @@ function verdictBadge(v){const c=verdictClass(v);const lbl=v==='FlyDSL faster'?'
 function accentColor(v){return v==='FlyDSL faster'?'var(--good)':v==='comparable'?'var(--warn)':v==='FlyDSL slower'?'var(--bad)':'var(--slate)';}
 const f1=x=>x==null?'—':(Math.abs(x)>=100?Math.round(x):x.toFixed(1));
 const fx=x=>x==null?'—':x.toFixed(2)+'×';
+const f3=x=>x==null?'—':x.toFixed(3);
 
 /* ---- multishape verdict helpers ---- */
 const MS_VERDICT={
@@ -31,6 +32,12 @@ function msInfo(v){return MS_VERDICT[v]||{cls:'blocked',lbl:v||'—'};}
 function msBadge(v){const i=msInfo(v);return `<span class="verdict v-${i.cls}">${i.lbl}</span>`;}
 // geomean of best-correct-baseline / flydsl -> >1 means FlyDSL faster
 const msGeo=g=>g==null?'—':g.toFixed(g>=10?0:2)+'×';
+function familyColor(f){
+ const m={'DeepSeek':'#33e0c8','Kimi':'#4a8dff','Qwen':'#37e0a0','Llama':'#ffc24b',
+  'GPT-OSS':'#9b8cff','Mixtral':'#ff9457','Mixed':'#c084fc','DeepSeek/Kimi':'#27b8d6',
+  'Proxy/test':'#5b6b82','Synthetic/test':'#64748b','Other':'#9fb0c6'};
+ return m[f]||'#9fb0c6';
+}
 
 /* ---- header chips + kpis ---- */
 function header(){
@@ -51,14 +58,15 @@ function header(){
   ['bad',ms?(ms.tune_needed.length+ms.rewrite_needed.length):s.headroom,'tune / rewrite'],
   ['',s.with_att,'rocprof ATT traces'],
  ].map(([c,n,l])=>`<div class="kpi ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
- // metric legend band
- if(ms){
-  const models3='Qwen / DeepSeek / Kimi';
-  $('#metricbar').innerHTML=
-   `<span><b>${ms.kernels}</b> kernels · <b>${ms.total_shapes}</b> shapes · <b>3</b> models (${models3})</span>`+
-   `<span class="leg">metric = <code>${escapeHTML(ms.metric)}</code></span>`+
-   `<span class="leg">geomean &gt; <code>1.00×</code> ⇒ FlyDSL faster than best correct baseline</span>`;
- }
+	 // metric legend band
+	 if(ms){
+	  const fams=(ms.model_families||[]).filter(f=>!['Synthetic/test','Proxy/test','Other'].includes(f.family))
+	    .map(f=>f.family).slice(0,8).join(' / ');
+	  $('#metricbar').innerHTML=
+	   `<span><b>${ms.kernels}</b> kernels · <b>${ms.total_shapes}</b> shapes · model families: <b>${escapeHTML(fams||'see coverage')}</b></span>`+
+	   `<span class="leg">metric = <code>${escapeHTML(ms.metric)}</code></span>`+
+	   `<span class="leg">geomean &gt; <code>1.00×</code> ⇒ FlyDSL faster than best correct baseline</span>`;
+	 }
 }
 
 /* ---- speedup chart ---- */
@@ -84,6 +92,32 @@ function speedChart(){
  });
 }
 function shorten(s){if(!s)return 'baseline';s=s.replace(/\(.*$/,'').trim();return s.length>26?s.slice(0,24)+'…':s;}
+
+/* ---- model / shape coverage visualization ---- */
+function modelCoverageViz(){
+ const rows=K.filter(k=>k.multishape&&k.multishape.model_shapes&&k.multishape.model_shapes.length)
+   .sort((a,b)=>(b.multishape.n_shapes||0)-(a.multishape.n_shapes||0));
+ const tag=$('#modelviz-tag');
+ const wrap=$('#modelviz');
+ if(!tag||!wrap)return;
+ tag.textContent=`${rows.length} kernels · exact shapes in each drawer`;
+ wrap.innerHTML=rows.map(k=>{
+  const ms=k.multishape,total=ms.n_shapes||1;
+  const fam={};
+  (ms.model_shapes||[]).forEach(m=>{fam[m.family]=(fam[m.family]||0)+m.n_shapes;});
+  const bars=Object.entries(fam).sort((a,b)=>b[1]-a[1]).map(([name,n])=>
+   `<span style="width:${Math.max(3,n/total*100)}%;background:${familyColor(name)}" title="${escapeHTML(name)}: ${n} shapes"></span>`).join('');
+  const chips=(ms.model_shapes||[]).slice(0,6).map(m=>
+   `<span class="modelchip" title="${escapeHTML(m.model)}">${escapeHTML(m.model)} <b>${m.n_shapes}</b></span>`).join('');
+  const more=ms.model_shapes.length>6?`<span class="modelchip dimchip">+${ms.model_shapes.length-6} more</span>`:'';
+  return `<div class="modelrow" onclick="window.__openDrawer('${k.stem}')">
+    <div class="mkernel"><b>${escapeHTML(k.name)}</b><span>${escapeHTML(k.op_category||'other')}</span></div>
+    <div class="mcount"><b>${ms.n_shapes}</b><span>shapes</span></div>
+    <div class="familybar">${bars}</div>
+    <div class="modelchips">${chips}${more}</div>
+  </div>`;
+ }).join('');
+}
 
 /* ---- grid ---- */
 let activeCat='all',q='',sortBy='cat',msFilter='all';
@@ -211,12 +245,13 @@ function openDrawer(stem){
      <div class="cell"><div class="v">${(ms.models&&ms.models.length)||0}</div><div class="k">models covered</div></div>
    </div>
    <div style="margin-top:10px">${msBadge(ms.verdict)} <span class="dim mono" style="font-size:11.5px">verdict · vs_best on ${ms.vs_best_n??'—'} shapes${ms.weighted_geomean!=null?` · weighted ${msGeo(ms.weighted_geomean)}`:''}</span></div>`;
-   if(ms.models&&ms.models.length){
-    html+=`<div class="tagrow" style="margin-top:10px">`+ms.models.map(m=>`<span class="dlink" style="cursor:default;font-size:11px">${escapeHTML(m)}</span>`).join('')+`</div>`;
-   }
-   if(ms.summary_url){
-    html+=`<div class="dlinks" style="margin-top:10px"><a class="dlink" href="${ms.summary_url}">📊 benchmark_summary.md</a></div>`;
-   }
+	  if(ms.models&&ms.models.length){
+	    html+=`<div class="tagrow" style="margin-top:10px">`+ms.models.map(m=>`<span class="dlink" style="cursor:default;font-size:11px">${escapeHTML(m)}</span>`).join('')+`</div>`;
+	  }
+	  html+=modelShapeHTML(ms);
+	  if(ms.summary_url){
+	    html+=`<div class="dlinks" style="margin-top:10px"><a class="dlink" href="${ms.summary_url}">📊 benchmark_summary.md</a></div>`;
+	  }
   }
  }
  if(k.extra_baselines&&Object.keys(k.extra_baselines).length){
@@ -265,11 +300,39 @@ function openDrawer(stem){
      ${k.kernels&&k.kernels.length?`<span class="dlink" style="cursor:default">kernels/${k.kernels[0]}.py</span>`:''}
    </div>`;
  }
- html+=`</div>`;
- $('#drawer-content').innerHTML=html;
- $('#drawer').classList.add('on');$('#scrim').classList.add('on');
+	 html+=`</div>`;
+	 $('#drawer-content').innerHTML=html;
+	 $('#drawer').classList.add('on');$('#scrim').classList.add('on');
 }
-function escapeHTML(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+window.__openDrawer=openDrawer;
+function modelShapeHTML(ms){
+ const groups=ms.model_shapes||[];
+ if(!groups.length)return '';
+ return `<h4>Model × shape coverage</h4><div class="modelcover">`+groups.map((g,i)=>{
+  const stageTxt=Object.entries(g.stages||{}).map(([k,v])=>`${k} ${v}`).join(' · ');
+  const dtypeTxt=Object.entries(g.dtypes||{}).map(([k,v])=>`${k} ${v}`).join(' · ');
+  const geoCol=(g.geomean_vs_best==null)?'var(--ink3)':(g.geomean_vs_best>=1.0?'var(--good)':g.geomean_vs_best>=0.95?'var(--warn)':'var(--bad)');
+  const rows=(g.shapes||[]).map(s=>`<tr>
+    <td class="mono">${escapeHTML(s.stage||'—')}</td>
+    <td class="mono">${escapeHTML(s.dtype||'—')}</td>
+    <td class="mono args">${escapeHTML(s.args_summary||'')}</td>
+    <td class="mono" style="color:${geoCol}">${msGeo(s.speedup_vs_best)}</td>
+    <td class="mono">${s.weight!=null?f3(s.weight):'—'}</td>
+    <td class="mono">${escapeHTML(s.best_baseline||'—')}</td>
+  </tr>`).join('');
+  const open=(groups.length<=4||i<2)?' open':'';
+  return `<details class="modelblock"${open}>
+    <summary>
+      <span class="famdot" style="background:${familyColor(g.family)}"></span>
+      <span class="modelname">${escapeHTML(g.model)}</span>
+      <span class="modelmeta">${g.n_shapes} shapes · ${escapeHTML(stageTxt)} · ${escapeHTML(dtypeTxt)}</span>
+      <span class="modelgeo" style="color:${geoCol}">${msGeo(g.geomean_vs_best)}</span>
+    </summary>
+    <table class="t shapet"><tr><th>stage</th><th>dtype</th><th>shape args</th><th>speedup</th><th>weight</th><th>best</th></tr>${rows}</table>
+  </details>`;
+ }).join('')+`</div>`;
+}
+function escapeHTML(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 window.__closeDrawer=()=>{$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');};
 $('#scrim').onclick=window.__closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')window.__closeDrawer();});
@@ -286,7 +349,7 @@ function footer(){
 }
 
 /* init */
-header();speedChart();catPills();renderGrid();footer();
+	header();speedChart();modelCoverageViz();catPills();renderGrid();footer();
 $('#search').addEventListener('input',e=>{q=e.target.value.toLowerCase();renderGrid();});
 $('#sort').addEventListener('change',e=>{sortBy=e.target.value;renderGrid();});
 $('#msverdict').addEventListener('change',e=>{msFilter=e.target.value;renderGrid();});
