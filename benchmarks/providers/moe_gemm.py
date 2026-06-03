@@ -298,6 +298,29 @@ class Aiter(ProviderAdapter):
     includes_allocation = True
     includes_layout_conversion = True
 
+    def __init__(self, op_type):
+        super().__init__(op_type)
+        self._wcache = {}
+
+    def _fp8_weights(self, shape, inputs):
+        """Quantize + SHUFFLE the expert weights ONCE per shape (fp8 path).
+
+        fused_moe (like aiter's own op_tests) expects the expert weights in the
+        shuffled layout: passing the raw per-token-quant layout reads back as
+        orthogonal garbage (cos~0 vs the reference). The shuffle is a one-time
+        setup, so it is cached out of the timed region (matching the FlyDSL path,
+        which also preshuffles weights once)."""
+        import torch
+        a = shape["args"]
+        key = (int(a["Dim1"]), int(a["Dim2"]), int(a["E"]), int(a["TopK"]), int(inputs["M"]))
+        if key not in self._wcache:
+            from tests.utils import pertoken_quant, shuffle_weight
+            fp8 = torch.float8_e4m3fn
+            w1_q, w1_scale = pertoken_quant(inputs["w1_fp32"], quant_dtype=fp8)
+            w2_q, w2_scale = pertoken_quant(inputs["w2_fp32"], quant_dtype=fp8)
+            self._wcache[key] = (shuffle_weight(w1_q), shuffle_weight(w2_q), w1_scale, w2_scale)
+        return self._wcache[key]
+
     def supports(self, shape):
         if shape.get("op_type") != "moe_gemm":
             return False, "aiter moe_gemm adapter only implements moe_gemm"
@@ -325,18 +348,16 @@ class Aiter(ProviderAdapter):
         if dtype in ("fp8", "fp8_e4m3"):
             from tests.utils import pertoken_quant
             fp8 = torch.float8_e4m3fn
+            # weights: quantized + shuffled once (cached); activations quantized per call
+            w1b, w2b, w1_scale, w2_scale = self._fp8_weights(shape, inputs)
             x_q, a1_scale = pertoken_quant(x_fp32, quant_dtype=fp8)
-            w1_q, w1_scale = pertoken_quant(w1_fp32, quant_dtype=fp8)
-            w2_q, w2_scale = pertoken_quant(w2_fp32, quant_dtype=fp8)
-            self.provider_detail = "aiter.fused_moe (end-to-end fused; QuantType.per_Token fp8; bf16 out; routing+sorting timed)"
-            # Without an explicit `dtype`, fused_moe infers the output dtype from the
-            # fp8 inputs and asserts ("unsupported out dtype torch.float8_e4m3fn"),
-            # which is why aiter was `failed` on every fp8 row. Request bf16 out so
-            # the baseline at least RUNS. (It is still recorded `incorrect` vs our
-            # 2-stage reference -- aiter's end-to-end routing/normalization differs;
-            # see flydsl-kernel-profiling baseline-alignment issue.)
+            self.provider_detail = ("aiter.fused_moe (end-to-end fused; QuantType.per_Token fp8; "
+                                    "shuffled weights; bf16 out; routing+sorting+x-quant timed)")
+            # Pass an explicit bf16 out (fused_moe otherwise infers fp8 from the
+            # inputs and asserts) and SHUFFLED weights (the raw layout is read as
+            # garbage). With both, aiter matches the reference to fp8 noise.
             return fused_moe(
-                x_q, w1_q, w2_q, topk_weights, topk_ids,
+                x_q, w1b, w2b, topk_weights, topk_ids,
                 activation=ActivationType.Silu, quant_type=QuantType.per_Token,
                 doweight_stage1=False, dtype=torch.bfloat16,
                 w1_scale=w1_scale, w2_scale=w2_scale, a1_scale=a1_scale)
