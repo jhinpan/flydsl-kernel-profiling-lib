@@ -8,11 +8,18 @@ import json
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parent
-data = json.loads((DOCS / "data" / "kernels.json").read_text())
-template = (DOCS / "_dashboard_template.html").read_text()
+# explicit utf-8: the template + data carry non-ASCII (Chinese i18n, ·, —), which
+# would break read_text() on a non-utf-8 default locale (e.g. Windows cp1252).
+data = json.loads((DOCS / "data" / "kernels.json").read_text(encoding="utf-8"))
+template = (DOCS / "_dashboard_template.html").read_text(encoding="utf-8")
 
 # compact JSON (no spaces) keeps the inlined payload small
 payload = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+# Neutralize sequences that would prematurely break out of the inline <script>
+# block if they ever appear in a data string (e.g. a kernel name with "</script>").
+# The backslash escapes survive JS string parsing, so the data is byte-identical
+# after the browser evaluates window.KERNEL_DATA.
+payload = (payload.replace("</", "<\\/").replace("<!--", "<\\!--").replace("<script", "<\\script"))
 html = template.replace("__KERNEL_DATA__", payload)
 
 out = DOCS / "index.html"

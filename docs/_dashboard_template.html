@@ -480,7 +480,7 @@ function donut(){
  const counts=order.map(v=>[v,(MS[v]||[]).length]).filter(([v,n])=>n>0);
  const total=counts.reduce((a,[,n])=>a+n,0)||1;
  const R=52,C=2*Math.PI*R;let off=0;
- const segs=counts.map(([v,n])=>{const len=C*n/total;const s=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${vcol(v)}" stroke-width="16" stroke-dasharray="${len-2} ${C-len+2}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" stroke-linecap="butt"/>`;off+=len;return s;}).join('');
+ const segs=counts.map(([v,n])=>{const len=C*n/total;const dash=Math.max(0,len-2);const s=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${vcol(v)}" stroke-width="16" stroke-dasharray="${dash} ${C-dash}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" stroke-linecap="butt"/>`;off+=len;return s;}).join('');
  $('#donut').innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">${segs}
    <text x="70" y="66" text-anchor="middle" font-family="${DISPF}" font-weight="800" font-size="30" fill="${PAL.ink}">${MS.kernels}</text>
    <text x="70" y="84" text-anchor="middle" font-family="${MONOF}" font-size="9" fill="${PAL.ink3}">KERNELS</text></svg>`;
@@ -568,7 +568,7 @@ function openDrawer(stem){
    <div class="cell"><div class="v">${m.n_flydsl_correct??'—'}/${m.n_shapes??'—'}</div><div class="k">${t('dr_correct')}</div></div>
    <div class="cell"><div class="v">${(m.models||[]).length}</div><div class="k">${t('dr_models')}</div></div></div>`;
   h+=modelShapeHTML(m);
-  if(m.summary_url)h+=`<div class="dlinks"><a class="dlink" href="${m.summary_url}">📊 benchmark_summary.md</a></div>`;
+  if(m.summary_url)h+=`<div class="dlinks"><a class="dlink" href="${esc(m.summary_url)}">📊 benchmark_summary.md</a></div>`;
  }
  // rocprof single-shape
  if(k.flydsl_us!=null){h+=`<h5>${t('dr_rocprof')}</h5><div class="kv">
@@ -585,7 +585,7 @@ function openDrawer(stem){
     k.top_source_lines.slice(0,7).map(s=>`<tr><td style="color:${col}">${s.pct_total}%</td><td class="dim">${esc(s.domtype||'')}</td><td style="font-size:11px">${esc(s.source||'')}</td></tr>`).join('')+`</table>`;}
  }
  if(k.top_recommendation)h+=`<h5>${t('dr_rec')}</h5><div class="note" style="border-left-color:var(--promote)">${esc(k.top_recommendation)}</div>`;
- if(k.has_bundle)h+=`<h5>${t('dr_art')}</h5><div class="dlinks"><a class="dlink" href="${k.report_url}">📄 REPORT.md</a><a class="dlink" href="${k.bundle_url}">📦 ATT bundle</a></div>`;
+ if(k.has_bundle)h+=`<h5>${t('dr_art')}</h5><div class="dlinks"><a class="dlink" href="${esc(k.report_url)}">📄 REPORT.md</a><a class="dlink" href="${esc(k.bundle_url)}">📦 ATT bundle</a></div>`;
  h+='</div>';
  $('#drawer-content').innerHTML=h;$('#drawer').classList.add('on');$('#scrim').classList.add('on');
 }
