@@ -1,4 +1,4 @@
-{
+window.KERNEL_DATA = {
   "provenance": {
     "flydsl_version": "0.1.9.dev594",
     "flydsl_commit": "18c5a7ed",
@@ -12340,4 +12340,4 @@
     ],
     "metric": "kernel-only cold-cache (CUDA-graph + L2 flush), geomean of best-correct-baseline / flydsl"
   }
-}
+};
