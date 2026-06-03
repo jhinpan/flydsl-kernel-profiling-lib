@@ -2151,7 +2151,7 @@ window.KERNEL_DATA = {
         "n_shapes": 159,
         "n_flydsl_correct": 153,
         "geomean_vs_best": 0.881,
-        "weighted_geomean": null,
+        "weighted_geomean": 0.819,
         "models": [
           "DeepSeek-R1",
           "GPT-OSS 120B",

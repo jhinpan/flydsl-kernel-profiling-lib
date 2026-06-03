@@ -8,11 +8,11 @@ correct baseline, #shapes, #flydsl-correct, weighted geomean, models covered,
 verdict) and a link to its benchmark_summary.md. Multishape-only kernels (no
 rocprof record) are appended as new records. Rewrites kernels.json + data.js.
 """
-import json, math, os, sys
-
-REPO = "/sgl-workspace/flydsl-kernel-profiling"
-DOCS = f"{REPO}/docs"
-EX = f"{REPO}/benchmarks/examples"
+import argparse
+import json
+import math
+import sys
+from pathlib import Path
 
 # dashboard `example` name  ->  multishape op_type (renames where they differ)
 MS_OPS = {
@@ -48,11 +48,27 @@ def _t(r):
     return r.get("graph_median_us") or r.get("median_us")
 
 
-def compute_ms(op):
-    path = f"{EX}/{op}/benchmark_results.jsonl"
-    if not os.path.exists(path):
+def _read_jsonl(path):
+    with path.open(encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def _shape_weight(shape):
+    """baseline_time_weight wins over traffic_weight, matching reports.analysis."""
+    w = shape.get("weight") or {}
+    if w.get("baseline_time_weight") is not None:
+        return w.get("baseline_time_weight")
+    return w.get("traffic_weight")
+
+
+def compute_ms(op, examples_dir, github_base):
+    op_dir = examples_dir / op
+    result_path = op_dir / "benchmark_results.jsonl"
+    if not result_path.exists():
         return None
-    rows = [json.loads(l) for l in open(path)]
+    rows = _read_jsonl(result_path)
+    ledger_path = op_dir / "shape_ledger.jsonl"
+    ledger = {r["shape_id"]: r for r in _read_jsonl(ledger_path)} if ledger_path.exists() else {}
     by = {}
     for r in rows:
         by.setdefault(r["shape_id"], []).append(r)
@@ -75,9 +91,7 @@ def compute_ms(op):
             continue
         ratio = min(bases) / ft  # <1 => flydsl slower than best correct baseline
         ratios.append(ratio)
-        w = 0.0
-        for r in rs:  # use the ledger traffic_weight if present (live-trace kernels)
-            w = (r.get("weight") or {}).get("traffic_weight") or w
+        w = _shape_weight(ledger.get(sid, {}))
         if w:
             wlog += w * math.log(ratio)
             wsum += w
@@ -85,7 +99,7 @@ def compute_ms(op):
         return {"n_shapes": len(by), "n_flydsl_correct": n_fly_ok,
                 "geomean_vs_best": None, "weighted_geomean": None, "vs_best_n": 0,
                 "models": sorted(models), "verdict": "blocked",
-                "summary_url": f"{GH}/{op}/benchmark_summary.md"}
+                "summary_url": f"{github_base}/{op}/benchmark_summary.md"}
     g = math.exp(sum(math.log(x) for x in ratios) / len(ratios))
     wg = math.exp(wlog / wsum) if wsum > 0 else None
     # geomean >10x almost always means the only *correct* baseline left is a slow
@@ -101,19 +115,35 @@ def compute_ms(op):
             "weighted_geomean": round(wg, 3) if wg else None,
             "models": sorted(models), "verdict": verdict,
             "vs_best_n": len(ratios),
-            "summary_url": f"{GH}/{op}/benchmark_summary.md"}
+            "summary_url": f"{github_base}/{op}/benchmark_summary.md"}
 
 
-def main():
-    kp = f"{DOCS}/data/kernels.json"
-    data = json.load(open(kp))
+def parse_args(argv=None):
+    default_repo = Path(__file__).resolve().parents[1]
+    ap = argparse.ArgumentParser(description="Merge multi-shape benchmark results into the dashboard dataset")
+    ap.add_argument("--repo-root", type=Path, default=default_repo,
+                    help="repository root; defaults to this script's parent repo")
+    ap.add_argument("--github-base", default=GH,
+                    help="base URL for benchmark_summary.md links")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    repo = args.repo_root.resolve()
+    docs_dir = repo / "docs"
+    examples_dir = repo / "benchmarks" / "examples"
+
+    kp = docs_dir / "data" / "kernels.json"
+    with kp.open(encoding="utf-8") as f:
+        data = json.load(f)
     kernels = data["kernels"]
     by_example = {k.get("example"): k for k in kernels}
     attached, added = 0, 0
     seen_ops = set()
 
     for ex_name, op in MS_OPS.items():
-        ms = compute_ms(op)
+        ms = compute_ms(op, examples_dir, args.github_base)
         if ms is None:
             continue
         seen_ops.add(op)
@@ -125,7 +155,7 @@ def main():
             kernels.append({
                 "name": PRETTY.get(op, op), "test": f"test_{op}.py", "stem": f"test_{op}",
                 "example": op, "op_category": CAT.get(op, "other"),
-                "report_url": ms["summary_url"], "bundle_url": f"{GH}/{op}/",
+                "report_url": ms["summary_url"], "bundle_url": f"{args.github_base}/{op}/",
                 "flydsl_us": None, "baseline_us": None, "speedup_vs_baseline": None,
                 "verdict": None, "has_bundle": False, "multishape": ms,
             })
@@ -146,8 +176,9 @@ def main():
     }
     data["summary"]["total"] = len(kernels)
 
-    json.dump(data, open(kp, "w"), indent=2)
-    with open(f"{DOCS}/data/data.js", "w") as f:
+    with kp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    with (docs_dir / "data" / "data.js").open("w", encoding="utf-8") as f:
         f.write("window.KERNEL_DATA = ")
         json.dump(data, f, indent=2)
         f.write(";\n")
