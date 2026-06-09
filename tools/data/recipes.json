@@ -214,24 +214,25 @@
     ]
   },
   {
-    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_flash_attn_func.py",
+    "test_file": "/sgl-workspace/FlyDSL-lab/tests/kernels/test_flash_attn_fwd.py",
     "kernels": [
-      "flash_attn_func_kernel"
+      "flash_attn"
     ],
+    "kernel_name_hint": "flash_attn",
     "arch": "gfx950",
     "op_category": "attention",
     "runnable_standalone": true,
-    "invocation": "python tests/kernels/test_flash_attn_func.py --batch 1 --seq_len 128 --num_heads 8 --head_dim 128 --warmup 5 --iters 20",
+    "invocation": "python tests/kernels/test_flash_attn_fwd.py --batch 1 --seq_len 2048 --num_heads 16 --head_dim 128 --causal --warmup 5 --iters 30",
     "prints_gpu_us": true,
     "aiter_comparable": "aiter.mha_fwd (CK backend) or aiter.fmha_v3_fwd (ASM backend, bf16 only)",
     "ck_baseline_candidate": "aiter.mha_fwd with softmax_scale=1/sqrt(head_dim), causal=True",
     "needs_multi_gpu": false,
     "confidence": "high",
     "metric_lines": [
-      "[Perf] FlyDSL flash_attn_func gpu: <time> us (from run_perftest profiler)",
+      "[Perf] FlyDSL flash_attn gpu: <time> us (from run_perftest profiler)",
       "tflops = <calculated from flops / (us * 1e-6) / 1e12>"
     ],
-    "notes": "Kernel timing: run_perftest returns (data, us) where us is microseconds from torch.profiler device_time_sum. Test harness calculates TFLOPS as flops / (us * 1e-6) / 1e12 where flops = 4.0*S*s_eff*D*H*B and s_eff = S/2 (causal) or S (non-causal). Smallest recommended shape is (1,128,8,128) to minimize JIT compile time while remaining representative of attention workload. Shape constraints: seq_len % 128 == 0, head_dim % 32 == 0 and >= 64. Test supports --causal / --no-causal flags; default runs both causal and non-causal. AIter comparison available with --compare flag (requires aiter package). Kernel JIT compiles on first invocation with build_flash_attn_func_module; uses custom LLVM tools if available (gfx950+ optimized path). Device kernel flash_attn_func_kernel defined at @flyc.kernel in flash_attn_func.py:257. Kernel entry: build_flash_attn_func_module returns exe callable with signature exe(Q_flat, K_flat, V_flat, O_flat, batch_size, seq_len). Expected kernel name in rocprofv3 kernel_include_regex: kernel substring contains 'flash_attn_func' or 'amdgcn.kernel' target. For gfx950 specifically: uses MFMA32 (K=16), HW transpose LDS read (ds_read_tr16_b64), 160KB LDS. Verify with HIP_VISIBLE_DEVICES=0 to ensure single GPU capture."
+    "notes": "Updated 2026-06-09: the test was renamed test_flash_attn_func.py -> test_flash_attn_fwd.py; the old recipe pointed at the removed file (broken capture). Shape is set via the test's own CLI args (--batch/--seq_len/--num_heads/--head_dim/--causal), NOT ROCDSL_*_SHAPES; passing any of them runs a single config. Default here is a representative (1,2048,16,128) causal MHA. Constraints: seq_len % 128 == 0, head_dim % 32 == 0 and >= 64. On gfx950 the JIT kernel discovered is flash_attn_dualwave_swp_gfx950_kernel (dual-wave software-pipelined; source kernels/flash_attn_gfx950.py); flash_attn_generic.py is the portable path. Timing: run_perftest returns (data, us) from torch.profiler device_time_sum; TFLOPS = flops/(us*1e-6)/1e12, flops = 4*S*s_eff*D*H*B, s_eff = S/2 (causal) or S. Capture with HIP_VISIBLE_DEVICES=0; arch_vgpr ~249 caps occupancy at ~4 waves/CU."
   },
   {
     "test_file": "tests/kernels/test_hgemm_splitk.py",
