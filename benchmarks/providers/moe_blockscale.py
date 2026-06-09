@@ -232,14 +232,19 @@ class FlyDSL(ProviderAdapter):
         # x_q is the per-token fp8 of x (so all providers see identical x bits);
         # then re-block-quantize per (1x128) group for the kernel.
         x_q, _x_scale = pertoken_quant(x_fp32, quant_dtype=fp8_dtype)
+        # Block-quantize the DEQUANTIZED x (x_q * scale), NOT the raw fp8 codes.
+        # Using the codes (~448 magnitude) drops the ~0.2 per-token scale, inflating
+        # the activation ~1/scale (~2000x); the stage1 intermediate then overflows
+        # f16 to NaN for both FlyDSL and aiter's CK kernel. See ROCm/FlyDSL#642.
+        x_dq = x_q.float() * _x_scale
         if _has_aiter:
             a1_bq, a1_scale_fly = per_group_quant_hip(
-                x_q.to(torch.bfloat16), quant_dtype=fp8_dtype,
+                x_dq.to(torch.bfloat16), quant_dtype=fp8_dtype,
                 group_size=scale_blk_k, transpose_scale=True)
             a1_scale_fly = a1_scale_fly.view(-1).contiguous()
         else:
             a1_bq, a1_bscale = pertoken_quant(
-                x_q.float().view(-1, model_dim // scale_blk_k, scale_blk_k),
+                x_dq.view(-1, model_dim // scale_blk_k, scale_blk_k),
                 quant_dtype=fp8_dtype)
             a1_bq = a1_bq.view(-1, model_dim)
             a1_bscale = a1_bscale.squeeze(-1)
@@ -460,9 +465,12 @@ class Aiter(ProviderAdapter):
         w1_bq_shuf = shuffle_weight(w1_bq, layout=(16, 16))
         w2_bq_shuf = shuffle_weight(w2_bq, layout=(16, 16))
 
-        x_q, _ = pertoken_quant(x_fp32, quant_dtype=fp8_dtype)
+        # block-quantize the DEQUANTIZED x (x_q * scale), not the raw fp8 codes --
+        # the codes (~448) drop the ~0.2 per-token scale and overflow f16 to NaN
+        # (same bug as the FlyDSL path; ROCm/FlyDSL#642).
+        x_q, x_scale = pertoken_quant(x_fp32, quant_dtype=fp8_dtype)
         a1_bq, a1_scale_fly = per_group_quant_hip(
-            x_q.to(torch.bfloat16), quant_dtype=fp8_dtype,
+            (x_q.float() * x_scale).to(torch.bfloat16), quant_dtype=fp8_dtype,
             group_size=scale_blk_k, transpose_scale=True)
         # fmoe_fp8_blockscale_g1u1 expects a1_scale as [nblk_k_w1, tokens] contiguous.
         a1_scale_aiter = a1_scale_fly.view(nblk_k_w1, tokens)
