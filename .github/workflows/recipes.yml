@@ -1,0 +1,16 @@
+name: validate-recipes
+on:
+  push: { paths: ["tools/data/recipes.json", "tests/**", ".github/workflows/recipes.yml"] }
+  pull_request: { paths: ["tools/data/recipes.json", "tests/**", ".github/workflows/recipes.yml"] }
+jobs:
+  recipes:
+    # Structural validation of tools/data/recipes.json (required keys, the invocation
+    # references its test_file, …). The test_file-existence check skips here — it needs
+    # the FlyDSL worktree — and runs where that worktree is present.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pytest
+      - run: pytest tests/test_recipes.py -q
