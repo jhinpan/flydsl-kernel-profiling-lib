@@ -1,7 +1,7 @@
 name: validate-recipes
 on:
   push: { paths: ["tools/data/recipes.json", "tests/**", ".github/workflows/recipes.yml"] }
-  pull_request: { paths: ["tools/data/recipes.json", "tests/**"] }
+  pull_request: { paths: ["tools/data/recipes.json", "tests/**", ".github/workflows/recipes.yml"] }
 jobs:
   recipes:
     # Structural validation of tools/data/recipes.json (required keys, the invocation
@@ -13,4 +13,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install pytest
-      - run: pytest tests/ -q
+      - run: pytest tests/test_recipes.py -q
