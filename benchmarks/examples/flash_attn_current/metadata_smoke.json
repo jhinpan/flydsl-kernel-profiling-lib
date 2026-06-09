@@ -1,0 +1,13 @@
+{
+  "flydsl_head": "48170e30482daa0117eae4951106a4208f99f4b1",
+  "flydsl_lab": "/sgl-workspace/FlyDSL-lab",
+  "gpu": "AMD Instinct MI350X",
+  "gpu_count_visible": 1,
+  "hip_visible_devices": "1",
+  "host": "nimrodmi350",
+  "profiling_repo_head": "ec880afff62518675630ef10b913b9bb06cd5611",
+  "python": "3.10.12",
+  "rocm_arch": "gfx950",
+  "timestamp_utc": "2026-06-08T16:15:23Z",
+  "torch": "2.9.1+rocm7.2.0.git7e1940d4"
+}

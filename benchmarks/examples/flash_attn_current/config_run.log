@@ -1,0 +1,55 @@
+{"flydsl_head": "48170e30482daa0117eae4951106a4208f99f4b1", "flydsl_lab": "/sgl-workspace/FlyDSL-lab", "gpu": "AMD Instinct MI350X", "gpu_count_visible": 1, "hip_visible_devices": "3", "host": "nimrodmi350", "profiling_repo_head": "ec880afff62518675630ef10b913b9bb06cd5611", "python": "3.10.12", "rocm_arch": "gfx950", "timestamp_utc": "2026-06-08T16:20:55Z", "torch": "2.9.1+rocm7.2.0.git7e1940d4"}
+Running suite=config shapes=2 providers=['generic_m128', 'generic_m128_n32', 'generic_m128_n128', 'generic_m256', 'dualwave', 'dualwave_no_lazy', 'dualwave_no_setprio', 'dualwave_no_stagger', 'auto', 'aiter_ck', 'aiter_asm']
+[1/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 103.3 us 332.6 TFLOPS correctness=pass
+[2/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m128_n32
+  ok 102.2 us 336.1 TFLOPS correctness=pass
+[3/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m128_n128
+  ok 94.3 us 364.4 TFLOPS correctness=pass
+[4/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 111.4 us 308.4 TFLOPS correctness=pass
+[5/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 116.8 us 294.1 TFLOPS correctness=pass
+[6/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=dualwave_no_lazy
+  ok 116.5 us 294.9 TFLOPS correctness=pass
+[7/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=dualwave_no_setprio
+  ok 115.2 us 298.3 TFLOPS correctness=pass
+[8/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=dualwave_no_stagger
+  ok 117.5 us 292.3 TFLOPS correctness=pass
+[9/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=auto
+  ok 112.0 us 306.6 TFLOPS correctness=pass
+[10/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=aiter_ck
+[aiter] import [module_aiter_core] under /sgl-workspace/aiter/aiter/jit/module_aiter_core.so
+[aiter] import [mha_fwd_bf16_nbias_mask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/mha_fwd_bf16_nbias_mask_lse_ndropout_nqscale.so
+[aiter] type hints mismatch, override to --> mha_fwd(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, sink_size: int, return_softmax_lse: bool, return_dropout_randval: bool, cu_seqlens_q: Optional[torch.Tensor] = None, cu_seqlens_kv: Optional[torch.Tensor] = None, out: Optional[torch.Tensor] = None, bias: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, q_descale: Optional[torch.Tensor] = None, k_descale: Optional[torch.Tensor] = None, v_descale: Optional[torch.Tensor] = None, sink_ptr: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+  ok 80.9 us 424.9 TFLOPS correctness=pass
+[11/22] config_diag_2048 B=1 S=2048 H=32/32 D=128 bf16 causal provider=aiter_asm
+[aiter] import [module_fmha_v3_fwd] under /sgl-workspace/aiter/aiter/jit/module_fmha_v3_fwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_fwd(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, return_softmax_lse: bool, return_dropout_randval: bool, how_v3_bf16_cvt: int, out: Optional[torch.Tensor] = None, bias: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, q_descale: Optional[torch.Tensor] = None, k_descale: Optional[torch.Tensor] = None, v_descale: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter26fmha_fwd_hd128_bf16_causalE hsaco: /sgl-workspace/aiter/hsa//gfx950/fmha_v3_fwd/fwd_hd128_bf16_causal.co
+  ok 98.2 us 349.9 TFLOPS correctness=pass
+[12/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=generic_m128
+  ok 7847.9 us 560.4 TFLOPS correctness=not_checked
+[13/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=generic_m128_n32
+  ok 8354.3 us 526.4 TFLOPS correctness=not_checked
+[14/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=generic_m128_n128
+  ok 7862.1 us 559.4 TFLOPS correctness=not_checked
+[15/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=generic_m256
+  ok 8038.7 us 547.1 TFLOPS correctness=not_checked
+[16/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=dualwave
+  ok 4481.5 us 981.4 TFLOPS correctness=not_checked
+[17/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=dualwave_no_lazy
+  ok 5132.0 us 857.0 TFLOPS correctness=not_checked
+[18/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=dualwave_no_setprio
+  ok 4456.0 us 987.0 TFLOPS correctness=not_checked
+[19/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=dualwave_no_stagger
+  ok 5107.3 us 861.1 TFLOPS correctness=not_checked
+[20/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=auto
+  ok 4483.6 us 980.9 TFLOPS correctness=not_checked
+[21/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=aiter_ck
+  ok 6332.0 us 694.6 TFLOPS correctness=not_checked
+[22/22] config_gqa_8192 B=4 S=8192 H=64/8 D=128 bf16 causal provider=aiter_asm
+  ok 9162.7 us 480.0 TFLOPS correctness=not_checked
+Wrote benchmarks/examples/flash_attn_current/results_config.jsonl
+Wrote benchmarks/examples/flash_attn_current/results_config.csv
+Wrote benchmarks/examples/flash_attn_current/REPORT_config.md

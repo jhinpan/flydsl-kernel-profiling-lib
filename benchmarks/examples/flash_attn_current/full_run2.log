@@ -1,0 +1,419 @@
+{"flydsl_head": "48170e30482daa0117eae4951106a4208f99f4b1", "flydsl_lab": "/sgl-workspace/FlyDSL-lab", "gpu": "AMD Instinct MI350X", "gpu_count_visible": 1, "hip_visible_devices": "2", "host": "nimrodmi350", "profiling_repo_head": "ec880afff62518675630ef10b913b9bb06cd5611", "python": "3.10.12", "rocm_arch": "gfx950", "timestamp_utc": "2026-06-08T16:17:51Z", "torch": "2.9.1+rocm7.2.0.git7e1940d4"}
+Running suite=full shapes=33 providers=['generic_m128', 'generic_m256', 'dualwave', 'auto', 'aiter_ck', 'aiter_asm']
+[1/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 86.7 us 1.5 TFLOPS correctness=pass
+[2/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 84.6 us 1.6 TFLOPS correctness=pass
+[3/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[4/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=auto
+  ok 86.4 us 1.6 TFLOPS correctness=pass
+[5/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=aiter_ck
+[aiter] import [module_aiter_core] under /sgl-workspace/aiter/aiter/jit/module_aiter_core.so
+[aiter] import [mha_fwd_bf16_nbias_mask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/mha_fwd_bf16_nbias_mask_lse_ndropout_nqscale.so
+[aiter] type hints mismatch, override to --> mha_fwd(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, sink_size: int, return_softmax_lse: bool, return_dropout_randval: bool, cu_seqlens_q: Optional[torch.Tensor] = None, cu_seqlens_kv: Optional[torch.Tensor] = None, out: Optional[torch.Tensor] = None, bias: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, q_descale: Optional[torch.Tensor] = None, k_descale: Optional[torch.Tensor] = None, v_descale: Optional[torch.Tensor] = None, sink_ptr: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+  ok 12.3 us 10.9 TFLOPS correctness=pass
+[6/198] boundary_B1_S128_H32 B=1 S=128 H=32/32 D=128 bf16 causal provider=aiter_asm
+[aiter] import [module_fmha_v3_fwd] under /sgl-workspace/aiter/aiter/jit/module_fmha_v3_fwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_fwd(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, return_softmax_lse: bool, return_dropout_randval: bool, how_v3_bf16_cvt: int, out: Optional[torch.Tensor] = None, bias: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, q_descale: Optional[torch.Tensor] = None, k_descale: Optional[torch.Tensor] = None, v_descale: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter26fmha_fwd_hd128_bf16_causalE hsaco: /sgl-workspace/aiter/hsa//gfx950/fmha_v3_fwd/fwd_hd128_bf16_causal.co
+  ok 10.8 us 12.5 TFLOPS correctness=pass
+[7/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 82.3 us 6.5 TFLOPS correctness=pass
+[8/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 82.6 us 6.5 TFLOPS correctness=pass
+[9/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[10/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=auto
+  ok 84.3 us 6.4 TFLOPS correctness=pass
+[11/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 12.2 us 44.1 TFLOPS correctness=pass
+[12/198] boundary_B1_S256_H32 B=1 S=256 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 13.2 us 40.8 TFLOPS correctness=pass
+[13/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 82.7 us 14.6 TFLOPS correctness=pass
+[14/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 82.6 us 14.6 TFLOPS correctness=pass
+[15/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[16/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=auto
+  ok 82.6 us 14.6 TFLOPS correctness=pass
+[17/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 14.9 us 80.9 TFLOPS correctness=pass
+[18/198] boundary_B1_S384_H32 B=1 S=384 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 25.0 us 48.3 TFLOPS correctness=pass
+[19/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 81.1 us 26.5 TFLOPS correctness=pass
+[20/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 80.8 us 26.6 TFLOPS correctness=pass
+[21/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 108.3 us 19.8 TFLOPS correctness=pass
+[22/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=auto
+  ok 108.6 us 19.8 TFLOPS correctness=pass
+[23/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 18.1 us 118.5 TFLOPS correctness=pass
+[24/198] boundary_B1_S512_H32 B=1 S=512 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 29.3 us 73.3 TFLOPS correctness=pass
+[25/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 80.8 us 106.3 TFLOPS correctness=pass
+[26/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 81.2 us 105.8 TFLOPS correctness=pass
+[27/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 108.2 us 79.4 TFLOPS correctness=pass
+[28/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=auto
+  ok 108.7 us 79.0 TFLOPS correctness=pass
+[29/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 35.7 us 240.9 TFLOPS correctness=pass
+[30/198] boundary_B1_S1024_H32 B=1 S=1024 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 44.1 us 194.9 TFLOPS correctness=pass
+[31/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 88.8 us 386.9 TFLOPS correctness=pass
+[32/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 108.0 us 318.1 TFLOPS correctness=pass
+[33/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 109.1 us 315.0 TFLOPS correctness=pass
+[34/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=auto
+  ok 108.9 us 315.4 TFLOPS correctness=pass
+[35/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 70.3 us 488.5 TFLOPS correctness=pass
+[36/198] boundary_B1_S2048_H32 B=1 S=2048 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 91.9 us 373.9 TFLOPS correctness=pass
+[37/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 272.6 us 504.1 TFLOPS correctness=not_checked
+[38/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 291.3 us 471.8 TFLOPS correctness=not_checked
+[39/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 177.2 us 775.6 TFLOPS correctness=not_checked
+[40/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=auto
+  ok 172.3 us 797.8 TFLOPS correctness=not_checked
+[41/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 211.4 us 650.2 TFLOPS correctness=not_checked
+[42/198] boundary_B1_S4096_H32 B=1 S=4096 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 306.9 us 447.9 TFLOPS correctness=not_checked
+[43/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 2001.9 us 549.2 TFLOPS correctness=not_checked
+[44/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 2094.4 us 525.0 TFLOPS correctness=not_checked
+[45/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 1234.0 us 891.0 TFLOPS correctness=not_checked
+[46/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=auto
+  ok 1233.9 us 891.1 TFLOPS correctness=not_checked
+[47/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 1540.2 us 713.9 TFLOPS correctness=not_checked
+[48/198] boundary_B2_S8192_H32 B=2 S=8192 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 2405.1 us 457.1 TFLOPS correctness=not_checked
+[49/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 79.4 us 27.1 TFLOPS correctness=pass
+[50/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 81.3 us 26.4 TFLOPS correctness=pass
+[51/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[52/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=auto
+  ok 82.8 us 25.9 TFLOPS correctness=pass
+[53/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 23.3 us 92.0 TFLOPS correctness=pass
+[54/198] flydsl_default_B8_S128_H64_Hkv64 B=8 S=128 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 21.4 us 100.1 TFLOPS correctness=pass
+[55/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 81.0 us 106.0 TFLOPS correctness=pass
+[56/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 80.9 us 106.2 TFLOPS correctness=pass
+[57/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[58/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=auto
+  ok 81.8 us 105.0 TFLOPS correctness=pass
+[59/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 45.3 us 189.7 TFLOPS correctness=pass
+[60/198] flydsl_default_B8_S256_H64_Hkv64 B=8 S=256 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 39.6 us 217.0 TFLOPS correctness=pass
+[61/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 81.9 us 29.5 TFLOPS correctness=pass
+[62/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 81.2 us 29.8 TFLOPS correctness=pass
+[63/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=dualwave
+  unsupported: dualwave dispatcher contract is S>=384 and S%256==0
+[64/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=auto
+  ok 81.6 us 29.6 TFLOPS correctness=pass
+[65/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 18.9 us 127.8 TFLOPS correctness=pass
+[66/198] flydsl_default_B1_S384_H64_Hkv64 B=1 S=384 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 27.1 us 89.2 TFLOPS correctness=pass
+[67/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 81.4 us 211.0 TFLOPS correctness=pass
+[68/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 81.4 us 211.2 TFLOPS correctness=pass
+[69/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=dualwave
+  ok 108.2 us 158.8 TFLOPS correctness=pass
+[70/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=auto
+  ok 110.5 us 155.5 TFLOPS correctness=pass
+[71/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 46.6 us 368.8 TFLOPS correctness=pass
+[72/198] flydsl_default_B1_S1024_H64_Hkv64 B=1 S=1024 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 61.7 us 278.3 TFLOPS correctness=pass
+[73/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 154.7 us 444.2 TFLOPS correctness=not_checked
+[74/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 166.1 us 413.7 TFLOPS correctness=not_checked
+[75/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=dualwave
+  ok 111.5 us 616.5 TFLOPS correctness=not_checked
+[76/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=auto
+  ok 111.1 us 618.4 TFLOPS correctness=not_checked
+[77/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 121.1 us 567.2 TFLOPS correctness=not_checked
+[78/198] flydsl_default_B1_S2048_H64_Hkv64 B=1 S=2048 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 186.8 us 367.9 TFLOPS correctness=not_checked
+[79/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 531.8 us 516.9 TFLOPS correctness=not_checked
+[80/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 547.6 us 501.9 TFLOPS correctness=not_checked
+[81/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=dualwave
+  ok 333.5 us 824.1 TFLOPS correctness=not_checked
+[82/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=auto
+  ok 334.0 us 823.1 TFLOPS correctness=not_checked
+[83/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 409.0 us 672.1 TFLOPS correctness=not_checked
+[84/198] flydsl_default_B1_S4096_H64_Hkv64 B=1 S=4096 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 617.0 us 445.5 TFLOPS correctness=not_checked
+[85/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=generic_m128
+  ok 8045.7 us 546.6 TFLOPS correctness=not_checked
+[86/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=generic_m256
+  ok 7931.9 us 554.5 TFLOPS correctness=not_checked
+[87/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=dualwave
+  ok 4904.0 us 896.8 TFLOPS correctness=not_checked
+[88/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=auto
+  ok 4908.5 us 896.0 TFLOPS correctness=not_checked
+[89/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=aiter_ck
+  ok 6467.1 us 680.1 TFLOPS correctness=not_checked
+[90/198] flydsl_default_B4_S8192_H64_Hkv64 B=4 S=8192 H=64/64 D=128 bf16 causal provider=aiter_asm
+  ok 9596.7 us 458.3 TFLOPS correctness=not_checked
+[91/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=generic_m128
+  ok 7324.9 us 600.4 TFLOPS correctness=not_checked
+[92/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=generic_m256
+  ok 7742.9 us 568.0 TFLOPS correctness=not_checked
+[93/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=dualwave
+  ok 4771.6 us 921.7 TFLOPS correctness=not_checked
+[94/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=auto
+  ok 4774.0 us 921.3 TFLOPS correctness=not_checked
+[95/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=aiter_ck
+  ok 6342.1 us 693.5 TFLOPS correctness=not_checked
+[96/198] flydsl_default_B16_S8192_H16_Hkv16 B=16 S=8192 H=16/16 D=128 bf16 causal provider=aiter_asm
+  ok 9639.0 us 456.3 TFLOPS correctness=not_checked
+[97/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=generic_m128
+  ok 7221.9 us 609.0 TFLOPS correctness=not_checked
+[98/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=generic_m256
+  ok 7874.0 us 558.6 TFLOPS correctness=not_checked
+[99/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=dualwave
+  ok 4835.3 us 909.6 TFLOPS correctness=not_checked
+[100/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=auto
+  ok 4817.9 us 912.8 TFLOPS correctness=not_checked
+[101/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=aiter_ck
+  ok 6335.3 us 694.2 TFLOPS correctness=not_checked
+[102/198] flydsl_default_B32_S8192_H8_Hkv8 B=32 S=8192 H=8/8 D=128 bf16 causal provider=aiter_asm
+  ok 9652.1 us 455.7 TFLOPS correctness=not_checked
+[103/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=generic_m128
+  ok 32396.6 us 543.0 TFLOPS correctness=not_checked
+[104/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=generic_m256
+  ok 31864.3 us 552.1 TFLOPS correctness=not_checked
+[105/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=dualwave
+  ok 18546.0 us 948.6 TFLOPS correctness=not_checked
+[106/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=auto
+  ok 18555.0 us 948.1 TFLOPS correctness=not_checked
+[107/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=aiter_ck
+  ok 25472.4 us 690.6 TFLOPS correctness=not_checked
+[108/198] flydsl_default_B16_S8192_H64_Hkv8 B=16 S=8192 H=64/8 D=128 bf16 causal provider=aiter_asm
+  ok 38768.2 us 453.8 TFLOPS correctness=not_checked
+[109/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=generic_m128
+  ok 1052.5 us 522.3 TFLOPS correctness=not_checked
+[110/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=generic_m256
+  ok 1096.9 us 501.2 TFLOPS correctness=not_checked
+[111/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=dualwave
+  ok 600.6 us 915.3 TFLOPS correctness=not_checked
+[112/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=auto
+  ok 605.5 us 908.0 TFLOPS correctness=not_checked
+[113/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=aiter_ck
+  ok 780.4 us 704.5 TFLOPS correctness=not_checked
+[114/198] llama3_8b_prefill B=1 S=8192 H=32/8 D=128 bf16 causal provider=aiter_asm
+  ok 1187.1 us 463.1 TFLOPS correctness=not_checked
+[115/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=generic_m128
+  ok 1017.7 us 540.2 TFLOPS correctness=not_checked
+[116/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=generic_m256
+  ok 1060.9 us 518.2 TFLOPS correctness=not_checked
+[117/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=dualwave
+  ok 648.2 us 848.1 TFLOPS correctness=not_checked
+[118/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=auto
+  ok 654.0 us 840.6 TFLOPS correctness=not_checked
+[119/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=aiter_ck
+  ok 826.8 us 664.9 TFLOPS correctness=not_checked
+[120/198] llama3_8b_batch B=4 S=4096 H=32/8 D=128 bf16 causal provider=aiter_asm
+  ok 1290.4 us 426.0 TFLOPS correctness=not_checked
+[121/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=generic_m128
+  ok 2038.0 us 539.5 TFLOPS correctness=not_checked
+[122/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=generic_m256
+  ok 2082.4 us 528.0 TFLOPS correctness=not_checked
+[123/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=dualwave
+  ok 1182.8 us 929.6 TFLOPS correctness=not_checked
+[124/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=auto
+  ok 1188.3 us 925.3 TFLOPS correctness=not_checked
+[125/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=aiter_ck
+  ok 1596.6 us 688.7 TFLOPS correctness=not_checked
+[126/198] llama3_70b_prefill B=1 S=8192 H=64/8 D=128 bf16 causal provider=aiter_asm
+  ok 2424.8 us 453.4 TFLOPS correctness=not_checked
+[127/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=generic_m128
+  ok 2096.1 us 524.5 TFLOPS correctness=not_checked
+[128/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=generic_m256
+  ok 2191.4 us 501.7 TFLOPS correctness=not_checked
+[129/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=dualwave
+  ok 1266.2 us 868.3 TFLOPS correctness=not_checked
+[130/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=auto
+  ok 1261.1 us 871.9 TFLOPS correctness=not_checked
+[131/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=aiter_ck
+  ok 1697.4 us 647.8 TFLOPS correctness=not_checked
+[132/198] llama3_70b_batch B=4 S=4096 H=64/8 D=128 bf16 causal provider=aiter_asm
+  ok 2574.7 us 427.0 TFLOPS correctness=not_checked
+[133/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=generic_m128
+  ok 902.1 us 533.2 TFLOPS correctness=not_checked
+[134/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=generic_m256
+  ok 952.5 us 505.0 TFLOPS correctness=not_checked
+[135/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=dualwave
+  ok 576.8 us 833.9 TFLOPS correctness=not_checked
+[136/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=auto
+  ok 574.4 us 837.4 TFLOPS correctness=not_checked
+[137/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=aiter_ck
+  ok 729.7 us 659.2 TFLOPS correctness=not_checked
+[138/198] qwen_gqa_h28 B=4 S=4096 H=28/4 D=128 bf16 causal provider=aiter_asm
+  ok 1105.5 us 435.1 TFLOPS correctness=not_checked
+[139/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=generic_m128
+  ok 1012.0 us 543.2 TFLOPS correctness=not_checked
+[140/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=generic_m256
+  ok 1060.5 us 518.4 TFLOPS correctness=not_checked
+[141/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=dualwave
+  ok 626.6 us 877.4 TFLOPS correctness=not_checked
+[142/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=auto
+  ok 628.9 us 874.1 TFLOPS correctness=not_checked
+[143/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=aiter_ck
+  ok 843.1 us 652.1 TFLOPS correctness=not_checked
+[144/198] wide_h128 B=1 S=4096 H=128/8 D=128 bf16 causal provider=aiter_asm
+  ok 1230.1 us 446.9 TFLOPS correctness=not_checked
+[145/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=generic_m128
+  ok 114.1 us 301.0 TFLOPS correctness=not_checked
+[146/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=generic_m256
+  unsupported: skipped after observed GPU memory fault for generic_m256 with D<128
+[147/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=dualwave
+  unsupported: dualwave is D=128 only
+[148/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=auto
+  unsupported: skipped: auto would dispatch to generic_m256, which faulted for D<128
+[149/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=aiter_ck
+  ok 83.3 us 412.6 TFLOPS correctness=not_checked
+[150/198] D64_causal B=2 S=2048 H=32/32 D=64 bf16 causal provider=aiter_asm
+[aiter WARNING] unsupported condition in fwd_v3!!! data type: bf16
+  failed: invalid argument for fmha_fwd
+[151/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=generic_m128
+  ok 162.8 us 422.0 TFLOPS correctness=not_checked
+[152/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=generic_m256
+  unsupported: skipped after observed GPU memory fault for generic_m256 with D<128
+[153/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=dualwave
+  unsupported: dualwave is D=128 only
+[154/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=auto
+  unsupported: skipped: auto would dispatch to generic_m256, which faulted for D<128
+[155/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=aiter_ck
+[aiter] [pid=1017910 pname=MainProcess] start build [mha_fwd_bf16_nbias_nmask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/build/mha_fwd_bf16_nbias_nmask_lse_ndropout_nqscale
+[aiter] Current hipcc not support: -mllvm -amdgpu-coerce-illegal-types=1, skip it.
+[aiter] [pid=1017910 pname=MainProcess] [32mfinish build [mha_fwd_bf16_nbias_nmask_lse_ndropout_nqscale], cost 50.5s [0m
+[aiter] import [mha_fwd_bf16_nbias_nmask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/mha_fwd_bf16_nbias_nmask_lse_ndropout_nqscale.so
+  ok 145.8 us 471.2 TFLOPS correctness=not_checked
+[156/198] D64_nocausal B=2 S=2048 H=32/32 D=64 bf16 nocausal provider=aiter_asm
+[aiter WARNING] unsupported condition in fwd_v3!!! data type: bf16
+  failed: invalid argument for fmha_fwd
+[157/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=generic_m128
+  failed: AssertionError: 
+[158/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=generic_m256
+  unsupported: skipped after observed GPU memory fault for generic_m256 with D<128
+[159/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=dualwave
+  unsupported: dualwave is D=128 only
+[160/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=auto
+  unsupported: skipped: auto would dispatch to generic_m256, which faulted for D<128
+[161/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=aiter_ck
+  ok 112.0 us 460.1 TFLOPS correctness=not_checked
+[162/198] D96_causal B=2 S=2048 H=32/32 D=96 bf16 causal provider=aiter_asm
+[aiter WARNING] unsupported condition in fwd_v3!!! data type: bf16
+  failed: invalid argument for fmha_fwd
+[163/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=generic_m128
+  failed: AssertionError: 
+[164/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=generic_m256
+  unsupported: skipped after observed GPU memory fault for generic_m256 with D<128
+[165/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=dualwave
+  unsupported: dualwave is D=128 only
+[166/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=auto
+  unsupported: skipped: auto would dispatch to generic_m256, which faulted for D<128
+[167/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=aiter_ck
+  ok 176.3 us 584.8 TFLOPS correctness=not_checked
+[168/198] D96_nocausal B=2 S=2048 H=32/32 D=96 bf16 nocausal provider=aiter_asm
+[aiter WARNING] unsupported condition in fwd_v3!!! data type: bf16
+  failed: invalid argument for fmha_fwd
+[169/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=generic_m128
+  ok 156.8 us 438.1 TFLOPS correctness=not_checked
+[170/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=generic_m256
+  ok 177.1 us 388.1 TFLOPS correctness=not_checked
+[171/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=dualwave
+  ok 112.2 us 612.5 TFLOPS correctness=not_checked
+[172/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=auto
+  ok 112.1 us 613.3 TFLOPS correctness=not_checked
+[173/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=aiter_ck
+  ok 119.8 us 573.6 TFLOPS correctness=not_checked
+[174/198] D128_causal B=2 S=2048 H=32/32 D=128 bf16 causal provider=aiter_asm
+  ok 185.0 us 371.5 TFLOPS correctness=not_checked
+[175/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=generic_m128
+  ok 262.6 us 523.5 TFLOPS correctness=not_checked
+[176/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=generic_m256
+  ok 253.7 us 541.6 TFLOPS correctness=not_checked
+[177/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=dualwave
+  ok 159.4 us 862.3 TFLOPS correctness=not_checked
+[178/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=auto
+  ok 163.1 us 842.9 TFLOPS correctness=not_checked
+[179/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=aiter_ck
+  ok 189.5 us 725.1 TFLOPS correctness=not_checked
+[180/198] D128_nocausal B=2 S=2048 H=32/32 D=128 bf16 nocausal provider=aiter_asm
+[aiter] LoadKernel: _ZN5aiter19fmha_fwd_hd128_bf16E hsaco: /sgl-workspace/aiter/hsa//gfx950/fmha_v3_fwd/fwd_hd128_bf16.co
+  ok 160.3 us 857.3 TFLOPS correctness=not_checked
+[181/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=generic_m128
+  ok 80.8 us 26.6 TFLOPS correctness=pass
+[182/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=generic_m256
+  ok 80.2 us 26.8 TFLOPS correctness=pass
+[183/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=dualwave
+  ok 107.1 us 20.0 TFLOPS correctness=pass
+[184/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=auto
+  ok 108.6 us 19.8 TFLOPS correctness=pass
+[185/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=aiter_ck
+[aiter] [pid=1017910 pname=MainProcess] start build [mha_fwd_fp16_nbias_mask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/build/mha_fwd_fp16_nbias_mask_lse_ndropout_nqscale
+[aiter] [pid=1017910 pname=MainProcess] [32mfinish build [mha_fwd_fp16_nbias_mask_lse_ndropout_nqscale], cost 48.4s [0m
+[aiter] import [mha_fwd_fp16_nbias_mask_lse_ndropout_nqscale] under /sgl-workspace/aiter/aiter/jit/mha_fwd_fp16_nbias_mask_lse_ndropout_nqscale.so
+  ok 18.5 us 116.0 TFLOPS correctness=pass
+[186/198] fp16_S512 B=1 S=512 H=32/32 D=128 fp16 causal provider=aiter_asm
+  unsupported: aiter asm v3 is bf16 only
+[187/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=generic_m128
+  ok 93.6 us 367.1 TFLOPS correctness=pass
+[188/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=generic_m256
+  ok 109.0 us 315.3 TFLOPS correctness=pass
+[189/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=dualwave
+  ok 111.4 us 308.4 TFLOPS correctness=pass
+[190/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=auto
+  ok 110.8 us 310.1 TFLOPS correctness=pass
+[191/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=aiter_ck
+  ok 76.0 us 452.1 TFLOPS correctness=pass
+[192/198] fp16_S2048 B=1 S=2048 H=32/32 D=128 fp16 causal provider=aiter_asm
+  unsupported: aiter asm v3 is bf16 only
+[193/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=generic_m128
+  ok 2051.9 us 535.8 TFLOPS correctness=not_checked
+[194/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=generic_m256
+  ok 2123.7 us 517.7 TFLOPS correctness=not_checked
+[195/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=dualwave
+  ok 1318.8 us 833.7 TFLOPS correctness=not_checked
+[196/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=auto
+  ok 1320.3 us 832.8 TFLOPS correctness=not_checked
+[197/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=aiter_ck
+  ok 1634.9 us 672.5 TFLOPS correctness=not_checked
+[198/198] fp16_S8192 B=2 S=8192 H=32/32 D=128 fp16 causal provider=aiter_asm
+  unsupported: aiter asm v3 is bf16 only
+Wrote benchmarks/examples/flash_attn_current/results_full.jsonl
+Wrote benchmarks/examples/flash_attn_current/results_full.csv
+Wrote benchmarks/examples/flash_attn_current/REPORT_full.md
